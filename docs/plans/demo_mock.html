@@ -169,6 +169,26 @@ section.view.on{display:block;animation:rise .45s var(--ease)}
 .opt-chip.on{border-color:color-mix(in srgb,var(--accent) 65%,transparent);color:var(--accent);font-weight:700;
   background:color-mix(in srgb,var(--accent) 8%,var(--panel-2))}
 .golive{display:flex;justify-content:center;margin-top:6px}
+/* 프롬프트 확인 패널 — "이 버튼이 실제로 보내는 것" (core/script.py와 동일 값) */
+.pp{border:1px solid var(--line);border-radius:16px;background:var(--panel);margin:0 0 18px;overflow:hidden}
+.pp summary{cursor:pointer;padding:12px 16px;font-size:13px;color:var(--dim);list-style:none;display:flex;align-items:center;gap:8px}
+.pp summary::-webkit-details-marker{display:none}
+.pp summary .arrow{transition:transform .3s var(--ease);color:var(--faint)}
+.pp[open] summary .arrow{transform:rotate(90deg)}
+.pp .rows{padding:2px 16px 14px;display:flex;flex-direction:column;gap:0}
+.pp .prow{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:8px 0;border-top:1px dashed var(--line);font-size:12.5px}
+.pp .prow .k{color:var(--faint)}
+.pp .prow .v{color:var(--text)}
+.pp .ban{display:inline-block;font-size:11px;padding:1px 8px;border-radius:99px;margin:0 4px 3px 0;
+  background:color-mix(in srgb,var(--crit) 14%,transparent);color:#F09A90;text-decoration:line-through}
+.pp .src-note{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+/* 경쟁사 분석 블록 (시트) — core/scout.py 리포트 데이터 */
+.comp{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--panel-2)}
+.comp .ch{font-size:12px;color:var(--faint);margin-bottom:8px}
+.comp .vbar{display:grid;grid-template-columns:74px 1fr 62px;gap:8px;align-items:center;font-size:12px;margin-bottom:6px}
+.comp .vbar .bar{height:12px;border-radius:4px;background:var(--panel);overflow:hidden}
+.comp .vbar .bar i{display:block;height:100%;border-radius:4px}
+.comp .mult{font-size:13px;font-weight:800;color:var(--accent)}
 .runbox{border-radius:20px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--shadow);margin-top:18px}
 .runbox .scene{aspect-ratio:21/9;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;position:relative}
 .runbox .pct{font-family:var(--mono);font-size:34px;font-weight:700;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.5)}
@@ -306,6 +326,7 @@ section.view.on{display:block;animation:rise .45s var(--ease)}
       <div class="lead">어떤 소재로 만들까요?</div>
       <div class="srcs" id="srcList"></div>
       <div class="opts" id="optChips"></div>
+      <details class="pp" id="promptPanel"></details>
       <div class="golive" id="goLive"></div>
       <div id="runArea"></div>
     </div>
@@ -406,10 +427,12 @@ const TILES=[
 ];
 const CARDS={
  k1:{tr:'drama',ttl:'시청률 역주행 드라마 3화 떡밥 정리',owner:null,approved:null,
-  why:'경쟁 채널 평균 조회수의 4.1배로 튄 소재예요. 3화 공개 직후 커뮤니티 언급이 급증했어요.',
-  hist:[['어제 21:40','소재 발견 (스카우트)']]},
+  why:'경쟁 채널 중앙값의 4.1배로 튄 소재예요. 3화 공개 직후 커뮤니티 언급이 급증했어요.',
+  comp:{channel:'경쟁채널-D튜브',medianK:40,viewsK:168,mult:4.1,week:3.2,score:8.2},
+  hist:[['어제 21:40','소재 발견 (경쟁사 분석)']]},
  k2:{tr:'japan',ttl:'일본 20대 평균 연봉의 함정',owner:'B',approved:'A',
   why:'평균과 중앙값의 괴리 소재. 통계로 사실 시트를 만들 수 있어요.',
+  comp:{channel:'경쟁채널-J머니',medianK:41,viewsK:115,mult:2.8,week:2.5,score:6.9},
   hist:[['어제 22:40','A가 확정'],['어제 22:38','B가 맡음']]},
  k3:{tr:'japan',ttl:'엔저 시대 월급의 진실',owner:'B',approved:'A',
   why:'12분 롱폼 — 지금 씬 28개 중 18개를 이어붙이는 중이에요.',
@@ -508,6 +531,12 @@ function openSheet(cardId){
      <div class="meta">${chch(c.tr)}${tile?stChip(tile):''}</div>
      <h3>${c.ttl}</h3>
      <p class="muted" style="margin:0;font-size:13.5px">${c.why}</p>
+     ${c.comp?`<div class="comp">
+       <div class="ch">경쟁사 분석 · ${c.comp.channel} (주 ${c.comp.week}회 업로드) · 아웃라이어 점수 <b class="mult">${c.comp.score}</b></div>
+       <div class="vbar"><span>이 영상</span><span class="bar"><i style="width:100%;background:${CH[c.tr].c}"></i></span><b class="num">${c.comp.viewsK}만 회</b></div>
+       <div class="vbar"><span>채널 중앙값</span><span class="bar"><i style="width:${Math.round(c.comp.medianK/c.comp.viewsK*100)}%;background:var(--faint)"></i></span><b class="num">${c.comp.medianK}만 회</b></div>
+       <div class="tiny" style="margin-top:4px">중앙값의 <b class="mult">${c.comp.mult}배</b> · 최근 14일 가중치 반영 (core/scout.py)</div>
+     </div>`:''}
      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
        <div class="gate"><div class="k">맡은 사람</div><div class="v">${c.owner?`${c.owner} (${NAMES[c.owner]})`:'아직 없음'}</div></div>
        <div class="gate"><div class="k">소재 확정</div><div class="v">${c.approved?`${c.approved} (${NAMES[c.approved]})`:'아직 안 됨'}</div></div>
@@ -556,6 +585,7 @@ function renderGen(){
   const lens=c.tr==='playlist'?['60분']:['10분','12분','15분'];
   $('#optChips').innerHTML=lens.map(l=>`<span class="opt-chip ${l===c.len?'on':''}">${l}</span>`).join('')
     +`<span class="opt-chip on">${c.tr==='playlist'?'플레이리스트':'롱폼 16:9'}</span><span class="opt-chip">다음 빈 슬롯 발행</span>`;
+  renderPromptPanel(c);
   $('#goLive').innerHTML= genRun?'' :
     unowned?`<button class="primary big" id="btnClaimG">내가 맡고 시작하기</button>`:
     mine?`<button class="primary big" id="btnStart">만들기 시작</button>`:
@@ -564,6 +594,39 @@ function renderGen(){
   const bs=$('#btnStart');if(bs)bs.addEventListener('click',startGen);
   paintRun();
 }
+/* ── 프롬프트 확인 패널 — core/script.py의 build_system_prompt와 동일 값 ── */
+const PERSONA={japan:'차분한 다큐멘터리 — 데이터 근거 중심, 투자 권유 표현 금지',
+ drama:'텐션 있는 썰 — 씬마다 해석·비평 의무, 줄거리 서술 30% 상한',
+ realestate:'건조하고 정확하게 — 시세 단정 금지',
+ natepan:'담담한 낭독 — 복수 사연 모티프 결합 재창작만',
+ playlist:'큐레이션 노트 1~2씬 — 내레이션 최소'};
+const BANNED={japan:['무조건 오른다','확실한 투자','지금 사야'],
+ drama:['배우 닮은','실제 배우','스틸컷','공식 스틸','드라마 장면 그대로'],
+ realestate:['무조건 오른다','영끌 추천','지금이 바닥'],
+ natepan:['실화 그대로','원문 그대로'],playlist:['무료 다운로드','음원 추출']};
+const GLOSS={japan:4,drama:2,realestate:4,natepan:2,playlist:1};
+function lenSpec(tr,min){const sc=min/10;const [a,b]=tr==='japan'?[3400,3600]:[3300,3600];
+ return {scenes:`${Math.round(26*sc)}~${Math.round(32*sc)}개`,
+   chars:`${Math.round(a*sc).toLocaleString()}~${Math.round(b*sc).toLocaleString()}자`,
+   mid:[240,420,600].filter(s=>s<min*60).map(s=>s/60+'분')}}
+function renderPromptPanel(c){
+  const wasOpen=$('#promptPanel').open;
+  const min=parseInt(c.len);const sp=lenSpec(c.tr,min);
+  $('#promptPanel').innerHTML=`
+   <summary><span class="arrow">›</span>버튼이 실제로 보내는 프롬프트 확인
+     <span class="src-note" style="margin-left:auto">core/script.py · build_system_prompt()</span></summary>
+   <div class="rows">
+     <div class="prow"><span class="k">페르소나</span><span class="v">${PERSONA[c.tr]}</span></div>
+     <div class="prow"><span class="k">바이블 주입</span><span class="v">용어집 ${GLOSS[c.tr]}개 표기 강제 · 금지어 ${BANNED[c.tr].length}개<br>
+       ${BANNED[c.tr].map(b=>`<span class="ban">${b}</span>`).join('')}</span></div>
+     <div class="prow"><span class="k">길이 제어</span><span class="v">${min}분 = 씬 ${sp.scenes} · 내레이션 ${sp.chars} — 미달이면 챕터 보강 씬 자동 재요청</span></div>
+     <div class="prow"><span class="k">훅·미드롤</span><span class="v">훅 40초 내 · ${sp.mid.length?sp.mid.join('/')+' 직전 클리프행어':'미드롤 없음'}</span></div>
+     <div class="prow"><span class="k">숫자 규칙</span><span class="v">수치는 <span class="num">{{fact:키}}</span> 토큰만 허용 — 직접 쓰면 검사에서 걸러져요</span></div>
+     <div class="prow"><span class="k">다시 만들기</span><span class="v">장면 하나만 · 앞뒤 문장(prev_tail/next_head)과 바이블이 자동으로 들어가요</span></div>
+   </div>`;
+  $('#promptPanel').open=wasOpen;
+}
+
 const STEPS=['대본','목소리','그림 (사람 7건)','조립'];
 function paintRun(){
   if(!genRun){$('#runArea').innerHTML='';return}
