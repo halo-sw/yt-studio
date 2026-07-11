@@ -33,14 +33,19 @@
 
 ## 목차
 
-| 문서 | 화면 | 담당 마일스톤 |
+| 문서 | 내용 | 담당 마일스톤 |
 |---|---|---|
-| [01_agent-rail-workspace.md](01_agent-rail-workspace.md) | 에이전트 레일 + 워크스페이스 | M2 |
+| [00_ia-depth-map.md](00_ia-depth-map.md) | **정보 구조 + 세부 뎁스(D0~D3) 규약** — 모든 화면 공통 | M2 |
+| [01_agent-rail-workspace.md](01_agent-rail-workspace.md) | 에이전트 레일 + 워크스페이스 (멀티에이전트 관제) | M2 |
 | [02_home-todo-feed.md](02_home-todo-feed.md) | 홈 할 일 피드 (받은편지함 패턴) | M2 |
 | [03_generation-flow.md](03_generation-flow.md) | 생성 플로우 (Runway식) | M2 |
 | [04_editor-timeline.md](04_editor-timeline.md) | 편집 화면 (CapCut식 타임라인) | M2 |
 | [05_decide-together.md](05_decide-together.md) | 함께 결정 (2/3 투표) | M2 |
 | [06_history-log.md](06_history-log.md) | 기록 (감사 로그 + 사용량) | M2 |
+| [07_multiagent-ui-reference.md](07_multiagent-ui-reference.md) | 멀티에이전트 UI 레퍼런스 리서치 + 채택 결정 | — |
+
+화면 기획서의 4번(화면 구성) 섹션은 00의 뎁스 표기(D1/D2/D3)를 사용해
+각 요소가 어느 뎁스에 속하는지 명시한다.
 
 인터랙티브 데모(HTML 목업)는 이 6개 기획서를 그대로 화면으로 옮긴 것으로,
 클릭 가능한 초안이 아티팩트로 발행되어 있다.

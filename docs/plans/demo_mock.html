@@ -1,4 +1,4 @@
-<title>channel-factory — 대시보드 데모 (기획서 초안)</title>
+<title>channel-factory — 멀티에이전트 관제 데모</title>
 <style>
 :root{
   --ink:#14161C; --panel:#1C1F27; --panel-2:#232732; --line:#2A2E3A;
@@ -21,60 +21,69 @@
 
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{
-  background:var(--ink); color:var(--text);
+body{background:var(--ink); color:var(--text);
   font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
-  font-size:14px; line-height:1.55;
-}
-button{font:inherit; color:inherit; cursor:pointer; border:1px solid var(--line);
-  background:var(--panel-2); border-radius:8px; padding:6px 12px;}
+  font-size:14px; line-height:1.55;}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);
+  background:var(--panel-2);border-radius:8px;padding:6px 12px}
 button:hover{border-color:var(--faint)}
-button:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-button.primary{background:var(--accent); color:var(--accent-ink); border-color:transparent; font-weight:700}
+button:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
 button.primary:hover{filter:brightness(1.08)}
-button:disabled{opacity:.45; cursor:not-allowed}
+button.ghost{background:transparent}
+button:disabled{opacity:.45;cursor:not-allowed}
 select{font:inherit;color:var(--text);background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
-h1,h2,h3{margin:0; text-wrap:balance}
-.num{font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:.92em}
+h1,h2,h3{margin:0;text-wrap:balance}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:.92em}
 
-.app{display:grid; grid-template-columns:252px 1fr; min-height:100vh}
-@media(max-width:900px){ .app{grid-template-columns:1fr} .rail{position:static;height:auto} }
+.app{display:grid;grid-template-columns:264px 1fr;min-height:100vh}
+@media(max-width:900px){.app{grid-template-columns:1fr}.rail{position:static;height:auto}}
 
-/* ── 에이전트 레일 (기획서 01) ── */
-.rail{background:var(--panel); border-right:1px solid var(--line); padding:16px 12px;
-  position:sticky; top:0; height:100vh; overflow-y:auto; display:flex; flex-direction:column; gap:4px}
+/* ═ D0: 에이전트 레일 ═ */
+.rail{background:var(--panel);border-right:1px solid var(--line);padding:16px 12px;
+  position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
 .logo{display:flex;align-items:center;gap:8px;padding:4px 8px 14px}
 .logo .tally{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
 .logo b{font-size:15px;letter-spacing:-.02em}
 .logo span{color:var(--faint);font-size:11px}
 .rail-label{font-size:10.5px;letter-spacing:.14em;color:var(--faint);padding:10px 8px 4px;text-transform:uppercase}
-.agent{display:flex;flex-direction:column;gap:2px;text-align:left;padding:9px 10px;border-radius:var(--r);
+.agent{display:flex;flex-direction:column;gap:4px;text-align:left;padding:9px 10px;border-radius:var(--r);
   background:transparent;border:1px solid transparent;width:100%}
 .agent:hover{background:var(--panel-2)}
 .agent.on{background:var(--panel-2);border-color:var(--line)}
 .agent .row1{display:flex;align-items:center;gap:8px}
 .agent .dot{width:8px;height:8px;border-radius:50%;flex:none}
-.agent .nm{font-weight:600;flex:1}
-.agent .sub{color:var(--faint);font-size:12px;padding-left:16px}
-.badge{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+.agent .nm{font-weight:600;flex:1;font-size:13.5px}
+.agent .sub{color:var(--faint);font-size:11.5px;padding-left:16px}
+.mini{height:3px;background:var(--panel-2);border-radius:99px;margin-left:16px;overflow:hidden}
+.agent.on .mini,.agent:hover .mini{background:var(--ink)}
+.mini i{display:block;height:100%;background:var(--accent);transition:width .6s}
+.badge{font-size:10.5px;padding:1px 7px;border-radius:99px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
 .badge.run{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
-.badge.review{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+.badge.review,.badge.human{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
 .badge.sched{color:var(--good);border-color:color-mix(in srgb,var(--good) 45%,transparent)}
 .badge.fail{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 45%,transparent)}
+.badge.human{animation:blink 2.4s ease-in-out infinite}
+@keyframes blink{50%{opacity:.45}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 .nav{margin-top:auto;border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:2px}
 .nav button{background:transparent;border:1px solid transparent;text-align:left;padding:8px 10px;display:flex;justify-content:space-between}
 .nav button:hover{background:var(--panel-2)}
 .nav button.on{background:var(--panel-2);border-color:var(--line);font-weight:600}
 .nav .cnt{color:var(--accent);font-weight:700}
 
-/* ── 상단 바 ── */
-.top{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line)}
-.top h1{font-size:17px;letter-spacing:-.02em}
+/* ═ D0: 상단 바 + 브레드크럼 ═ */
+.top{display:flex;align-items:center;gap:12px;padding:13px 22px;border-bottom:1px solid var(--line)}
+.crumbs{display:flex;align-items:center;gap:6px;font-size:14.5px;flex-wrap:wrap}
+.crumbs button{border:0;background:none;padding:2px 4px;color:var(--dim);font-weight:500;border-radius:5px}
+.crumbs button:hover{color:var(--text);background:var(--panel-2)}
+.crumbs .cur{font-weight:700;padding:2px 4px}
+.crumbs .sep{color:var(--faint)}
 .top .spacer{flex:1}
 .top label{color:var(--dim);font-size:12.5px}
-.main{padding:20px 22px 60px;max-width:1080px}
+.main{padding:20px 22px 60px;max-width:1120px}
+.view-note{font-size:12px;color:var(--faint);margin:0 0 16px}
 
-/* 공통 카드 */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
 .stack{display:flex;flex-direction:column;gap:10px}
 .hrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -84,12 +93,22 @@ h1,h2,h3{margin:0; text-wrap:balance}
   border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;
   padding:10px 16px;box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .25s;z-index:99}
 .toast.show{opacity:1}
-@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+section.view{display:none} section.view.on{display:block}
 
-/* ── 홈 (기획서 02) ── */
-.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-.strip .card{padding:11px 14px}
-.strip .k{font-size:12px;color:var(--dim)} .strip .v{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+/* ═ D1 홈: 함대 스트립 + 인박스 ═ */
+.fleet{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
+@media(max-width:1000px){.fleet{grid-template-columns:repeat(2,1fr)}}
+.fcard{padding:11px 12px;text-align:left;display:flex;flex-direction:column;gap:6px;border-radius:var(--r);
+  background:var(--panel);border:1px solid var(--line);width:100%}
+.fcard:hover{border-color:var(--faint)}
+.fcard .row1{display:flex;align-items:center;gap:7px}
+.fcard .dot{width:8px;height:8px;border-radius:50%}
+.fcard .nm{font-weight:700;font-size:13px;flex:1}
+.fcard .act-line{font-size:11.5px;color:var(--dim);min-height:2.7em;line-height:1.35}
+.fcard .act-line b{color:var(--text);font-weight:600}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.strip .card{padding:10px 14px}
+.strip .k{font-size:12px;color:var(--dim)} .strip .v{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums}
 .strip .v.warned{color:var(--crit)}
 .todo{display:flex;flex-direction:column;gap:8px}
 .todo .card{display:flex;gap:12px;align-items:flex-start}
@@ -99,12 +118,60 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .k-review{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
 .k-vote{background:color-mix(in srgb,var(--ch-realestate) 18%,transparent);color:var(--ch-realestate)}
 .k-fail{background:color-mix(in srgb,var(--crit) 18%,transparent);color:var(--crit)}
-.todo .body{flex:1}
-.todo .ttl{font-weight:600}
-.todo .act{display:flex;gap:6px;flex:none}
+.todo .body{flex:1} .todo .ttl{font-weight:600}
+.todo .wait{font-size:11px;color:var(--warn)}
+.todo .act{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
 .empty{border:1px dashed var(--line);border-radius:var(--r);padding:28px;text-align:center;color:var(--faint)}
+.sec-h{display:flex;align-items:baseline;gap:10px;margin:4px 0 10px}
+.sec-h h2{font-size:14px} .sec-h .tiny{margin-left:auto}
 
-/* ── 생성 플로우 (기획서 03) ── */
+/* ═ D1 워크스페이스 ═ */
+.ws-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.ws-head .big{width:14px;height:14px;border-radius:4px}
+.ws-head h2{font-size:17px}
+.stepper{display:flex;gap:0;align-items:center;flex-wrap:wrap;margin:6px 0 10px}
+.step{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--faint)}
+.step .sdot{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.step.done{color:var(--dim)} .step.done .sdot{background:var(--good);border-color:var(--good);color:#08130C}
+.step.run{color:var(--accent);font-weight:600} .step.run .sdot{border-color:var(--accent);color:var(--accent)}
+.step .bar{width:26px;height:1.5px;background:var(--line);margin:0 6px}
+.console{background:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 12px;
+  font-family:var(--mono);font-size:11.5px;line-height:1.8;color:var(--dim);max-height:150px;overflow-y:auto}
+.console .t{color:var(--faint);margin-right:8px}
+.console .hl{color:var(--accent)}
+.board{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;overflow-x:auto}
+@media(max-width:1000px){.board{grid-template-columns:repeat(2,1fr)}}
+.col{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);padding:8px;min-height:90px}
+.col h4{margin:0 0 8px;font-size:11px;color:var(--faint);font-weight:600;letter-spacing:.05em;display:flex;justify-content:space-between}
+.bcard{width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:8px 9px;font-size:12px;display:flex;flex-direction:column;gap:3px;margin-bottom:6px}
+.bcard:hover{border-color:var(--accent)}
+.bcard b{font-weight:600;line-height:1.3}
+.bcard .who{font-size:10.5px;color:var(--faint)}
+.drawer{margin-top:14px}
+.drawer summary{cursor:pointer;font-size:12.5px;color:var(--dim);padding:8px 0}
+.drawer .card{margin-top:6px}
+.lockrow{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--line)}
+.lockrow:last-child{border:0}
+
+/* ═ D2 카드 상세 ═ */
+.detail{display:grid;grid-template-columns:1fr 300px;gap:14px}
+@media(max-width:1000px){.detail{grid-template-columns:1fr}}
+.evidence{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.evidence .card{padding:10px 12px}
+.evidence .k{font-size:11px;color:var(--faint)} .evidence .v{font-size:17px;font-weight:800}
+.hist{margin-top:6px}
+.logrow{display:grid;grid-template-columns:110px 30px 1fr;gap:10px;padding:7px 4px;border-bottom:1px dashed var(--line);align-items:center;font-size:12.5px}
+.logrow .t{color:var(--faint);font-size:11.5px}
+.logrow.warned{border-left:3px solid var(--crit);padding-left:8px}
+.pill{font-size:10.5px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--panel-2);border:1px solid var(--line);flex:none}
+.gatebox{border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:10px}
+.gatebox h4{margin:0 0 6px;font-size:12px;color:var(--dim)}
+.notice{font-size:12px;color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:8px;padding:6px 10px}
+
+/* ═ 만들기 ═ */
 .gen{display:grid;grid-template-columns:290px 1fr;gap:14px}
 @media(max-width:900px){.gen{grid-template-columns:1fr}}
 .pick{width:100%;text-align:left;display:flex;flex-direction:column;gap:3px;padding:11px 12px;border-radius:var(--r)}
@@ -113,7 +180,7 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px}
 .chip{font-size:12.5px;padding:4px 12px;border-radius:99px;border:1px solid var(--line);background:var(--panel-2)}
 .chip.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-.stages{display:flex;flex-direction:column;gap:0;margin-top:14px}
+.stages{display:flex;flex-direction:column;margin-top:14px}
 .stage{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
 .stage:last-child{border-bottom:0}
 .stage .ic{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);color:var(--faint);
@@ -125,7 +192,7 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .pbar{height:5px;background:var(--panel-2);border-radius:99px;overflow:hidden;margin-top:10px}
 .pbar i{display:block;height:100%;background:var(--accent);width:0;transition:width .5s}
 
-/* ── 편집 (기획서 04) ── */
+/* ═ 편집 ═ */
 .editor{display:grid;grid-template-columns:1fr 290px;gap:14px}
 @media(max-width:1000px){.editor{grid-template-columns:1fr}}
 .canvas{aspect-ratio:16/9;background:linear-gradient(150deg,#20242E,#171A22);border:1px solid var(--line);
@@ -133,7 +200,7 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .canvas .cap{background:rgba(0,0,0,.55);color:#fff;padding:4px 14px;border-radius:4px;font-weight:700}
 .tl{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px;overflow-x:auto}
 .tl-inner{min-width:640px;position:relative}
-.trk{display:flex;align-items:center;gap:0;margin-bottom:6px}
+.trk{display:flex;align-items:center;margin-bottom:6px}
 .trk .lbl{width:64px;flex:none;font-size:11px;color:var(--faint)}
 .lane{flex:1;display:flex;gap:2px;position:relative}
 .blk{height:34px;border-radius:5px;border:1px solid transparent;background:var(--panel-2);position:relative;
@@ -141,7 +208,6 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .blk:hover{border-color:var(--faint)}
 .blk.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .blk.regen{border-color:var(--warn);color:var(--warn)}
-.blk.flag::after{content:"차트 다시";position:absolute;top:2px;right:4px;font-size:9px;color:var(--crit)}
 .sub-blk{height:14px;border-radius:3px;background:color-mix(in srgb,var(--text) 12%,transparent);flex:none}
 .wave{height:24px;border-radius:4px;flex:none;background:repeating-linear-gradient(90deg,
   color-mix(in srgb,var(--good) 55%,transparent) 0 2px, transparent 2px 5px)}
@@ -150,38 +216,25 @@ h1,h2,h3{margin:0; text-wrap:balance}
   display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim);letter-spacing:.1em}
 .mid{position:absolute;top:-4px;bottom:-2px;width:1.5px;background:var(--warn);opacity:.8}
 .mid i{position:absolute;top:-14px;left:-14px;font-style:normal;font-size:9.5px;color:var(--warn);width:30px;text-align:center}
-.ruler{position:relative;height:16px;margin-left:64px}
 .ebar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
-.notice{font-size:12px;color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);
-  border-radius:8px;padding:6px 10px}
 .panel h3{font-size:13.5px;margin-bottom:8px}
-.panel textarea{width:100%;min-height:110px;background:var(--panel-2);color:var(--text);border:1px solid var(--line);
-  border-radius:8px;padding:9px;font:inherit;font-size:13px;resize:vertical}
 .factchip{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);
   border-bottom:1px dashed var(--accent);padding:0 3px;border-radius:3px;cursor:help}
 .kv{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;border-bottom:1px dashed var(--line)}
 .kv:last-child{border:0} .kv b{font-variant-numeric:tabular-nums}
-
-/* ── 함께 결정 (기획서 05) ── */
-.tabs{display:flex;gap:6px;margin-bottom:14px}
-.tabs button{border-radius:99px}
-.tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
-.opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-top:6px}
-.opt button{flex:none}
-.opt .voters{display:flex;gap:4px}
-.pill{font-size:11px;font-weight:700;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:var(--panel-2);border:1px solid var(--line)}
-.opt.win{border-color:var(--good)}
 .state-pill{font-size:11px;font-weight:800;padding:2px 10px;border-radius:99px}
 .st-open{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
 .st-pass{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
 .st-void{background:var(--panel-2);color:var(--faint)}
 
-/* ── 기록 (기획서 06) ── */
+/* ═ 함께 결정 / 기록 ═ */
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tabs button{border-radius:99px}
+.tabs button.on{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+.opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-top:6px}
+.opt .voters{display:flex;gap:4px}
+.opt.win{border-color:var(--good)}
 .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.logrow{display:grid;grid-template-columns:118px 34px 1fr;gap:10px;padding:8px 4px;border-bottom:1px dashed var(--line);align-items:center}
-.logrow .t{color:var(--faint);font-size:12px}
-.logrow.warned{border-left:3px solid var(--crit);padding-left:8px}
 .gauge{margin:10px 0 18px}
 .gauge .gh{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px}
 .gbar{height:10px;background:var(--panel-2);border-radius:99px;position:relative;overflow:visible}
@@ -189,19 +242,16 @@ h1,h2,h3{margin:0; text-wrap:balance}
 .gbar i.over{background:var(--crit)}
 .gbar .th{position:absolute;left:80%;top:-4px;bottom:-4px;width:1.5px;background:var(--warn)}
 .bars{display:flex;flex-direction:column;gap:8px}
-.brow{display:grid;grid-template-columns:90px 1fr 120px;gap:10px;align-items:center;font-size:12.5px}
+.brow{display:grid;grid-template-columns:90px 1fr 130px;gap:10px;align-items:center;font-size:12.5px}
 .btrack{height:14px;display:flex;border-radius:4px;overflow:hidden;background:var(--panel-2)}
 .btrack .b1{background:var(--good)} .btrack .b2{background:var(--warn)}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--dim);margin-bottom:10px}
 .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
-section.view{display:none} section.view.on{display:block}
-.view-note{font-size:12px;color:var(--faint);margin:4px 0 16px}
 </style>
 
 <div class="app">
-<!-- ═══ 에이전트 레일 (기획서 01) ═══ -->
 <aside class="rail">
-  <div class="logo"><span class="tally"></span><div><b>channel-factory</b><br><span>3인 스튜디오 · 데모</span></div></div>
+  <div class="logo"><span class="tally"></span><div><b>channel-factory</b><br><span>3인 스튜디오 · 멀티에이전트 데모</span></div></div>
   <div class="rail-label">에이전트</div>
   <div id="agents"></div>
   <nav class="nav" id="nav"></nav>
@@ -209,7 +259,7 @@ section.view{display:none} section.view.on{display:block}
 
 <div>
   <div class="top">
-    <h1 id="viewTitle">홈</h1>
+    <nav class="crumbs" id="crumbs" aria-label="현재 위치"></nav>
     <div class="spacer"></div>
     <label>지금 보는 사람
       <select id="who" aria-label="사용자 시점 전환">
@@ -220,9 +270,11 @@ section.view{display:none} section.view.on{display:block}
 
   <main class="main">
 
-  <!-- ═══ 홈 할 일 피드 (기획서 02) ═══ -->
+  <!-- D1 홈: 함대 관제 + 받은편지함 -->
   <section class="view" id="v-home">
-    <div class="view-note">받은편지함 패턴 — 5개 채널에서 내가 처리할 일만 모입니다. 우상단에서 보는 사람을 바꾸면 셀프 검수 필터가 동작합니다.</div>
+    <div class="sec-h"><h2>지금 에이전트들</h2><span class="tiny">카드를 누르면 그 에이전트의 워크스페이스로</span></div>
+    <div class="fleet" id="fleet"></div>
+    <div class="sec-h"><h2>에이전트가 사람을 기다려요</h2><span class="tiny">받은편지함 — 위에서부터 처리하면 파이프라인이 다시 흐릅니다</span></div>
     <div class="strip">
       <div class="card"><div class="k">소재 확정 대기</div><div class="v" id="c-approve">0</div></div>
       <div class="card"><div class="k">최종 검토 대기</div><div class="v" id="c-review">0</div></div>
@@ -232,16 +284,19 @@ section.view{display:none} section.view.on{display:block}
     <div class="todo" id="todoList"></div>
   </section>
 
-  <!-- ═══ 생성 플로우 (기획서 03) ═══ -->
+  <!-- D1 워크스페이스 -->
+  <section class="view" id="v-ws"><div id="wsBody"></div></section>
+
+  <!-- D2 카드 상세 -->
+  <section class="view" id="v-card"><div id="cardBody"></div></section>
+
+  <!-- D1 만들기 -->
   <section class="view" id="v-gen">
     <div class="view-note">Runway식 — 확정된 소재만 목록에 나옵니다. 카드 선택은 맡은 사람만 가능합니다.</div>
-    <div class="gen">
-      <div class="stack" id="genCards"></div>
-      <div class="card" id="genRight"></div>
-    </div>
+    <div class="gen"><div class="stack" id="genCards"></div><div class="card" id="genRight"></div></div>
   </section>
 
-  <!-- ═══ 편집 화면 (기획서 04) ═══ -->
+  <!-- D1 편집 -->
   <section class="view" id="v-edit">
     <div class="view-note">CapCut식 — 일본 머니 「엔저 시대 월급의 진실」 (12분 목표, 맡은 사람: B). BGM은 씬과 무관한 글로벌 트랙 1줄입니다.</div>
     <div class="editor">
@@ -249,7 +304,7 @@ section.view{display:none} section.view.on{display:block}
         <div class="canvas"><div class="tiny">프리뷰 · <span class="num" id="pvTime">00:00</span> / <span class="num">11:42</span></div>
           <div class="cap" id="pvCap">장면을 선택하세요</div></div>
         <div class="tl"><div class="tl-inner">
-          <div class="ruler" id="ruler"></div>
+          <div style="height:16px"></div>
           <div class="trk"><span class="lbl">장면</span><div class="lane" id="laneScene"></div></div>
           <div class="trk"><span class="lbl">자막</span><div class="lane" id="laneSub"></div></div>
           <div class="trk"><span class="lbl">목소리</span><div class="lane" id="laneVoice"></div></div>
@@ -258,7 +313,7 @@ section.view{display:none} section.view.on{display:block}
         <div class="ebar">
           <span class="tiny">총 길이 <b class="num">11:42</b> / 목표 <b class="num">12:00</b></span>
           <span class="tiny">미드롤 <span class="num">4:00 · 7:00 · 10:00</span></span>
-          <div class="spacer" style="flex:1"></div>
+          <div style="flex:1"></div>
           <button id="btnReq">검토 요청</button>
           <span id="reviewSlot"></span>
           <button id="btnSched" disabled>발행 예약</button>
@@ -269,20 +324,16 @@ section.view{display:none} section.view.on{display:block}
     </div>
   </section>
 
-  <!-- ═══ 함께 결정 (기획서 05) ═══ -->
+  <!-- D1 함께 결정 -->
   <section class="view" id="v-vote">
     <div class="view-note">3인 중 2표(2/3)면 즉시 가결. 득표는 실명 공개, 마감 전 변경 가능합니다.</div>
-    <div class="tabs">
-      <button class="on" id="tabOpen">진행 중</button><button id="tabDone">끝난 결정</button>
-    </div>
+    <div class="tabs"><button class="on" id="tabOpen">진행 중</button><button id="tabDone">끝난 결정</button></div>
     <div class="stack" id="voteList"></div>
   </section>
 
-  <!-- ═══ 기록 (기획서 06) ═══ -->
+  <!-- D1 기록 -->
   <section class="view" id="v-log">
-    <div class="tabs">
-      <button class="on" id="tabAudit">기록</button><button id="tabUsage">사용량</button>
-    </div>
+    <div class="tabs"><button class="on" id="tabAudit">기록</button><button id="tabUsage">사용량</button></div>
     <div id="auditPane">
       <div class="filters" id="logFilters"></div>
       <div id="logList"></div>
@@ -316,73 +367,247 @@ section.view{display:none} section.view.on{display:block}
 const $=s=>document.querySelector(s);
 const CH={japan:{nm:'일본 머니',c:'var(--ch-japan)'},realestate:{nm:'부동산',c:'var(--ch-realestate)'},
   drama:{nm:'드라마썰',c:'var(--ch-drama)'},natepan:{nm:'사연',c:'var(--ch-natepan)'},playlist:{nm:'플레이리스트',c:'var(--ch-playlist)'}};
-let who='A', view='home';
+let who='A';
+let route={view:'home',agent:null,card:null};   // D1/D2 라우트 — D3은 라우트에 안 쌓임 (00 규약)
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)}
 function tag(tr){return `<span class="tag" style="background:color-mix(in srgb,${CH[tr].c} 18%,transparent);color:${CH[tr].c}">${CH[tr].nm}</span>`}
 
-/* ── 레일 ── */
-const AGENTS=[
- {tr:'japan',badge:'렌더 중 72%',cls:'run',sub:'「엔저 시대 월급의 진실」 조립'},
- {tr:'realestate',badge:'대기',cls:'',sub:'확정된 소재 없음'},
- {tr:'drama',badge:'검토 대기',cls:'review',sub:'3화 떡밥 정리 · 검토 필요'},
- {tr:'natepan',badge:'실패',cls:'fail',sub:'TTS 잡 재시도 2회 소진'},
- {tr:'playlist',badge:'예약됨',cls:'sched',sub:'비 오는 밤 재즈 60분 · 금 21시'},
+/* ── 데이터: 에이전트 (관제 상태 + 활동 로그) ── */
+const PIPE=['대본','목소리','그림','조립','검토','예약'];
+const AGENTS={
+ japan:{badge:'조립 중 72%',cls:'run',prog:72,step:3,cur:'엔저 시대 월급의 진실',
+   sub:'「엔저 시대 월급의 진실」 조립',human:null,
+   log:[['10:48','regen','장면 7 음성 다시 생성 · 바이블+앞뒤 문맥 주입'],
+        ['10:52','tts','씬 7 실측 100.0초 → duration 기입'],
+        ['11:02','assemble','2트랙 믹스: 내레이션 -14 LUFS / BGM -26 LUFS'],
+        ['11:04','assemble','씬 18/28 이어붙이는 중 · 경계 크로스페이드 80ms']]},
+ realestate:{badge:'대기',cls:'',prog:0,step:-1,cur:null,sub:'확정된 소재 없음',
+   human:{gate:'소재 확정',since:'2일째'},
+   log:[['어제','scout','경쟁 채널 9개 폴링 · 아웃라이어 없음']]},
+ drama:{badge:'사람 대기',cls:'human',prog:100,step:4,cur:'3화 떡밥 정리',
+   sub:'최종 검토를 기다려요 · 4시간째',human:{gate:'최종 검토',since:'4시간째'},
+   log:[['07:20','assemble','조립 완료 10:18 · 검토 대기'],
+        ['07:21','notify','검토 요청을 A·C 홈에 보냄']]},
+ natepan:{badge:'실패',cls:'fail',prog:41,step:1,cur:'장례식장에서 만난 사람',
+   sub:'TTS 잡 재시도 2회 소진',human:{gate:'실패 확인',since:'2시간째'},
+   log:[['09:10','tts','씬 14 녹음 실패 · ElevenLabs 응답 없음'],
+        ['09:11','retry','자동 재시도 1/2 실패'],['09:12','retry','자동 재시도 2/2 실패 → 알림 발송']]},
+ playlist:{badge:'예약됨',cls:'sched',prog:100,step:5,cur:'비 오는 밤, 창가의 재즈',
+   sub:'금 21:00 발행 예약 · verify 완료',human:null,
+   log:[['14:20','publish','예약 초안 업로드 (공개 전환은 사람이)'],
+        ['14:22','verify','업로드 상태 verify 통과']]},
+};
+
+/* ── 데이터: 소재 카드 (칸반 + 상세) ── */
+const CARDS=[
+ {id:'k1',tr:'drama',ttl:'시청률 역주행 드라마 3화 떡밥 정리',col:'new',score:8.2,mult:'4.1×',src:'경쟁 채널 D-튜브 · 3일 전 업로드',
+  sum:'경쟁 채널 평균 조회수의 4.1배로 튄 아웃라이어. 3화 공개 직후 커뮤니티 언급량 급증 — 회차 해설+떡밥 정리 포맷이 유효할 것으로 추정.',
+  hist:[['어제 21:40','—','스카우트가 소재 카드 만듦 (아웃라이어 8.2)']]},
+ {id:'k2',tr:'japan',ttl:'일본 20대 평균 연봉의 함정',col:'approved',owner:'B',approved:'A',score:6.9,mult:'2.8×',src:'경쟁 채널 J-머니 · 5일 전',
+  sum:'평균 vs 중앙값 괴리 소재. 후생노동성 통계로 사실 시트 구성 가능 — 차트 3장 파생 예정.',
+  hist:[['어제 22:38','B','맡음'],['어제 22:40','A','소재 확정'],['어제 21:00','—','스카우트가 소재 카드 만듦']]},
+ {id:'k3',tr:'japan',ttl:'엔저 시대 월급의 진실',col:'making',owner:'B',approved:'A',score:7.4,mult:'3.2×',src:'자체 기획 (지난 화 댓글 반응)',
+  sum:'12분 롱폼. 현재 조립 단계 — 씬 28개 중 18개 이어붙이는 중.',
+  hist:[['오늘 11:04','—','조립 중 (씬 18/28)'],['오늘 10:48','B','장면 7 다시 만듦'],['그제','A','소재 확정']]},
+ {id:'k4',tr:'drama',ttl:'3화 떡밥 정리',col:'review',owner:'B',approved:'A',score:8.2,mult:'4.1×',src:'경쟁 채널 D-튜브',
+  sum:'조립 완료 10:18 — 최종 검토를 기다려요 (4시간째).',
+  hist:[['오늘 07:21','—','검토 요청을 A·C 홈에 보냄'],['오늘 07:20','—','조립 완료']]},
+ {id:'k5',tr:'playlist',ttl:'비 오는 밤, 창가의 재즈',col:'scheduled',owner:'C',approved:'B',score:null,mult:null,src:'곡 DB 큐레이션 (라이선스 확인 24곡)',
+  sum:'60분 · 금 21:00 예약, verify 완료.',
+  hist:[['오늘 14:22','—','발행 확인됨(verify)'],['오늘 14:20','C','발행 예약']]},
+ {id:'k6',tr:'natepan',ttl:'장례식장에서 만난 사람',col:'making',owner:'A',approved:'C',score:5.8,mult:'2.1×',src:'모티프 결합 재창작 (사연 3건)',
+  sum:'녹음 단계에서 실패 — 씬 14 TTS 재시도 2회 소진. 다시 시도가 필요해요.',
+  hist:[['오늘 09:12','—','TTS 실패 · 알림 발송'],['어제','C','소재 확정']]},
 ];
-$('#agents').innerHTML=AGENTS.map(a=>`
- <button class="agent" data-ws="${a.tr}">
-   <span class="row1"><span class="dot" style="background:${CH[a.tr].c}"></span>
-   <span class="nm">${CH[a.tr].nm}</span><span class="badge ${a.cls}">${a.badge}</span></span>
-   <span class="sub">${a.sub}</span></button>`).join('');
-document.querySelectorAll('.agent').forEach(b=>b.addEventListener('click',()=>{
-  toast(`${CH[b.dataset.ws].nm} 워크스페이스 — 데모에서는 홈·생성·편집 화면이 이 채널 데이터를 대표합니다`);
-  document.querySelectorAll('.agent').forEach(x=>x.classList.toggle('on',x===b));
-}));
+const COLS=[['new','새 소재'],['approved','확정됨'],['making','제작 중'],['review','검토 대기'],['scheduled','예약됨']];
 
+/* ── D0 레일 ── */
+function renderRail(){
+  $('#agents').innerHTML=Object.entries(AGENTS).map(([tr,a])=>`
+   <button class="agent ${route.view==='ws'&&route.agent===tr?'on':''}" data-ws="${tr}">
+     <span class="row1"><span class="dot" style="background:${CH[tr].c}"></span>
+     <span class="nm">${CH[tr].nm}</span><span class="badge ${a.cls}">${a.badge}</span></span>
+     <span class="sub">${a.sub}</span>
+     <span class="mini"><i style="width:${a.prog}%"></i></span></button>`).join('');
+  document.querySelectorAll('.agent').forEach(b=>b.addEventListener('click',()=>go({view:'ws',agent:b.dataset.ws})));
+}
 const NAV=[['home','홈 할 일'],['gen','만들기'],['edit','편집'],['vote','함께 결정'],['log','기록']];
-function setView(v){view=v;NAV.forEach(([k])=>{$('#v-'+k).classList.toggle('on',k===v)});
-  $('#viewTitle').textContent=NAV.find(([k])=>k===v)[1];
-  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
 $('#nav').innerHTML=NAV.map(([k,n])=>`<button data-v="${k}">${n}${k==='home'?' <span class="cnt" id="navCnt"></span>':''}</button>`).join('');
-document.querySelectorAll('#nav button').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.v)));
+document.querySelectorAll('#nav button').forEach(b=>b.addEventListener('click',()=>go({view:b.dataset.v})));
 
-/* ── 홈: 할 일 피드 ── */
+/* ── 라우터 + 브레드크럼 (00 규약: D2까지 크럼에 쌓임) ── */
+function go(r){route={agent:null,card:null,...r};render()}
+function crumbs(){
+  const parts=[{t:'홈',r:{view:'home'}}];
+  if(route.view==='ws'||route.view==='card') parts.push({t:CH[route.agent].nm,r:{view:'ws',agent:route.agent}});
+  if(route.view==='card'){const c=CARDS.find(x=>x.id===route.card);parts.push({t:c.ttl,r:null})}
+  if(route.view==='gen')parts.push({t:'만들기',r:null});
+  if(route.view==='edit'){parts.push({t:'일본 머니',r:{view:'ws',agent:'japan'}},{t:'엔저 시대 월급의 진실',r:{view:'card',agent:'japan',card:'k3'}},{t:'편집',r:null})}
+  if(route.view==='vote')parts.push({t:'함께 결정',r:null});
+  if(route.view==='log')parts.push({t:'기록',r:null});
+  if(route.view==='home')parts[0].r=null;
+  $('#crumbs').innerHTML=parts.map((p,i)=>{
+    const last=i===parts.length-1;
+    return (i?'<span class="sep">›</span>':'')+(last||!p.r?`<span class="cur">${p.t}</span>`:`<button data-i="${i}">${p.t}</button>`);
+  }).join('');
+  $('#crumbs').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>go(parts[+b.dataset.i].r)));
+}
+function render(){
+  ['home','ws','card','gen','edit','vote','log'].forEach(k=>$('#v-'+k).classList.toggle('on',k===route.view));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===route.view));
+  crumbs();renderRail();
+  if(route.view==='home')renderHome();
+  if(route.view==='ws')renderWs();
+  if(route.view==='card')renderCard();
+  if(route.view==='gen')renderGen();
+  if(route.view==='edit')renderEditor();
+  if(route.view==='vote')renderVotes();
+  if(route.view==='log')renderLog();
+}
+
+/* ── D1 홈: 함대 스트립 ── */
+function renderFleet(){
+  $('#fleet').innerHTML=Object.entries(AGENTS).map(([tr,a])=>{
+    const last=a.log[a.log.length-1];
+    return `<button class="fcard" data-ws="${tr}">
+     <span class="row1"><span class="dot" style="background:${CH[tr].c}"></span>
+       <span class="nm">${CH[tr].nm}</span><span class="badge ${a.cls}">${a.badge}</span></span>
+     <span class="act-line">${a.human?`<b>${a.human.gate}</b>를 기다려요 · ${a.human.since}`:(a.cur?`<b>${a.cur}</b><br>${last[2]}`:'다음 소재를 찾는 중')}</span>
+     <span class="mini"><i style="width:${a.prog}%"></i></span></button>`;
+  }).join('');
+  $('#fleet').querySelectorAll('.fcard').forEach(b=>b.addEventListener('click',()=>go({view:'ws',agent:b.dataset.ws})));
+}
+
+/* ── D1 홈: 받은편지함 (Agent Inbox — 유형별 허용 액션) ── */
 let TODO=[
- {id:1,kind:'fail',tr:'natepan',ttl:'TTS 잡 실패 — 재시도 2회 소진',sub:'「장례식장에서 만난 사람」 씬 14 · ElevenLabs 응답 없음',pin:true},
+ {id:1,kind:'fail',tr:'natepan',ttl:'TTS 잡 실패 — 재시도 2회 소진',sub:'「장례식장에서 만난 사람」 씬 14 · ElevenLabs 응답 없음',pin:true,wait:'2시간째 멈춰 있어요'},
  {id:2,kind:'fail',tr:'japan',ttl:'ElevenLabs 크레딧 83% — 80% 경고선 초과',sub:'기록 › 사용량에서 확인',pin:true},
- {id:3,kind:'approve',tr:'drama',ttl:'새 소재 — 시청률 역주행 드라마 3화 떡밥 정리',sub:'스카우트 · 아웃라이어 점수 8.2 · 경쟁 채널 평균 대비 4.1×'},
- {id:4,kind:'approve',tr:'japan',ttl:'새 소재 — 일본 20대 평균 연봉의 함정',sub:'스카우트 · 아웃라이어 점수 6.9'},
- {id:5,kind:'review',tr:'japan',ttl:'최종 검토 — 엔저 시대 월급의 진실',sub:'렌더 완료 11:42 · 맡은 사람 B',owner:'B'},
+ {id:3,kind:'approve',tr:'drama',ttl:'새 소재 — 시청률 역주행 드라마 3화 떡밥 정리',sub:'아웃라이어 8.2 · 경쟁 평균 4.1×',card:'k1',wait:'스카우트가 어제부터 기다려요'},
+ {id:4,kind:'approve',tr:'japan',ttl:'새 소재 — 일본 20대 평균 연봉의 함정',sub:'아웃라이어 6.9',card:'k2'},
+ {id:5,kind:'review',tr:'drama',ttl:'최종 검토 — 3화 떡밥 정리',sub:'조립 완료 10:18 · 맡은 사람 B',owner:'B',wait:'에이전트가 4시간째 기다려요'},
  {id:6,kind:'vote',tr:'japan',ttl:'투표 — 이번 화 제목 고르기 (3안)',sub:'B 발의 · 마감 34시간 남음'},
 ];
 const KIND={approve:['소재 확정','k-approve'],review:['최종 검토','k-review'],vote:['투표','k-vote'],fail:['실패·경고','k-fail']};
 function renderHome(){
-  const vis=TODO.filter(t=>!(t.kind==='review'&&t.owner===who)); // 규칙 5-4: 내 영상 검토 요청은 내 피드에 안 뜸
+  renderFleet();
+  const vis=TODO.filter(t=>!(t.kind==='review'&&t.owner===who));
   vis.sort((a,b)=>(b.pin?1:0)-(a.pin?1:0));
   $('#c-approve').textContent=TODO.filter(t=>t.kind==='approve').length;
   $('#c-review').textContent=TODO.filter(t=>t.kind==='review').length;
   $('#c-vote').textContent=TODO.filter(t=>t.kind==='vote').length;
   $('#c-fail').textContent=TODO.filter(t=>t.kind==='fail').length;
-  const cnt=vis.length; const nc=$('#navCnt'); if(nc) nc.textContent=cnt?cnt:'';
+  const nc=$('#navCnt'); if(nc)nc.textContent=vis.length||'';
   $('#todoList').innerHTML= vis.length? vis.map(t=>`
    <div class="card ${t.pin?'pinned':''}">
      <span class="kind ${KIND[t.kind][1]}">${KIND[t.kind][0]}</span>
      <div class="body"><div class="hrow">${tag(t.tr)}<span class="ttl">${t.ttl}</span></div>
-       <div class="tiny">${t.sub}</div></div>
+       <div class="tiny">${t.sub}</div>${t.wait?`<div class="wait">⏸ ${t.wait}</div>`:''}</div>
      <div class="act">${
-       t.kind==='approve'?`<button class="primary" data-ok="${t.id}">소재 확정</button><button data-skip="${t.id}">넘기기</button>`:
+       t.kind==='approve'?`<button class="primary" data-ok="${t.id}">소재 확정</button>${t.card?`<button data-detail="${t.card}">자세히</button>`:''}<button class="ghost" data-skip="${t.id}">넘기기</button>`:
        t.kind==='review'?`<button class="primary" data-go="edit">검토하러 가기</button>`:
        t.kind==='vote'?`<button data-go="vote">함께 결정으로</button>`:
-       `<button data-go="log">기록 보기</button>`}</div>
+       `${t.id===1?`<button class="primary" data-retry="${t.id}">다시 시도</button>`:''}<button data-go="log">기록 보기</button>`}</div>
    </div>`).join('') : `<div class="empty">모두 처리했어요 — 다음 발행: 플레이리스트 금 21시</div>`;
   $('#todoList').querySelectorAll('[data-ok]').forEach(b=>b.addEventListener('click',()=>{
-    const t=TODO.find(x=>x.id==b.dataset.ok); TODO=TODO.filter(x=>x.id!=b.dataset.ok);
-    toast(`소재 확정 — ${who}가 확정했어요 (기록에 남았습니다)`); renderHome();}));
+    const t=TODO.find(x=>x.id==b.dataset.ok);
+    if(t.card){const c=CARDS.find(x=>x.id===t.card);c.col='approved';c.approved=who;c.hist.unshift(['방금',who,'소재 확정'])}
+    TODO=TODO.filter(x=>x.id!=b.dataset.ok);
+    toast(`소재 확정 — ${who}가 확정했어요. 에이전트가 다시 움직입니다`);renderHome();}));
   $('#todoList').querySelectorAll('[data-skip]').forEach(b=>b.addEventListener('click',()=>{
-    TODO=TODO.filter(x=>x.id!=b.dataset.skip); toast('넘겼어요 — 소재는 카드함에 남아 있습니다'); renderHome();}));
-  $('#todoList').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.go)));
+    TODO=TODO.filter(x=>x.id!=b.dataset.skip);toast('넘겼어요 — 소재는 보드에 남아 있습니다');renderHome();}));
+  $('#todoList').querySelectorAll('[data-retry]').forEach(b=>b.addEventListener('click',()=>{
+    TODO=TODO.filter(x=>x.id!=b.dataset.retry);
+    AGENTS.natepan.badge='녹음 중';AGENTS.natepan.cls='run';AGENTS.natepan.human=null;
+    AGENTS.natepan.sub='씬 14 다시 녹음 중';AGENTS.natepan.log.push(['방금','retry',who+'가 다시 시도 → 씬 14 녹음 재개']);
+    toast('다시 시도 — 사연 에이전트가 씬 14부터 이어서 갑니다');renderHome();}));
+  $('#todoList').querySelectorAll('[data-detail]').forEach(b=>b.addEventListener('click',()=>{
+    const c=CARDS.find(x=>x.id===b.dataset.detail);go({view:'card',agent:c.tr,card:c.id});}));
+  $('#todoList').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go({view:b.dataset.go})));
 }
 
-/* ── 생성 플로우 ── */
+/* ── D1 워크스페이스 ── */
+function renderWs(){
+  const tr=route.agent,a=AGENTS[tr];
+  const cards=CARDS.filter(c=>c.tr===tr);
+  $('#wsBody').innerHTML=`
+   <div class="ws-head"><span class="big" style="background:${CH[tr].c}"></span>
+     <h2>${CH[tr].nm} 에이전트</h2><span class="badge ${a.cls}">${a.badge}</span>
+     <span class="tiny" style="margin-left:auto">브레드크럼으로 홈에 돌아갈 수 있어요</span></div>
+
+   <div class="card" style="margin-bottom:14px">
+     <div class="sec-h" style="margin-top:0"><h2>지금 하는 일</h2>
+       ${a.cur?`<span class="tiny">「${a.cur}」</span>`:'<span class="tiny">실행 중인 에피소드 없음</span>'}</div>
+     ${a.step>=0?`<div class="stepper">${PIPE.map((p,i)=>
+        `<span class="step ${i<a.step?'done':i===a.step?'run':''}"><span class="sdot">${i<a.step?'✓':i+1}</span>${p}</span>${i<PIPE.length-1?'<span class="bar"></span>':''}`).join('')}</div>`:
+       `<div class="tiny">소재가 확정되면 파이프라인이 시작됩니다</div>`}
+     ${a.human?`<div class="notice" style="margin:8px 0">⏸ 에이전트가 <b>${a.human.gate}</b>을(를) ${a.human.since} 기다리고 있어요 — 홈 할 일에서 처리할 수 있습니다</div>`:''}
+     <div class="console" id="console">${a.log.map(l=>`<div><span class="t">${l[0]}</span><span class="hl">${l[1]}</span> ${l[2]}</div>`).join('')}</div>
+   </div>
+
+   <div class="sec-h"><h2>소재 카드 보드</h2><span class="tiny">카드를 누르면 상세로 (D2)</span></div>
+   <div class="board">${COLS.map(([k,n])=>{
+     const list=cards.filter(c=>c.col===k);
+     return `<div class="col"><h4>${n}<span class="num">${list.length}</span></h4>${
+       list.map(c=>`<button class="bcard" data-card="${c.id}"><b>${c.ttl}</b>
+         <span class="who">${c.owner?`${c.owner}가 맡음`:'아직 아무도 안 맡음'}${c.approved?` · ${c.approved} 확정`:''}</span></button>`).join('')||'<div class="tiny" style="padding:4px">비어 있음</div>'}</div>`}).join('')}</div>
+
+   <details class="drawer"><summary>채널 바이블 요약 — 잠금 자산, 여기서 못 바꿔요 (변경은 함께 결정으로)</summary>
+     <div class="card">
+       <div class="lockrow"><span>목소리</span><b>voice_id 확정 대기 · stability 0.55</b></div>
+       <div class="lockrow"><span>금지어</span><b>${tr==='drama'?'5개 (배우·스틸 참조 차단)':'3개'}</b></div>
+       <div class="lockrow"><span>BGM 세트</span><b>${tr==='playlist'?'없음 (곡이 본편)':'2곡'}</b></div>
+       <div class="lockrow"><span>자막 토큰</span><b>Noto Sans KR · 하단 중앙</b></div>
+     </div></details>`;
+  const cs=$('#console'); cs.scrollTop=cs.scrollHeight;
+  $('#wsBody').querySelectorAll('[data-card]').forEach(b=>b.addEventListener('click',()=>go({view:'card',agent:tr,card:b.dataset.card})));
+}
+
+/* ── D2 카드 상세 ── */
+function renderCard(){
+  const c=CARDS.find(x=>x.id===route.card);
+  const isOwner=c.owner===who, unowned=!c.owner;
+  const colIdx=COLS.findIndex(([k])=>k===c.col);
+  $('#cardBody').innerHTML=`
+   <div class="ws-head"><h2>${c.ttl}</h2>${tag(c.tr)}</div>
+   <div class="stepper" style="margin-bottom:12px">${COLS.map(([k,n],i)=>
+     `<span class="step ${i<colIdx?'done':i===colIdx?'run':''}"><span class="sdot">${i<colIdx?'✓':i+1}</span>${n}</span>${i<COLS.length-1?'<span class="bar"></span>':''}`).join('')}</div>
+   <div class="detail">
+     <div class="stack">
+       <div class="card"><h3 style="font-size:13.5px;margin-bottom:6px">왜 이 소재인가 — 확정 전에 확인하세요</h3>
+         <p style="margin:0" class="muted">${c.sum}</p>
+         ${c.score?`<div class="evidence">
+           <div class="card"><div class="k">아웃라이어 점수</div><div class="v num">${c.score}</div></div>
+           <div class="card"><div class="k">경쟁 평균 대비</div><div class="v num">${c.mult}</div></div>
+           <div class="card"><div class="k">출처</div><div class="v" style="font-size:12.5px;font-weight:600">${c.src}</div></div>
+         </div>`:`<div class="tiny" style="margin-top:8px">출처: ${c.src}</div>`}</div>
+       <div class="card"><h3 style="font-size:13.5px;margin-bottom:6px">이 카드의 이력</h3>
+         <div class="hist">${c.hist.map(h=>`<div class="logrow"><span class="t num">${h[0]}</span><span class="pill">${h[1]}</span><span>${h[2]}</span></div>`).join('')}</div></div>
+     </div>
+     <div class="stack">
+       <div class="gatebox"><h4>맡은 사람 (잠금)</h4>
+         ${c.owner?`<div class="hrow"><span class="pill">${c.owner}</span><b>${c.owner}가 맡은 카드</b></div>
+           ${!isOwner?`<div class="tiny" style="margin-top:6px">상태를 바꾸는 건 ${c.owner}만 할 수 있어요</div>`:''}`:
+          `<button class="primary" id="btnClaim" style="width:100%">내가 맡기</button>`}</div>
+       <div class="gatebox"><h4>소재 확정 (사람 게이트 1)</h4>
+         ${c.approved?`<div class="hrow"><span class="pill">${c.approved}</span><b>${c.approved}가 확정</b></div>`:
+          `<button class="primary" id="btnApproveCard" style="width:100%">소재 확정</button>
+           <div class="tiny" style="margin-top:6px">확정해야 에이전트가 대본을 시작해요</div>`}</div>
+       ${c.col==='approved'&&isOwner?`<button class="primary" id="btnMake" style="width:100%">만들기 시작 →</button>`:''}
+       ${c.col==='making'&&c.tr==='japan'?`<button id="btnToEdit" style="width:100%">편집 화면으로 →</button>`:''}
+       ${c.col==='review'?`<button class="primary" data-go-edit style="width:100%">검토하러 가기 →</button>`:''}
+     </div>
+   </div>`;
+  const bc=$('#btnClaim'); if(bc)bc.addEventListener('click',()=>{c.owner=who;c.hist.unshift(['방금',who,'맡음']);
+    toast(`내가 맡았어요 — 이제 ${who}만 이 카드를 진행할 수 있습니다`);renderCard();});
+  const ba=$('#btnApproveCard'); if(ba)ba.addEventListener('click',()=>{c.approved=who;if(c.col==='new')c.col='approved';
+    c.hist.unshift(['방금',who,'소재 확정']);TODO=TODO.filter(t=>t.card!==c.id);
+    toast('소재 확정 — 에이전트가 대본을 시작할 수 있어요');renderCard();});
+  const bm=$('#btnMake'); if(bm)bm.addEventListener('click',()=>{genSel=c.id==='k2'?'g1':genSel;go({view:'gen'})});
+  const bt=$('#btnToEdit'); if(bt)bt.addEventListener('click',()=>go({view:'edit'}));
+  const be=document.querySelector('[data-go-edit]'); if(be)be.addEventListener('click',()=>go({view:'edit'}));
+}
+
+/* ── D1 만들기 ── */
 const GENCARDS=[
  {id:'g1',tr:'japan',ttl:'일본 20대 평균 연봉의 함정',owner:'B',len:'12분',preset:'longform_16x9'},
  {id:'g2',tr:'drama',ttl:'시청률 역주행 드라마, 왜 지금 터졌나',owner:'A',len:'10분',preset:'longform_16x9'},
@@ -392,12 +617,11 @@ let genSel='g1', genRun=null;
 function renderGen(){
   $('#genCards').innerHTML=GENCARDS.map(c=>{
     const mine=c.owner===who, unowned=!c.owner;
-    return `<button class="card pick ${genSel===c.id?'on':''}" data-id="${c.id}" ${(!mine&&!unowned)?'':''}>
+    return `<button class="card pick ${genSel===c.id?'on':''}" data-id="${c.id}">
       <span class="hrow">${tag(c.tr)}<b>${c.ttl}</b></span>
       <span class="lock">${unowned?'아직 아무도 안 맡음':(mine?'내가 맡은 카드':`${c.owner}가 맡은 카드 — 잠김`)}</span></button>`;
   }).join('');
-  $('#genCards').querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>{
-    genSel=b.dataset.id; renderGen();}));
+  $('#genCards').querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>{genSel=b.dataset.id;renderGen()}));
   const c=GENCARDS.find(x=>x.id===genSel); const mine=c.owner===who, unowned=!c.owner;
   const lens=c.tr==='playlist'?['60분']:['10분','12분','15분'];
   $('#genRight').innerHTML=`
@@ -405,7 +629,7 @@ function renderGen(){
     <div class="tiny" style="margin:4px 0 2px">설정 칩 — 트랙 기본값이 미리 채워져 있어요</div>
     <div class="chips">${lens.map(l=>`<span class="chip ${l===c.len?'on':''}">${l}${l===c.len?' · 씬 26~32개':''}</span>`).join('')}
       <span class="chip on">${c.preset}</span><span class="chip">발행: 다음 빈 슬롯</span></div>
-    ${unowned?`<button class="primary" id="btnClaim">내가 맡기</button>`:
+    ${unowned?`<button class="primary" id="btnClaimG">내가 맡기</button>`:
       mine?`<button class="primary" id="btnStart" ${genRun?'disabled':''}>${genRun?'생성 중…':'생성 시작'}</button>`:
       `<button disabled>생성 시작</button><div class="notice" style="margin-top:8px">${c.owner}가 맡은 카드예요 — 맡은 사람만 시작할 수 있어요</div>`}
     <div class="pbar" ${genRun?'':'hidden'}><i id="pfill"></i></div>
@@ -413,7 +637,7 @@ function renderGen(){
   const st=[['① 대본','씬 28개 작성'],['② 목소리','씬별 녹음 + 길이 실측'],['③ 그림','수동 대기열 7건 — MJ에서 만들어 올려주세요'],['④ 조립','2트랙 믹스 + 챕터 마커']];
   $('#stages').innerHTML=st.map((s,i)=>`<div class="stage" data-i="${i}"><span class="ic">${i+1}</span>
     <span><span class="sn">${s[0]}</span><br><span class="ss">${s[1]}</span></span></div>`).join('');
-  const bc=$('#btnClaim'); if(bc)bc.addEventListener('click',()=>{c.owner=who;toast(`내가 맡았어요 — 이제 ${who}만 이 카드를 진행할 수 있습니다`);renderGen();});
+  const bc=$('#btnClaimG'); if(bc)bc.addEventListener('click',()=>{c.owner=who;toast(`내가 맡았어요`);renderGen();});
   const bs=$('#btnStart'); if(bs)bs.addEventListener('click',startGen);
   if(genRun)paintStages();
 }
@@ -424,19 +648,20 @@ function paintStages(){
     el.classList.toggle('run',i===genRun.step);
     if(i<genRun.step)el.querySelector('.ic').textContent='✓';
   });
-  $('#pfill').style.width=(genRun.step/4*100)+'%';
+  const pf=$('#pfill'); if(pf)pf.style.width=(genRun.step/4*100)+'%';
   if(genRun.step>=4){$('#genDone').innerHTML=`<div style="margin-top:12px"><button class="primary" id="goEdit">편집 화면으로</button></div>`;
-    $('#goEdit').addEventListener('click',()=>setView('edit'));}
+    $('#goEdit').addEventListener('click',()=>go({view:'edit'}));}
 }
 function startGen(){
-  genRun={step:0}; renderGen();
+  genRun={step:0};renderGen();
   const iv=setInterval(()=>{genRun.step++;
+    if(route.view!=='gen'){/* 서버가 소스 오브 트루스 — 화면 이탈해도 진행 */}
     if(genRun.step===3)toast('③ 그림 — 수동 대기열 7건이 남아 있어요 (자동 호출 안 함)');
     if(genRun.step>=4){clearInterval(iv);toast('조립 완료 — 검토를 기다립니다');}
-    paintStages();},1400);
+    if(route.view==='gen')paintStages();},1400);
 }
 
-/* ── 편집 ── */
+/* ── D1 편집 (+ D3 장면 패널) ── */
 const SCENES=[
  {id:1,ch:'훅',d:38,cap:'월급이 30년째 그대로라고?',nar:'1994년과 2024년, 일본 직장인의 실수령액은 거의 같습니다. 어떻게 이런 일이 가능했을까요.'},
  {id:2,ch:'훅',d:41,cap:'급여명세서 실물 공개',nar:'오늘은 도쿄 8년 차 회사원의 실제 급여명세서를 뜯어봅니다.'},
@@ -452,17 +677,16 @@ const CHCOLOR={'훅':'var(--ch-japan)','본론 1':'var(--ch-realestate)','본론
 function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function renderTimeline(){
   const total=SCENES.reduce((a,s)=>a+s.d,0);
-  $('#laneScene').innerHTML=SCENES.map(s=>`<div class="blk ${s.id===selScene?'sel':''} ${s.regen?'regen':''} ${s.flag?'flag':''}"
+  $('#laneScene').innerHTML=SCENES.map(s=>`<div class="blk ${s.id===selScene?'sel':''} ${s.regen?'regen':''}"
      data-id="${s.id}" style="width:${s.d/total*100}%;background:color-mix(in srgb,${CHCOLOR[s.ch]} 16%,var(--panel-2));"
      role="button" tabindex="0" aria-label="장면 ${s.id} ${s.cap}">${s.regen?'다시 만드는 중…':s.id+' · '+s.cap}</div>`).join('')
    +[240,420,600].map(m=>`<span class="mid" style="left:${m/total*100}%"><i>${m/60}:00</i></span>`).join('');
   $('#laneSub').innerHTML=SCENES.map(s=>`<div class="sub-blk" style="width:${s.d/total*100}%"></div>`).join('');
   $('#laneVoice').innerHTML=SCENES.map(s=>`<div class="wave" style="width:${s.d/total*100}%"></div>`).join('');
-  $('#ruler').innerHTML='';
   $('#laneScene').querySelectorAll('.blk').forEach(b=>{
-    const go=()=>{selScene=+b.dataset.id;renderEditor()};
-    b.addEventListener('click',go);
-    b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});
+    const go2=()=>{selScene=+b.dataset.id;renderEditor()};
+    b.addEventListener('click',go2);
+    b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go2()}});
   });
 }
 function renderPanel(){
@@ -485,7 +709,7 @@ function renderPanel(){
   $('#btnRegen').addEventListener('click',()=>{
     s.regen=true; renderEditor();
     toast('이 장면만 다시 만들어요 — 채널 바이블 + 앞뒤 문맥을 자동으로 넣었습니다. BGM은 그대로예요.');
-    setTimeout(()=>{s.regen=false; s.d=s.d+(s.id===3?4:2); renderEditor();
+    setTimeout(()=>{s.regen=false;s.d=s.d+2;if(route.view==='edit')renderEditor();
       toast(`장면 ${s.id} 완료 — 이음새 듣기로 경계를 확인하세요`);},2200);
   });
   $('#btnSeam').addEventListener('click',()=>toast(`▶ 장면 ${s.id===1?1:s.id-1}→${s.id} 경계 재생 중 (크로스페이드 80ms)`));
@@ -495,19 +719,17 @@ function renderEditor(){
   const owner='B', isOwner=who===owner;
   $('#reviewSlot').innerHTML = edState==='reviewed'
     ? `<span class="state-pill st-pass">검토 완료 (C)</span>`
-    : (isOwner
-       ? `<button disabled>검토 완료</button>`
-       : `<button class="primary" id="btnApprove">검토 완료</button>`);
+    : (isOwner ? `<button disabled>검토 완료</button>` : `<button class="primary" id="btnApprove">검토 완료</button>`);
   $('#editNotice').innerHTML = edState!=='reviewed'&&isOwner
     ? `<div class="notice" style="margin-top:10px">내 영상은 내가 승인할 수 없어요 — 검토 요청을 보내면 다른 사람 홈에 뜹니다. (서버도 403으로 막습니다)</div>`:'';
   $('#btnSched').disabled = edState!=='reviewed';
   const ba=$('#btnApprove'); if(ba)ba.addEventListener('click',()=>{
-    edState='reviewed'; toast(`검토 완료 — ${who}가 승인했어요. 발행 예약이 열렸습니다`); renderEditor();});
+    edState='reviewed';toast(`검토 완료 — ${who}가 승인했어요. 발행 예약이 열렸습니다`);renderEditor();});
   $('#btnReq').onclick=()=>toast('검토 요청 보냈어요 — 다른 두 사람의 홈 할 일에 떴습니다');
   $('#btnSched').onclick=()=>toast('발행 예약 — 예약 초안으로 올라가고, 공개 전환은 사람이 확인 후 합니다');
 }
 
-/* ── 함께 결정 ── */
+/* ── D1 함께 결정 ── */
 let voteTab='open';
 let VOTES=[
  {id:'v1',state:'open',tr:'japan',ttl:'이번 화 제목 고르기',by:'B',due:'34시간 남음',
@@ -545,9 +767,9 @@ function renderVotes(){
 $('#tabOpen').addEventListener('click',()=>{voteTab='open';renderVotes()});
 $('#tabDone').addEventListener('click',()=>{voteTab='done';renderVotes()});
 
-/* ── 기록 ── */
+/* ── D1 기록 ── */
 const LOGS=[
- {t:'오늘 14:22',p:'—',txt:'발행 확인됨(verify) — 플레이리스트 「비 오는 밤, 창가의 재즈」',warn:false},
+ {t:'오늘 14:22',p:'—',txt:'발행 확인됨(verify) — 플레이리스트 「비 오는 밤, 창가의 재즈」'},
  {t:'오늘 14:20',p:'C',txt:'발행 예약 — 플레이리스트 · 금 21:00 (예약 초안, 공개 전환은 사람이)'},
  {t:'오늘 11:05',p:'C',txt:'검토 완료 — 일본 머니 「엔저 시대 월급의 진실」'},
  {t:'오늘 10:48',p:'B',txt:'장면 7 다시 만듦 — 일본 머니 (재생성 크레딧 1,180자)'},
@@ -575,10 +797,24 @@ $('#usageBars').innerHTML=[['japan',62,18],['drama',34,9],['natepan',28,14],['re
    <div class="btrack"><span class="b1" style="width:${a}%"></span><span class="b2" style="width:${b}%"></span></div>
    <span class="num muted">${(a*1000).toLocaleString()} + 재생성 ${(b*1000).toLocaleString()}자</span></div>`).join('');
 
+/* ── 라이브 관제 시뮬레이션: 일본 머니 조립 진행 ── */
+const LIVE=[[74,'씬 20/28 이어붙이는 중 · 경계 크로스페이드 80ms'],[79,'씬 22/28 · 미드롤 챕터 마커 7:00 삽입'],
+  [85,'씬 24/28 · 자막 번인'],[92,'씬 27/28 · LUFS 검사 통과 (-14.1 / -26.0)'],[100,'조립 완료 11:42 → 검토를 기다려요']];
+let li=0;
+const liveTimer=setInterval(()=>{
+  if(li>=LIVE.length){clearInterval(liveTimer);return}
+  const [p,msg]=LIVE[li++]; const a=AGENTS.japan;
+  a.prog=p; a.log.push([new Date().toTimeString().slice(0,5),'assemble',msg]);
+  if(p>=100){a.badge='사람 대기';a.cls='human';a.step=4;a.human={gate:'최종 검토',since:'방금'};a.sub='최종 검토를 기다려요';}
+  else a.badge=`조립 중 ${p}%`;
+  renderRail();
+  if(route.view==='home')renderFleet();
+  if(route.view==='ws'&&route.agent==='japan')renderWs();
+},5000);
+
 /* ── 시점 전환 ── */
 $('#who').addEventListener('change',e=>{who=e.target.value;
-  toast(`이제 ${who} 시점으로 봅니다 — 잠금·셀프 검수 필터가 바뀌어요`);
-  renderHome();renderGen();renderEditor();renderVotes();});
+  toast(`이제 ${who} 시점으로 봅니다 — 잠금·셀프 검수 필터가 바뀌어요`);render();});
 
-renderHome();renderGen();renderEditor();renderVotes();renderLog();setView('home');
+render();
 </script>
