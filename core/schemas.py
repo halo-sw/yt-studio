@@ -66,6 +66,30 @@ class SceneContext(BaseModel):
     next_head: str = ""
 
 
+class Emotion(BaseModel):
+    """감정전달 — 씬의 감정 톤과 낭독(TTS) 지시.
+
+    tone은 트랙별 감정 아크(script.TRACK_STRUCTURES)를 따르고, delivery는
+    tts.py가 보이스 파라미터·포즈에 반영할 낭독 지시다.
+    """
+
+    tone: str = ""      # 예: "궁금증+불안", "긴장 피크", "안도"
+    delivery: str = ""  # 예: "차분히, 마지막 문장 앞 한 박자 쉬고 강조"
+
+
+class Conte(BaseModel):
+    """콘테 — 전문 유튜버 대본의 씬 단위 연출 정보 (v5 보고서 반영).
+
+    내레이션만으로는 영상이 안 된다. 씬마다 아래 4요소를 함께 생성해
+    정보전달·감정전달·구도·시각을 종합 제공한다 (script.py가 강제).
+    """
+
+    info_point: str = ""       # 정보전달: 이 씬이 전달하는 단 하나의 정보
+    emotion: Emotion = Field(default_factory=Emotion)
+    composition: str = ""      # 구도: 샷 사이즈·피사체·시선·자막 여백
+    visual_direction: str = "" # 시각: 만들 사람이 그대로 만들 수 있는 연출 설명
+
+
 class Scene(BaseModel):
     """씬 JSON v1. 부분 재생성(규칙 5-2)의 최소 단위.
 
@@ -84,6 +108,7 @@ class Scene(BaseModel):
         default=None, ge=0.0, description="tts.py가 ffprobe로 실측 후 기입 (초)"
     )
     context: SceneContext = Field(default_factory=SceneContext)
+    conte: Conte = Field(default_factory=Conte)
 
     def fact_refs(self) -> list[str]:
         """내레이션·자막이 참조하는 fact_sheet 키 목록 (규칙 5-3).

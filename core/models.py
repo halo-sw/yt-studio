@@ -112,6 +112,8 @@ class SceneModel(Base):
     # 규칙 5-2: 부분 재생성 시 억양·문맥 연결용 컨텍스트.
     prev_tail: Mapped[str] = mapped_column(Text, default="")
     next_head: Mapped[str] = mapped_column(Text, default="")
+    # 콘테 — 정보 포인트/감정(톤·낭독)/구도/시각 연출 (schemas.Conte 직렬화).
+    conte: Mapped[dict] = mapped_column(JSON, default=dict)
     # 씬 레이어 오디오(내레이션·효과음, -14 LUFS) 경로.
     # BGM은 에피소드 글로벌 트랙이므로 씬에 컬럼이 없다 (규칙 5-1).
     audio_path: Mapped[str | None] = mapped_column(String(500), nullable=True)

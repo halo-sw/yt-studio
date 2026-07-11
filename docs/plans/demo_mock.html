@@ -243,8 +243,17 @@ section.view.on{display:block;animation:rise .45s var(--ease)}
 .srow .no{font-family:var(--mono);font-size:11.5px;color:var(--faint)}
 .srow .chap{font-size:11px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--panel-2);border:1px solid var(--line)}
 .srow .dur{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--faint)}
-.srow .nar{font-size:14.5px;line-height:1.65;margin:0 0 6px}
+.srow .nar{font-size:14.5px;line-height:1.65;margin:0 0 8px}
 .srow .capline{font-size:12px;color:var(--faint);margin-bottom:10px}
+/* 콘테 4요소 — 정보전달·감정전달·구도 (시각은 좌측 카드) */
+.cmeta{display:flex;flex-direction:column;gap:0;margin-bottom:10px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.crow{display:grid;grid-template-columns:48px 1fr;gap:10px;padding:7px 12px;font-size:12.5px;background:var(--panel-2)}
+.crow+.crow{border-top:1px dashed var(--line)}
+.crow .mk{color:var(--faint);font-size:11px;font-weight:700;padding-top:1px}
+.crow .mv{color:var(--dim);line-height:1.5}
+.crow .mv b{color:var(--text)}
+.tone{display:inline-block;font-size:11px;font-weight:700;padding:1px 9px;border-radius:99px;margin-right:6px;
+  background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
 .srow .acts{display:flex;gap:8px;flex-wrap:wrap}
 .srow .acts button{padding:6px 14px;font-size:12.5px}
 .factchip{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);
@@ -455,7 +464,7 @@ function setView(v){view=v;
   $('#viewTitle').textContent=NAV.find(([k])=>k===v)[1];
   $('#hello').textContent = v==='home' ? `${NAMES[who]}님, 처리할 일 ${todoCount()}개예요` :
     v==='gen' ? '소재 고르고, 버튼 하나면 끝' :
-    v==='edit' ? '일본 머니 · 엔저 시대 월급의 진실 — 장면별 시나리오와 들어갈 그림' :
+    v==='edit' ? '일본 머니 · 엔저 시대 월급의 진실 — 장면별 콘테 (정보·감정·구도·그림)' :
     v==='vote' ? '2명이 고르면 바로 결정돼요' : '누가 뭘 했는지, 돈이 어디 쓰이는지';
   renderRail();
   if(v==='home')renderHome(); if(v==='gen')renderGen(); if(v==='edit')renderEditor();
@@ -593,6 +602,13 @@ const BANNED={japan:['무조건 오른다','확실한 투자','지금 사야'],
  realestate:['무조건 오른다','영끌 추천','지금이 바닥'],
  natepan:['실화 그대로','원문 그대로'],playlist:['무료 다운로드','음원 추출']};
 const GLOSS={japan:4,drama:2,realestate:4,natepan:2,playlist:1};
+/* 트랙별 구성·감정 아크 — core/script.py TRACK_STRUCTURES와 동일 */
+const STRUCT={
+ japan:[['훅','궁금증+불안'],['페르소나 인사','신뢰'],['제도 기본','이해'],['케이스 계산 A/B','몰입'],['함정·반전','긴장 피크'],['체크리스트','안도'],['아웃트로','여운']],
+ drama:[['콜드오픈','도발'],['맥락·고지','정돈'],['핵심 장면 해석','몰입 상승'],['반전 분석','긴장 피크'],['결말 해석·대안','카타르시스'],['비하인드','친밀'],['CTA','여운']],
+ realestate:[['훅','궁금증'],['온이 인사','친근'],['개요','이해'],['자격 6항목','집중'],['일정','긴박'],['비용 계산','몰입'],['함정','긴장 피크'],['신청 방법','안도'],['아웃트로','여운']],
+ natepan:[['사연 도입','호기심'],['갈등 전개','몰입'],['절정','감정 피크'],['정리·질문','여운']],
+ playlist:[['인트로 카드','무드 셋'],['큐레이션 노트','차분'],['아웃트로','여운']]};
 function lenSpec(tr,min){const sc=min/10;const [a,b]=tr==='japan'?[3400,3600]:[3300,3600];
  return {scenes:`${Math.round(26*sc)}~${Math.round(32*sc)}개`,
    chars:`${Math.round(a*sc).toLocaleString()}~${Math.round(b*sc).toLocaleString()}자`,
@@ -605,6 +621,8 @@ function renderPromptPanel(c){
      <span class="src-note" style="margin-left:auto">core/script.py · build_system_prompt()</span></summary>
    <div class="rows">
      <div class="prow"><span class="k">페르소나</span><span class="v">${PERSONA[c.tr]}</span></div>
+     <div class="prow"><span class="k">구성·감정</span><span class="v">${STRUCT[c.tr].map(([ch,em])=>`${ch}<span class="tiny">(${em})</span>`).join(' → ')}</span></div>
+     <div class="prow"><span class="k">콘테</span><span class="v">씬마다 <b>정보 1포인트 · 감정 톤+낭독 지시 · 구도 · 그림 연출</b>을 함께 생성 — 같은 샷/그림 종류 3연속 금지, 마지막 챕터는 댓글 유도</span></div>
      <div class="prow"><span class="k">바이블 주입</span><span class="v">용어집 ${GLOSS[c.tr]}개 표기 강제 · 금지어 ${BANNED[c.tr].length}개<br>
        ${BANNED[c.tr].map(b=>`<span class="ban">${b}</span>`).join('')}</span></div>
      <div class="prow"><span class="k">길이 제어</span><span class="v">${min}분 = 씬 ${sp.scenes} · 내레이션 ${sp.chars} — 미달이면 챕터 보강 씬 자동 재요청</span></div>
@@ -641,20 +659,36 @@ function startGen(){
 /* ── 편집 = 시나리오 + 그림 설명 (스토리보드) ── */
 const SCENES=[
  {id:1,ch:'훅',d:38,cap:'월급이 30년째 그대로라고?',nar:'1994년과 2024년, 일본 직장인의 실수령액은 거의 같습니다. 어떻게 이런 일이 가능했을까요.',
+  info:'실수령액이 30년째 제자리라는 사실',tone:'궁금증+불안',deliv:'질문형으로 끝을 올려서 — "가능했을까요" 앞 반 박자 쉼',
+  compo:'와이드에서 숫자 클로즈업으로 전환, 하단 자막 여백',
   vt:'자료 화면',manual:false,vd:'<b>1994년과 2024년 급여명세서 두 장을 나란히</b>, 실수령액 항목만 밝게 남기고 나머지는 어둡게. 두 숫자가 거의 같다는 게 한눈에 보여야 해요. 효과: 숫자 줌 콜아웃.'},
  {id:2,ch:'훅',d:41,cap:'급여명세서 실물 공개',nar:'오늘은 도쿄 8년 차 회사원의 실제 급여명세서를 뜯어봅니다.',
+  info:'오늘 자료가 실제 명세서라는 신뢰',tone:'신뢰·기대',deliv:'보통 속도, "실제"에 강세',
+  compo:'미디엄 샷, 피사체 오른쪽·시선 왼쪽, 좌측 자막 여백',
   vt:'일러스트',manual:true,vd:'<b>도쿄 야경, 퇴근길 회사원 뒷모습</b>. 웜톤 필름 룩, 네온 반사. 인물 얼굴은 안 보이게. 효과: Ken Burns 천천히 줌인.'},
  {id:3,ch:'본론 1',d:96,cap:'평균 연봉의 함정',nar:'일본 평균 연봉은 {{fact:jp_avg_salary}}엔. 하지만 이 숫자에는 함정이 있습니다.',fact:true,
+  info:'평균 연봉 수치, 그리고 함정의 존재 예고',tone:'차분한 이해→의심',deliv:'수치는 또박또박, "함정"에서 톤을 한 단계 낮춤',
+  compo:'차트 풀샷 — 글자 많은 화면이라 다음 씬은 여백 있게',
   vt:'차트',manual:false,vd:'<b>평균 vs 중앙값 연봉 막대 차트</b>. 수치는 사실 시트(jp_avg_salary)에서 자동으로 그려져요 — 시트가 바뀌면 차트도 다시 그려져요.'},
  {id:4,ch:'본론 1',d:88,cap:'세금과 사회보험',nar:'명세서에서 먼저 사라지는 것은 후생연금입니다.',
+  info:'공제 항목이 실수령액을 깎는 구조',tone:'집중',deliv:'항목 나열은 리듬 있게 끊어 읽기',
+  compo:'클로즈업(명세서 항목), 줌 주석 따라 시선 유도',
   vt:'자료 화면',manual:false,vd:'<b>급여명세서 공제 항목 확대</b>, 후생연금 줄만 형광펜 강조. 나머지 항목은 블러 처리.'},
  {id:5,ch:'본론 2',d:112,cap:'30년 임금 정체의 구조',nar:'버블 붕괴 이후 기업들은 임금 대신 고용을 지켰습니다.',
+  info:'기업이 임금 대신 고용을 지킨 30년의 배경',tone:'몰입·무게',deliv:'느리게, 서사 톤으로',
+  compo:'와이드, 인물 없는 풍경, 상단 자막 여백',
   vt:'일러스트',manual:true,vd:'<b>셔터 내린 상점가, 1990년대 분위기</b>. 무채색 바탕에 앰버 가로등 포인트 하나. 쓸쓸하지만 과장 없이.'},
  {id:6,ch:'본론 2',d:104,cap:'엔저가 바꾼 체감 월급',nar:'환율이 바뀌자 같은 월급의 구매력이 달라졌습니다.',
+  info:'환율이 구매력을 바꾸는 메커니즘',tone:'긴장 상승 (미드롤 직전)',deliv:'점점 빠르게 — 마지막 문장을 끊어 클리프행어로',
+  compo:'차트 + 급락 구간 줌 콜아웃, 시선을 우하단으로',
   vt:'차트',manual:false,vd:'<b>엔/달러 환율 30년 라인 차트</b> + 같은 월급의 구매력 변화 오버레이. 미드롤 직전이라 마지막 프레임에서 급락 구간을 강조.'},
  {id:7,ch:'본론 2',d:98,cap:'해외 이직 러시',nar:'젊은 세대가 국경을 넘기 시작한 이유입니다.',
+  info:'청년 해외 이직이 앞 구조의 결과라는 연결',tone:'긴장 피크→전환',deliv:'첫 문장은 강하게, 이후 담담하게 풀기',
+  compo:'미디엄, 뒷모습 피사체, 오른쪽 자막 여백',
   vt:'일러스트',manual:true,vd:'<b>공항 출국장, 캐리어를 끄는 젊은 직장인 뒷모습</b>. 이른 아침 광선, 화면 오른쪽 여백 크게(자막 자리).'},
  {id:8,ch:'마무리',d:125,cap:'그래서, 우리는?',nar:'이 이야기는 일본만의 이야기가 아닐지도 모릅니다.',
+  info:'한국도 같은 구조일 수 있다는 질문 — 댓글 유도',tone:'여운',deliv:'느리게, 마지막 질문 뒤 2초 무음',
+  compo:'와이드 정적 샷, 중앙 자막',
   vt:'일러스트',manual:true,vd:'<b>새벽 사무실 창가 와이드 샷</b>. 인물 없이 빈 책상과 도시. 채도 낮게, 여운 있게 — 엔딩 멘트가 얹히는 장면.'},
 ];
 let edState='rendered';
@@ -679,6 +713,11 @@ function renderStoryboard(){
           ${isCliff?`<span class="cliff">미드롤 직전 — 클리프행어</span>`:''}
           <span class="dur">${s.d}초</span></div>
         <p class="nar">${s.regen?'다시 만드는 중…':narHtml}</p>
+        <div class="cmeta">
+          <div class="crow"><span class="mk">정보</span><span class="mv">${s.info}</span></div>
+          <div class="crow"><span class="mk">감정</span><span class="mv"><span class="tone">${s.tone}</span>${s.deliv}</span></div>
+          <div class="crow"><span class="mk">구도</span><span class="mv">${s.compo}</span></div>
+        </div>
         <div class="capline">자막: ${s.cap}</div>
         <div class="acts">
           <button class="primary" data-regen="${s.id}" ${s.regen?'disabled':''}>이 장면만 다시 만들기</button>

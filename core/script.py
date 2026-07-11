@@ -20,7 +20,7 @@ import os
 import re
 from dataclasses import dataclass, field
 
-from core.schemas import Bible, Manifest, Scene, SceneContext, SceneVisual, Track
+from core.schemas import Bible, Conte, Emotion, Manifest, Scene, SceneContext, SceneVisual, Track
 
 # ---------------------------------------------------------------------------
 # 규칙 5-7 — 길이 제어 스펙 (10분 기준을 분 단위로 스케일)
@@ -88,14 +88,88 @@ TRACK_PROMPTS: dict[Track, str] = {
 
 
 # ---------------------------------------------------------------------------
-# 프롬프트 조립 — "만들기 시작"이 실제로 보내는 내용
+# 트랙별 구성 블루프린트 — v5 보고서 §3의 구성·감정 아크 (챕터, 목적, 감정 톤)
 # ---------------------------------------------------------------------------
+
+TRACK_STRUCTURES: dict[Track, list[tuple[str, str, str]]] = {
+    Track.JAPAN: [
+        ("훅", "손익 질문으로 시작 — 40초 내", "궁금증+가벼운 불안"),
+        ("페르소나 인사", "은행 OB 페르소나가 신뢰를 만든다", "신뢰·안정"),
+        ("제도 기본", "제도의 뼈대를 쉬운 말로", "차분한 이해"),
+        ("케이스 계산 A/B", "구체적 인물 두 명의 금액 비교", "몰입·비교 긴장"),
+        ("함정·반전", "다들 놓치는 조건, 금액이 뒤집힌다", "긴장 피크"),
+        ("체크리스트", "시청자가 할 일 정리", "안도·정리"),
+        ("아웃트로", "다음 화 예고 + 댓글 질문 유도", "여운"),
+    ],
+    Track.REALESTATE: [
+        ("훅", "이 공고로 얼마를 아끼는지부터", "궁금증"),
+        ("온이 인사", "캐릭터 인사 — 립싱크 컷", "친근"),
+        ("개요", "공고 핵심 3줄", "이해"),
+        ("자격 (6항목×4비트)", "항목마다: 조건→예시→함정→확인법", "집중"),
+        ("일정", "달력 기준 데드라인", "긴박"),
+        ("비용 계산", "실제 납입 금액 계산", "몰입"),
+        ("함정", "떨어지는 사람들의 공통 실수", "긴장 피크"),
+        ("신청 방법", "따라 하면 되는 단계", "안도"),
+        ("아웃트로", "다음 공고 예고 + 댓글 유도", "여운"),
+    ],
+    Track.DRAMA: [
+        ("콜드오픈", "논쟁적 질문 하나로 시작", "도발·호기심"),
+        ("맥락·고지", "최소 줄거리 + 스포일러 고지", "정돈"),
+        ("핵심 장면 해석", "장면 3~4개 — 요약은 짧게, 분석은 길게", "몰입 상승"),
+        ("반전 분석", "그 반전이 작동한 장치 해부", "긴장 피크"),
+        ("결말 해석·대안", "결말 해석 + 대안 시나리오 제시", "카타르시스"),
+        ("공개 비하인드", "공개된 출처의 비하인드만", "친밀"),
+        ("CTA", "당신의 해석은? 댓글 유도", "여운"),
+    ],
+    Track.NATEPAN: [
+        ("사연 도입", "화자와 상황 설정 — 모티프 결합 재창작", "호기심"),
+        ("갈등 전개", "갈등이 쌓이는 과정", "몰입"),
+        ("절정", "감정이 터지는 지점", "감정 피크"),
+        ("정리·질문", "여운 정리 + '여러분이라면?' 댓글 유도", "여운"),
+    ],
+    Track.PLAYLIST: [
+        ("인트로 카드", "10초 — 오늘의 무드 한 줄", "무드 셋"),
+        ("큐레이션 노트", "선곡 이유 1~2씬 (YPP 방어)", "차분"),
+        ("아웃트로", "다음 믹스 예고", "여운"),
+    ],
+}
+
+
+def structure_block(track: Track) -> str:
+    rows = TRACK_STRUCTURES[track]
+    return "\n".join(
+        f"  {i + 1}. {ch} — 목적: {purpose} / 감정: {tone}"
+        for i, (ch, purpose, tone) in enumerate(rows)
+    )
+
+
+# ---------------------------------------------------------------------------
+# 콘테 규칙 — 정보전달·감정전달·구도·시각을 씬마다 강제
+# ---------------------------------------------------------------------------
+
+CONTE_RULES = (
+    "[콘테 규칙 — 씬마다 4요소를 반드시 채운다]\n"
+    "1. 정보전달(info_point): 1씬 1포인트. 이 씬에서 시청자가 얻는 것 한 문장.\n"
+    "   챕터의 '목적'에 복무해야 하고, 직전 씬과 중복 금지.\n"
+    "2. 감정전달(emotion): tone은 위 구성표의 감정 아크를 따른다. 직전 씬에서\n"
+    "   자연스럽게 이어지게 — 급락·급등 금지, 미드롤 직전은 반드시 긴장 피크.\n"
+    "   delivery는 낭독 지시: 속도(빠르게/보통/느리게), 쉼 위치, 강조 단어.\n"
+    "3. 구도(composition): 샷 사이즈(와이드/미디엄/클로즈업) + 피사체와 시선\n"
+    "   방향 + 자막 들어갈 여백 위치를 명시. 같은 샷 사이즈 3연속 금지(컷 리듬).\n"
+    "   글자 많은 화면(차트·자료) 다음 씬은 여백 있는 화면으로.\n"
+    "4. 시각(visual_direction): 만들 사람이 이 문장만 보고 그대로 만들 수 있게\n"
+    "   — 소재, 톤/조명, 카메라 효과까지. visual.type 3연속 동일 금지.\n"
+    "   chart 타입은 반드시 어떤 fact 키를 그리는지 명시."
+)
 
 SCENE_JSON_SPEC = (
     '각 씬은 다음 JSON으로 출력한다:\n'
     '{"scene_id": int, "chapter": str, "narration": str, "caption": str,\n'
     ' "visual": {"type": "slide|chart|doc_highlight|illust|clip|loop_art",'
-    ' "ref": "생성 프롬프트 또는 에셋 힌트", "effect": "kenburns|zoom_callout|none"}}\n'
+    ' "ref": "생성 프롬프트 또는 에셋 힌트", "effect": "kenburns|zoom_callout|none"},\n'
+    ' "conte": {"info_point": str,'
+    ' "emotion": {"tone": str, "delivery": str},'
+    ' "composition": str, "visual_direction": str}}\n'
     "전체 출력은 씬 객체의 JSON 배열 하나여야 한다. 배열 밖 텍스트 금지."
 )
 
@@ -107,6 +181,10 @@ def build_system_prompt(track: Track, bible: Bible, spec: LengthSpec) -> str:
     midroll_txt = ", ".join(f"{s // 60}분" for s in spec.midrolls)
     return (
         f"{TRACK_PROMPTS[track]}\n\n"
+        f"[영상 구성 — 이 순서와 감정 아크를 따른다 (v5 보고서 §3)]\n"
+        f"{structure_block(track)}\n"
+        f"마지막 챕터는 반드시 댓글 유도로 끝낸다.\n\n"
+        f"{CONTE_RULES}\n\n"
         f"[채널 바이블 — 잠금 자산, 위반 금지]\n"
         f"용어집(이 표기만 사용):\n{glossary}\n"
         f"금지어: {banned}\n\n"
@@ -151,8 +229,9 @@ def build_regen_prompt(scene: Scene, bible: Bible, manifest: Manifest) -> str:
         f"[기존 씬]\n{scene.model_dump_json(exclude={'duration'})}\n\n"
         f"[금지어]: {', '.join(bible.banned_phrases) or '(없음)'}\n"
         f"[fact 키]: {', '.join(manifest.fact_sheet.facts)}\n"
-        f"수치는 {{{{fact:키}}}} 토큰으로만. 같은 scene_id·chapter를 유지한 씬 JSON\n"
-        f"객체 하나만 출력한다."
+        f"수치는 {{{{fact:키}}}} 토큰으로만. 같은 scene_id·chapter를 유지하고,\n"
+        f"콘테 4요소(info_point/emotion/composition/visual_direction)도 다시 채운\n"
+        f"씬 JSON 객체 하나만 출력한다. 감정 톤은 앞뒤 씬 사이에 자연스럽게."
     )
 
 
@@ -160,6 +239,8 @@ def prompt_summary(track: Track, bible: Bible, spec: LengthSpec) -> dict:
     """UI 노출용 요약 — '이 버튼이 실제로 보내는 프롬프트' 확인 패널의 데이터."""
     return {
         "track_persona": TRACK_PROMPTS[track].splitlines()[0],
+        "structure": [ch for ch, _, _ in TRACK_STRUCTURES[track]],
+        "emotion_arc": [tone for _, _, tone in TRACK_STRUCTURES[track]],
         "glossary_terms": len(bible.glossary),
         "banned_phrases": list(bible.banned_phrases),
         "scenes": f"{spec.min_scenes}~{spec.max_scenes}개",
@@ -167,6 +248,7 @@ def prompt_summary(track: Track, bible: Bible, spec: LengthSpec) -> dict:
         "hook": f"{spec.hook_seconds}초 내",
         "midroll_cliffhangers": [f"{s // 60}분" for s in spec.midrolls],
         "fact_rule": "수치는 {{fact:key}} 토큰만 허용",
+        "conte": "씬마다 정보 1포인트 · 감정 톤+낭독 지시 · 구도(샷 3연속 금지) · 시각 연출",
     }
 
 
@@ -219,6 +301,48 @@ def lint_fact_rule(scenes: list[Scene]) -> list[str]:
     return hits
 
 
+_SHOT_SIZES = ("클로즈업", "미디엄", "와이드")
+
+
+def _shot_size(composition: str) -> str | None:
+    for size in _SHOT_SIZES:  # 클로즈업을 먼저 — '미디엄 클로즈업' 같은 표기 대비
+        if size in composition:
+            return size
+    return None
+
+
+def lint_conte(scenes: list[Scene]) -> list[str]:
+    """콘테 린트 — 정보전달·감정전달·구도·시각이 씬마다 채워졌고 리듬 규칙을
+    지키는지 검사한다. 위반은 qc 실패가 아니라 재생성 대상 씬 지정에 쓴다."""
+    issues: list[str] = []
+    for s in scenes:
+        c = s.conte
+        if not c.info_point:
+            issues.append(f"scene {s.scene_id}: info_point 없음 (정보전달)")
+        if not c.emotion.tone or not c.emotion.delivery:
+            issues.append(f"scene {s.scene_id}: 감정 톤/낭독 지시 불완전 (감정전달)")
+        if not c.composition:
+            issues.append(f"scene {s.scene_id}: composition 없음 (구도)")
+        if not c.visual_direction:
+            issues.append(f"scene {s.scene_id}: visual_direction 없음 (시각)")
+    # 컷 리듬: 같은 샷 사이즈 3연속 금지
+    for i in range(2, len(scenes)):
+        sizes = [_shot_size(scenes[j].conte.composition) for j in (i - 2, i - 1, i)]
+        if sizes[0] and sizes[0] == sizes[1] == sizes[2]:
+            issues.append(f"scene {scenes[i].scene_id}: 같은 샷({sizes[0]}) 3연속 — 컷 리듬 위반")
+    # 시각 다양성: visual.type 3연속 동일 금지
+    for i in range(2, len(scenes)):
+        types = [scenes[j].visual.type.value for j in (i - 2, i - 1, i)]
+        if types[0] == types[1] == types[2]:
+            issues.append(f"scene {scenes[i].scene_id}: visual.type {types[0]} 3연속")
+    # 정보 중복: 연속 씬의 info_point 동일 금지
+    for i in range(1, len(scenes)):
+        a, b = scenes[i - 1].conte.info_point, scenes[i].conte.info_point
+        if a and a == b:
+            issues.append(f"scene {scenes[i].scene_id}: info_point가 직전 씬과 동일")
+    return issues
+
+
 def _attach_context(scenes: list[Scene]) -> list[Scene]:
     """규칙 5-2: 각 씬에 prev_tail/next_head를 기입해 재생성 대비."""
     for i, s in enumerate(scenes):
@@ -234,27 +358,46 @@ def parse_scenes(raw: str, track: Track) -> list[Scene]:
     if not m:
         raise ValueError("씬 JSON 배열을 찾지 못함")
     items = json.loads(m.group(0))
-    scenes = [
-        Scene(
+    scenes = []
+    for it in items:
+        raw_conte = it.get("conte", {})
+        scenes.append(Scene(
             scene_id=it["scene_id"], track=track, chapter=it["chapter"],
             narration=it["narration"], caption=it.get("caption", ""),
             visual=SceneVisual(**it["visual"]),
-        )
-        for it in items
-    ]
+            conte=Conte(
+                info_point=raw_conte.get("info_point", ""),
+                emotion=Emotion(**raw_conte.get("emotion", {})),
+                composition=raw_conte.get("composition", ""),
+                visual_direction=raw_conte.get("visual_direction", ""),
+            ),
+        ))
     return _attach_context(scenes)
 
 
 def _mock_scenes(manifest: Manifest, spec: LengthSpec) -> list[Scene]:
-    """API 키 없이 파이프라인 e2e를 돌리기 위한 결정적 목 생성기."""
-    chapters = manifest.chapters or ["훅", "본론 1", "본론 2", "마무리"]
+    """API 키 없이 파이프라인 e2e를 돌리기 위한 결정적 목 생성기.
+
+    실제 생성과 같은 형태로 콘테 4요소를 채운다 — 트랙 구성표의 챕터·감정
+    아크를 따르고, 샷 사이즈와 visual.type을 회전시켜 리듬 규칙을 지킨다.
+    """
+    structure = TRACK_STRUCTURES[manifest.track]
     n = spec.min_scenes
     per_scene = max(spec.min_chars // n + 1, 60)
     fact_keys = list(manifest.fact_sheet.facts) or ["sample_metric"]
+    shot_cycle = ["와이드", "미디엄", "클로즈업"]
+    type_cycle = ["slide", "illust", "chart"] if manifest.track is not Track.PLAYLIST else ["loop_art", "slide", "illust"]
+    delivery_cycle = [
+        "보통 속도, 문장 끝을 또렷하게",
+        "살짝 빠르게, 핵심 단어에 강세",
+        "느리게, 마지막 문장 앞에서 한 박자 쉼",
+    ]
     scenes = []
     for i in range(n):
-        chapter = chapters[min(i * len(chapters) // n, len(chapters) - 1)]
+        row = structure[min(i * len(structure) // n, len(structure) - 1)]
+        chapter, purpose, tone = row
         fact = fact_keys[i % len(fact_keys)]
+        vtype = type_cycle[i % 3]
         base = (
             f"{manifest.outline}에 대한 {chapter} 파트 {i + 1}번째 이야기입니다. "
             f"핵심 수치는 {{{{fact:{fact}}}}}입니다. "
@@ -264,7 +407,17 @@ def _mock_scenes(manifest: Manifest, spec: LengthSpec) -> list[Scene]:
         scenes.append(Scene(
             scene_id=i + 1, track=manifest.track, chapter=chapter,
             narration=narration, caption=f"{chapter} · {i + 1}",
-            visual=SceneVisual(type="slide", ref=f"mock/scene_{i + 1}", effect="kenburns"),
+            visual=SceneVisual(type=vtype, ref=f"mock/scene_{i + 1}", effect="kenburns"),
+            conte=Conte(
+                info_point=f"{purpose} (포인트 {i + 1})",
+                emotion=Emotion(tone=tone, delivery=delivery_cycle[i % 3]),
+                composition=f"{shot_cycle[i % 3]} 샷, 피사체 중앙, 하단 자막 여백 확보",
+                visual_direction=(
+                    f"{chapter} 분위기의 {vtype} — {purpose}를 한 화면으로. "
+                    f"채널 스타일 앵커 톤 유지"
+                    + (f", fact:{fact} 수치를 그린다" if vtype == "chart" else "")
+                ),
+            ),
         ))
     return _attach_context(scenes)
 

@@ -101,3 +101,56 @@ def test_lint_fact_rule_catches_raw_numbers():
 def test_prompt_summary_for_ui():
     s = prompt_summary(Track.JAPAN, load_bible(Track.JAPAN), LengthSpec.for_minutes(12, Track.JAPAN))
     assert s["banned_phrases"] and "fact" in s["fact_rule"]
+    assert "훅" in s["structure"] and "긴장 피크" in s["emotion_arc"]
+
+
+# ── 콘테 (v5 보고서: 정보전달·감정전달·구도·시각) ──
+
+def test_system_prompt_contains_structure_and_conte_rules():
+    from core.script import lint_conte
+    bible = load_bible(Track.JAPAN)
+    sp = build_system_prompt(Track.JAPAN, bible, LengthSpec.for_minutes(12, Track.JAPAN))
+    # 트랙 구성 블루프린트 (보고서 §3 ①)
+    assert "케이스 계산 A/B" in sp and "함정·반전" in sp and "체크리스트" in sp
+    # 감정 아크 + 콘테 4요소 규칙
+    assert "긴장 피크" in sp
+    assert "info_point" in sp and "delivery" in sp
+    assert "샷 사이즈 3연속 금지" in sp or "3연속 금지" in sp
+    assert "댓글 유도" in sp  # 공통 길이 공학: 마지막 챕터 댓글 유도
+
+
+def test_drama_structure_is_critique_shaped():
+    sp = build_system_prompt(Track.DRAMA, load_bible(Track.DRAMA),
+                             LengthSpec.for_minutes(12, Track.DRAMA))
+    assert "콜드오픈" in sp and "반전 분석" in sp and "대안 시나리오" in sp
+
+
+def test_mock_scenes_have_full_conte():
+    from core.script import lint_conte
+    scenes, report = generate_script(make_manifest(), load_bible(Track.JAPAN),
+                                     minutes=10, api_key=None)
+    assert report.ok
+    issues = lint_conte(scenes)
+    assert issues == [], issues  # 4요소 완비 + 샷/타입 리듬 + 정보 중복 없음
+    s = scenes[0]
+    assert s.conte.info_point and s.conte.emotion.tone and s.conte.emotion.delivery
+    assert s.conte.composition and s.conte.visual_direction
+    # 감정 아크가 구성표를 따름: 훅 씬은 궁금증 계열
+    assert "궁금증" in scenes[0].conte.emotion.tone
+
+
+def test_lint_conte_catches_rhythm_violations():
+    from core.script import lint_conte
+    from core.schemas import Conte, Emotion, SceneVisual, Scene
+    def sc(i, shot, vtype):
+        return Scene(scene_id=i, track=Track.JAPAN, chapter="훅",
+                     narration="테스트.", caption="",
+                     visual=SceneVisual(type=vtype, ref="x", effect="none"),
+                     conte=Conte(info_point=f"p{i}", emotion=Emotion(tone="t", delivery="d"),
+                                 composition=f"{shot} 샷", visual_direction="v"))
+    bad = [sc(1, "와이드", "slide"), sc(2, "와이드", "slide"), sc(3, "와이드", "slide")]
+    issues = lint_conte(bad)
+    assert any("컷 리듬" in i for i in issues)
+    assert any("3연속" in i and "slide" in i for i in issues)
+    good = [sc(1, "와이드", "slide"), sc(2, "미디엄", "illust"), sc(3, "클로즈업", "chart")]
+    assert lint_conte(good) == []
