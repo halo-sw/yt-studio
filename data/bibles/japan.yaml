@@ -1,0 +1,31 @@
+# 채널 바이블 — 일본 머니 트랙 (잠금 자산, 변경은 3인 합의 후에만)
+# core.schemas.Bible로 로드·검증된다. 씬 재생성 시 자동 주입 (규칙 5-2).
+channel: japan
+voice_id: TODO_ELEVENLABS_VOICE_ID  # 일본어 지원 보이스로 확정 필요
+voice_params:
+  stability: 0.55
+  similarity: 0.80
+  speed: 1.0
+style_anchors:
+  - data/assets/japan/anchor_01_showa_office.png
+  - data/assets/japan/anchor_02_yen_texture.png
+subtitle_tokens:
+  font: "Noto Sans KR Bold"
+  size: "64"
+  color: "#FFFFFF"
+  stroke: "#1A1A2E"
+  position: "bottom-center"
+lut: data/assets/japan/lut_warm_film.cube
+bgm_set:  # 에피소드 글로벌 트랙 후보 — 씬 오디오에 굽지 않는다 (규칙 5-1)
+  - data/assets/bgm/calm_documentary_01.mp3
+  - data/assets/bgm/jazz_lofi_02.mp3
+character_refs: []
+glossary:  # qc.py가 표기 일관성 검사
+  엔저: "엔저 (엔화 약세)"
+  버블경제: "버블 경제 (1986~1991)"
+  잃어버린30년: "잃어버린 30년"
+  일본은행: "일본은행 (BOJ)"
+banned_phrases:  # qc.py 금지어 검사
+  - "무조건 오른다"
+  - "확실한 투자"
+  - "지금 사야"  # 투자 권유성 표현 금지 — 감수 2인 로테이션 게이트와 이중 방어

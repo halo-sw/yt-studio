@@ -1,0 +1,34 @@
+# 채널 바이블 — 드라마썰 트랙 (잠금 자산, 변경은 3인 합의 후에만)
+# 규칙 5-5: 대본은 비평 중심(줄거리 서술 총량 상한 + 씬당 해석 의무),
+# 재연 컷 프롬프트에 배우명·작품 스틸 참조 금지 → banned_phrases + CastCard 검증 이중 방어.
+channel: drama
+voice_id: TODO_ELEVENLABS_VOICE_ID
+voice_params:
+  stability: 0.45   # 썰 텐션을 위해 표현력 우선
+  similarity: 0.75
+  speed: 1.1
+style_anchors:
+  - data/assets/drama/anchor_01_illust_style.png   # 자체 일러스트 스타일 (스틸 미사용)
+  - data/assets/drama/anchor_02_palette.png
+subtitle_tokens:
+  font: "Noto Sans KR Black"
+  size: "72"
+  color: "#FFE066"
+  stroke: "#000000"
+  position: "bottom-center"
+lut: data/assets/drama/lut_vivid_story.cube
+bgm_set:
+  - data/assets/bgm/tension_light_01.mp3
+  - data/assets/bgm/comic_beat_02.mp3
+character_refs:  # 인물 카드(illust_batch.py 주입)의 스타일 기준 — 배우 외형 아님
+  - data/assets/drama/charref_female_lead_style.png
+  - data/assets/drama/charref_male_lead_style.png
+glossary:
+  회차: "N화 (회차 표기 통일)"
+  떡밥: "떡밥 (복선)"
+banned_phrases:  # 규칙 5-5: 프롬프트·대본에서 실존 배우/스틸 참조 차단
+  - "배우 닮은"
+  - "실제 배우"
+  - "스틸컷"
+  - "공식 스틸"
+  - "드라마 장면 그대로"
