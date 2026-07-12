@@ -387,6 +387,44 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
 .spark .fillpath{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:none}
 .spark .lastdot{fill:var(--accent)}
 
+/* ═ 완성된 영상 + 플레이어 ═ */
+.done-tile .thumb{justify-content:flex-end}
+.done-tile .playmini{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.5);border:1.5px solid rgba(255,255,255,.35);
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.done-tile .playmini svg{width:16px;height:16px;fill:#fff;margin-left:2px}
+.done-tile .stats{display:flex;gap:10px;font-size:11px;color:rgba(255,255,255,.65)}
+.player{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.97);
+  width:min(960px,94vw);z-index:71;border-radius:20px;overflow:hidden;border:1px solid var(--line-strong);
+  box-shadow:0 40px 100px -20px rgba(2,5,14,.95);opacity:0;pointer-events:none;
+  transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.player.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.player .pscreen{aspect-ratio:16/9;position:relative;display:flex;align-items:center;justify-content:center}
+.player .pctrl{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--panel);border-top:1px solid var(--line);font-size:12px}
+.player .ptrack{flex:1;height:5px;border-radius:99px;background:var(--panel-2);overflow:hidden;cursor:pointer}
+.player .ptrack i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s linear}
+.player .pclose{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;padding:0;
+  background:rgba(0,0,0,.5);border-color:transparent;color:#fff;backdrop-filter:blur(4px)}
+.player .ptitle{position:absolute;top:14px;left:16px;color:#fff;font-weight:700;text-shadow:0 1px 8px rgba(0,0,0,.7)}
+
+/* ═ 경쟁·수익 ═ */
+.comp-row{display:grid;grid-template-columns:1.3fr .7fr .8fr 1.4fr auto;gap:10px;align-items:center;
+  padding:10px 4px;border-bottom:1px dashed var(--line);font-size:12.5px}
+.comp-row:last-child{border:0}
+.comp-row .chn{display:flex;align-items:center;gap:7px;font-weight:600}
+.comp-row .hot{color:var(--dim)} .comp-row .hot b{color:var(--accent)}
+.comp-row button{padding:5px 12px;font-size:12px}
+@media(max-width:820px){.comp-row{grid-template-columns:1fr auto;gap:4px}
+  .comp-row .hide-m{display:none}}
+.rev-row{display:grid;grid-template-columns:86px 1fr 150px;gap:10px;align-items:center;font-size:12.5px;margin-bottom:9px}
+.rev-row .bar{height:14px;border-radius:5px;background:var(--panel-2);overflow:hidden}
+.rev-row .bar i{display:block;height:100%;border-radius:5px}
+.rev-total{position:relative;height:16px;border-radius:99px;background:var(--panel-2);margin:14px 0 22px;box-shadow:inset 0 1px 3px rgba(0,0,0,.3)}
+.rev-total i{display:block;height:100%;border-radius:99px;background:var(--accent);
+  box-shadow:0 0 10px color-mix(in srgb,var(--accent) 50%,transparent)}
+.rev-mark{position:absolute;top:-5px;bottom:-5px;width:1.5px;background:var(--faint)}
+.rev-mark span{position:absolute;top:18px;left:-30px;width:60px;text-align:center;font-size:10px;color:var(--faint)}
+
 /* ═ 반응형: 태블릿·모바일 = 앱 UI ═ */
 @media(max-width:900px){
   .app{grid-template-columns:1fr}
@@ -477,6 +515,8 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
     <div class="sec"><h2>만들어지는 중</h2><span class="tiny">누르면 자세히 보여요</span></div>
     <div class="galfilters" id="galFilters"></div>
     <div class="gal" id="gallery"></div>
+    <div class="sec"><h2>완성된 영상</h2><span class="tiny">누르면 재생돼요</span></div>
+    <div class="gal" id="doneGal"></div>
   </section>
 
   <!-- 만들기 -->
@@ -504,7 +544,21 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
 
   <!-- 기록 -->
   <section class="view" id="v-log">
-    <div class="tabs"><button class="on" id="tabAudit">기록</button><button id="tabUsage">사용량</button></div>
+    <div class="tabs"><button class="on" id="tabAudit">기록</button><button id="tabUsage">사용량</button><button id="tabBiz">경쟁·수익</button></div>
+    <div id="bizPane" style="display:none">
+      <div class="card" style="margin-bottom:14px">
+        <h3 style="font-size:14.5px;margin-bottom:8px">경쟁 채널 — 일 2~4회 자동 확인</h3>
+        <div class="tiny" style="margin-bottom:8px">채널 중앙값보다 크게 튄 영상이 소재 큐로 올라와요 (최근 14일 가중)</div>
+        <div id="compRows"></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:14.5px;margin-bottom:4px">이번 달 예상 수익</h3>
+        <div class="tiny" style="margin-bottom:12px">조회수 × 트랙 단가(RPM) 추정 — 목표: 고정비 60만 원의 3배(180만)</div>
+        <div class="rev-total" id="revTotal"></div>
+        <div id="revRows"></div>
+        <div class="tiny" style="margin-top:10px">11~12월 성수기엔 단가가 1.5~2배 — 같은 조회수로 수익이 올라가요</div>
+      </div>
+    </div>
     <div id="auditPane">
       <div class="filters" id="logFilters"></div>
       <div id="logList"></div>
@@ -544,6 +598,18 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
   <div class="ck-foot"><span><kbd>↑</kbd><kbd>↓</kbd> 이동</span><span><kbd>Enter</kbd> 실행</span><span><kbd>Esc</kbd> 닫기</span></div>
 </div>
 
+<!-- 완성본 플레이어 -->
+<div class="player" id="player" role="dialog" aria-label="영상 재생">
+  <div class="pscreen" id="pScreen">
+    <span class="ptitle" id="pTitle"></span>
+    <button class="pclose" id="pClose" aria-label="닫기">✕</button>
+    <button class="playbtn" id="pToggle" aria-label="재생/일시정지"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></button>
+  </div>
+  <div class="pctrl"><span class="num" id="pTime">00:00</span>
+    <div class="ptrack" id="pTrack"><i id="pFill"></i></div>
+    <span class="num" id="pDur">00:00</span></div>
+</div>
+
 <!-- 발행 예약 확인 -->
 <div class="confirm" id="confirmSched" role="dialog" aria-label="발행 예약 확인">
   <h3>발행 예약할까요?</h3>
@@ -568,23 +634,29 @@ function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');cl
 function chch(tr){return `<span class="chip"><span class="dot" style="background:${CH[tr].c}"></span>${CH[tr].nm}</span>`}
 
 /* ── 데이터 ── */
+/* 큐(cue) 구조 — 접속한 사람 누구나 승인·처리한다. 권한 게이트 없음. */
 let TODO=[
  {id:1,kind:'실패',tr:'natepan',ttl:'목소리 만들기가 멈췄어요',s:'「장례식장에서 만난 사람」 씬 14 · 2시간째',crit:true,
   act:[['다시 시도','retry','primary']]},
- {id:3,kind:'소재 확인',tr:'drama',ttl:'시청률 역주행 드라마 3화 떡밥 정리',s:'터진 소재예요 — 경쟁 평균의 4.1배',card:'k1',
-  act:[['확정','ok','primary'],['자세히','detail','ghost']]},
- {id:4,kind:'소재 확인',tr:'japan',ttl:'일본 20대 평균 연봉의 함정',s:'경쟁 평균의 2.8배',card:'k2',
-  act:[['확정','ok','primary'],['자세히','detail','ghost']]},
- {id:5,kind:'최종 검토',tr:'drama',ttl:'3화 떡밥 정리 — 다 만들어졌어요',s:'10분 18초 · 4시간째 기다리는 중',owner:'B',
-  act:[['검토하러 가기','edit','primary']]},
+ {id:3,kind:'소재 승인',tr:'drama',ttl:'시청률 역주행 드라마 3화 떡밥 정리',s:'터진 소재예요 — 경쟁 중앙값의 4.1배',card:'k1',
+  act:[['승인','ok','primary'],['자세히','detail','ghost']]},
+ {id:4,kind:'소재 승인',tr:'japan',ttl:'일본 20대 평균 연봉의 함정',s:'경쟁 중앙값의 2.8배',card:'k2',
+  act:[['승인','ok','primary'],['자세히','detail','ghost']]},
+ {id:5,kind:'검토',tr:'japan',ttl:'콘테 확인 — 엔저 시대 월급의 진실',s:'대본·목소리 준비 끝 · 다듬고 하나로 합쳐주세요',
+  act:[['콘테 확인','edit','primary']]},
  {id:6,kind:'투표',tr:'japan',ttl:'이번 화 제목, 셋 중 하나만 골라주세요',s:'마감 34시간 남음',
   act:[['고르러 가기','vote','primary']]},
 ];
 const TILES=[
- {id:'k3',tr:'japan',ttl:'엔저 시대 월급의 진실',st:'making',prog:72,sub:'조립 중',live:true},
- {id:'k4',tr:'drama',ttl:'3화 떡밥 정리',st:'waiting',prog:100,sub:'검토 기다리는 중'},
+ {id:'k3',tr:'japan',ttl:'엔저 시대 월급의 진실',st:'waiting',prog:100,sub:'콘테 확인 기다리는 중'},
+ {id:'k4',tr:'drama',ttl:'3화 떡밥 정리',st:'making',prog:64,sub:'그림 만드는 중 · 사람 3장 대기',live:true},
  {id:'k6',tr:'natepan',ttl:'장례식장에서 만난 사람',st:'fail',prog:41,sub:'멈춤 — 다시 시도 필요'},
- {id:'k5',tr:'playlist',ttl:'비 오는 밤, 창가의 재즈',st:'sched',prog:100,sub:'금 21:00 예약됨'},
+];
+/* 완성된 영상 — 발행·예약된 결과물 (재생 가능) */
+const DONE=[
+ {id:'d1',tr:'playlist',ttl:'비 오는 밤, 창가의 재즈',len:'61:02',lenS:3662,when:'금 21:00 예약',sched:true},
+ {id:'d2',tr:'natepan',ttl:'시어머니의 서랍',len:'10:44',lenS:644,when:'3일 전 발행',views:'2.4만 회'},
+ {id:'d3',tr:'japan',ttl:'연금 개정, 손해 보는 사람',len:'12:18',lenS:738,when:'5일 전 발행',views:'1.2만 회'},
 ];
 const CARDS={
  k1:{tr:'drama',ttl:'시청률 역주행 드라마 3화 떡밥 정리',owner:null,approved:null,
@@ -595,12 +667,12 @@ const CARDS={
   why:'평균과 중앙값의 괴리 소재. 통계로 사실 시트를 만들 수 있어요.',
   comp:{channel:'경쟁채널-J머니',medianK:41,viewsK:115,mult:2.8,week:2.5,score:6.9},
   hist:[['어제 22:40','A가 확정'],['어제 22:38','B가 맡음']]},
- k3:{tr:'japan',ttl:'엔저 시대 월급의 진실',owner:'B',approved:'A',
-  why:'12분 롱폼 — 지금 씬 28개 중 18개를 이어붙이는 중이에요.',
-  hist:[['오늘 10:48','B가 장면 7 다시 만듦'],['그제','A가 확정']]},
- k4:{tr:'drama',ttl:'3화 떡밥 정리',owner:'B',approved:'A',
-  why:'다 만들어졌어요. B가 만든 영상이라 A나 C가 검토해야 해요.',
-  hist:[['오늘 07:21','검토 요청 보냄'],['오늘 07:20','조립 완료']]},
+ k3:{tr:'japan',ttl:'엔저 시대 월급의 진실',approved:'A',
+  why:'대본과 목소리가 준비됐어요. 콘테를 다듬고 하나의 영상으로 합쳐주세요.',
+  hist:[['오늘 10:48','B가 장면 7 다시 만듦'],['그제','A가 승인']]},
+ k4:{tr:'drama',ttl:'3화 떡밥 정리',approved:'A',
+  why:'그림 3장이 사람 손을 기다리고 있어요 — 대기열에서 만들어 올리면 이어서 진행돼요.',
+  hist:[['오늘 07:20','그림 만들기 시작 · 사람 3장 대기'],['어제','A가 승인']]},
  k5:{tr:'playlist',ttl:'비 오는 밤, 창가의 재즈',owner:'C',approved:'B',
   why:'60분 · 금 21:00 예약. 업로드 확인까지 끝났어요.',
   hist:[['오늘 14:22','업로드 확인됨'],['오늘 14:20','C가 발행 예약']]},
@@ -626,25 +698,25 @@ function todoCount(){return TODO.filter(t=>!(t.kind==='최종 검토'&&t.owner==
 function setView(v){view=v;
   NAV.forEach(([k])=>$('#v-'+k).classList.toggle('on',k===v));
   $('#viewTitle').textContent=NAV.find(([k])=>k===v)[1];
-  $('#hello').textContent = v==='home' ? `${NAMES[who]}님, 처리할 일 ${todoCount()}개예요` :
-    v==='gen' ? '소재 고르고, 버튼 하나면 끝' :
-    v==='edit' ? '일본 머니 · 엔저 시대 월급의 진실 — 장면별 콘테 (정보·감정·구도·그림)' :
-    v==='vote' ? '2명이 고르면 바로 결정돼요' : '누가 뭘 했는지, 돈이 어디 쓰이는지';
+  $('#hello').textContent = v==='home' ? `${NAMES[who]}님, 기다리는 큐 ${todoCount()}개 — 승인하면 파이프라인이 흘러가요` :
+    v==='gen' ? '승인된 소재 고르고, 버튼 하나면 끝' :
+    v==='edit' ? '일본 머니 · 엔저 시대 월급의 진실 — 콘테 다듬기 → 합치기 → 확인 → 발행' :
+    v==='vote' ? '2명이 고르면 바로 결정돼요' : '기록 · 사용량 · 경쟁 채널과 예상 수익';
   renderRail();
   if(v==='home')renderHome(); if(v==='gen')renderGen(); if(v==='edit')renderEditor();
   if(v==='vote')renderVotes(); if(v==='log')renderLog();
 }
 
-/* ── 시점(아바타) ── */
+/* ── 접속자(아바타) — 권한이 아니라 기록용 신원. 누구나 큐를 승인한다. ── */
 function renderAvatars(){
-  $('#avatars').innerHTML=['A','B','C'].map(p=>`<button class="av ${who===p?'on':''}" data-p="${p}" title="${NAMES[p]} 시점">${p}</button>`).join('');
+  $('#avatars').innerHTML=['A','B','C'].map(p=>`<button class="av ${who===p?'on':''}" data-p="${p}" title="지금 나: ${NAMES[p]}">${p}</button>`).join('');
   $('#avatars').querySelectorAll('.av').forEach(b=>b.addEventListener('click',()=>{
-    who=b.dataset.p;toast(`${NAMES[who]} 시점으로 봅니다`);renderAvatars();setView(view);}));
+    who=b.dataset.p;toast(`${NAMES[who]}(으)로 접속 — 승인 기록에 이 이름이 남아요`);renderAvatars();setView(view);}));
 }
 
 /* ── 홈 ── */
 function renderHome(){
-  const vis=TODO.filter(t=>!(t.kind==='최종 검토'&&t.owner===who));
+  const vis=TODO;
   $('#todoRow').innerHTML= vis.length? vis.slice(0,4).map(t=>`
    <div class="tcard k-${t.tr} ${t.crit?'crit':''}">
      <span class="kind">${t.kind.toUpperCase()}</span>
@@ -653,15 +725,51 @@ function renderHome(){
    </div>`).join('') : `<div class="done-all">다 했어요 — 다음 발행은 금요일 21시예요</div>`;
   $('#todoRow').querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',()=>{
     const a=b.dataset.a,id=+b.dataset.id;
-    if(a==='ok'){const t=TODO.find(x=>x.id===id);if(t.card&&CARDS[t.card]){CARDS[t.card].approved=who;CARDS[t.card].hist.unshift(['방금',who+'가 확정'])}
-      TODO=TODO.filter(x=>x.id!==id);toast('확정했어요 — 에이전트가 이어서 만듭니다');renderHome();renderRail();}
+    if(a==='ok'){const t=TODO.find(x=>x.id===id);if(t.card&&CARDS[t.card]){CARDS[t.card].approved=who;CARDS[t.card].hist.unshift(['방금',who+'가 승인'])}
+      TODO=TODO.filter(x=>x.id!==id);toast(`${who}가 승인했어요 — 에이전트가 이어서 만듭니다 (기록에 남음)`);renderHome();renderRail();}
     if(a==='retry'){TODO=TODO.filter(x=>x.id!==id);const tile=TILES.find(x=>x.id==='k6');tile.st='making';tile.sub='씬 14 다시 녹음 중';
       toast('다시 시도 — 씬 14부터 이어서 가요');renderHome();renderRail();}
     if(a==='detail')openSheet(b.dataset.card);
     if(a==='edit')setView('edit'); if(a==='vote')setView('vote');
   }));
-  renderGalFilters();renderGallery();
+  renderGalFilters();renderGallery();renderDone();
 }
+/* ── 완성된 영상 ── */
+function renderDone(){
+  $('#doneGal').innerHTML=DONE.map(d=>`
+   <button class="tile done-tile" data-play="${d.id}">
+     <span class="thumb th-${d.tr}">
+       <span class="playmini"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span>
+       <span class="row">${chch(d.tr)}${d.sched?'<span class="chip state green">예약됨</span>':''}</span>
+       <span class="bottom"><span class="name">${d.ttl}</span>
+         <span class="stats"><span class="num">${d.len}</span><span>${d.when}</span>${d.views?`<span class="num">${d.views}</span>`:''}</span></span>
+     </span></button>`).join('');
+  $('#doneGal').querySelectorAll('[data-play]').forEach(b=>b.addEventListener('click',()=>openPlayer(b.dataset.play)));
+}
+/* ── 플레이어 (완성본·발행본 공용) ── */
+let pTimer=null,pPos=0,pDurS=0,pPlaying=false;
+function fmtT(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0')}
+function openPlayer(idOrTitle){
+  const d=DONE.find(x=>x.id===idOrTitle)||{tr:'japan',ttl:idOrTitle,lenS:702,len:'11:42'};
+  pDurS=d.lenS;pPos=0;pPlaying=true;
+  $('#pScreen').className='pscreen th-'+d.tr;
+  $('#pTitle').textContent=d.ttl;$('#pDur').textContent=d.len;
+  $('#player').classList.add('on');$('#ckScrim').classList.add('on');
+  clearInterval(pTimer);
+  pTimer=setInterval(()=>{if(!pPlaying)return;pPos=Math.min(pPos+pDurS/120,pDurS);
+    $('#pFill').style.width=(pPos/pDurS*100)+'%';$('#pTime').textContent=fmtT(pPos);
+    if(pPos>=pDurS){pPlaying=false}},250);
+  paintPToggle();
+}
+function paintPToggle(){$('#pToggle').innerHTML=pPlaying
+  ?'<svg viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>'
+  :'<svg viewBox="0 0 24 24" fill="#fff"><path d="M6 4l14 8-14 8z"/></svg>'}
+function closePlayer(){$('#player').classList.remove('on');clearInterval(pTimer);
+  if(!$('#cmdk').classList.contains('on')&&!$('#confirmSched').classList.contains('on'))$('#ckScrim').classList.remove('on')}
+$('#pClose').addEventListener('click',closePlayer);
+$('#pToggle').addEventListener('click',()=>{pPlaying=!pPlaying;paintPToggle()});
+$('#pTrack').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();
+  pPos=pDurS*(e.clientX-r.left)/r.width;$('#pFill').style.width=(pPos/pDurS*100)+'%';$('#pTime').textContent=fmtT(pPos)});
 function stChip(t){
   if(t.st==='making')return `<span class="chip state amber">만드는 중 ${t.prog}%</span>`;
   if(t.st==='waiting')return `<span class="chip state amber">사람 기다림</span>`;
@@ -697,7 +805,6 @@ function renderGallery(){
 function openSheet(cardId){
   const c=CARDS[cardId]; if(!c)return;
   const tile=TILES.find(t=>t.id===cardId);
-  const unowned=!c.owner, mine=c.owner===who;
   $('#sheet').innerHTML=`
    <div class="thumb sthumb th-${c.tr}"></div>
    <button class="close" id="shClose" aria-label="닫기">✕</button>
@@ -711,27 +818,17 @@ function openSheet(cardId){
        <div class="vbar"><span>채널 중앙값</span><span class="bar"><i style="width:${Math.round(c.comp.medianK/c.comp.viewsK*100)}%;background:var(--faint)"></i></span><b class="num">${c.comp.medianK}만 회</b></div>
        <div class="tiny" style="margin-top:4px">중앙값의 <b class="mult">${c.comp.mult}배</b> · 최근 14일 가중치 반영 (core/scout.py)</div>
      </div>`:''}
-     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-       <div class="gate"><div class="k">맡은 사람</div><div class="v">${c.owner?`${c.owner} (${NAMES[c.owner]})`:'아직 없음'}</div></div>
-       <div class="gate"><div class="k">소재 확정</div><div class="v">${c.approved?`${c.approved} (${NAMES[c.approved]})`:'아직 안 됨'}</div></div>
-     </div>
-     ${unowned?`<button class="primary big" id="shClaim">내가 맡기</button>`:''}
-     ${!c.approved?`<button class="primary big" id="shApprove">소재 확정</button>`:''}
-     ${cardId==='k4'?(who===c.owner
-        ?`<div class="notice">내가 만든 영상이라 내가 승인할 수 없어요 — 다른 사람이 검토해요</div>`
-        :`<button class="primary big" id="shReview">검토하러 가기</button>`):''}
-     ${cardId==='k3'?`<button class="primary big" id="shEdit">편집 열기</button>`:''}
-     ${cardId==='k2'&&c.approved&&mine?`<button class="primary big" id="shMake">이 소재로 만들기</button>`:''}
-     ${cardId==='k2'&&c.approved&&!mine?`<div class="notice">${c.owner}가 맡은 카드예요 — 맡은 사람만 만들 수 있어요</div>`:''}
+     <div class="gate"><div class="k">소재 승인</div><div class="v">${c.approved?`${c.approved} (${NAMES[c.approved]})가 승인`:'아직 승인 전 — 누구든 승인하면 시작돼요'}</div></div>
+     ${!c.approved?`<button class="primary big" id="shApprove">소재 승인</button>`:''}
+     ${cardId==='k3'?`<button class="primary big" id="shEdit">콘테 확인하러 가기</button>`:''}
+     ${cardId==='k2'&&c.approved?`<button class="primary big" id="shMake">이 소재로 만들기</button>`:''}
      <div class="tiny" style="margin-top:4px">지금까지</div>
      <div class="hist">${c.hist.map(h=>`<div><span class="t num">${h[0]}</span><span>${h[1]}</span></div>`).join('')}</div>
    </div>`;
   $('#sheet').classList.add('on');$('#scrim').classList.add('on');
   $('#shClose').addEventListener('click',closeSheet);
-  const cl=$('#shClaim');if(cl)cl.addEventListener('click',()=>{c.owner=who;c.hist.unshift(['방금',who+'가 맡음']);toast('내가 맡았어요');openSheet(cardId)});
-  const ap=$('#shApprove');if(ap)ap.addEventListener('click',()=>{c.approved=who;c.hist.unshift(['방금',who+'가 확정']);
-    TODO=TODO.filter(t=>t.card!==cardId);toast('확정했어요 — 에이전트가 이어서 만듭니다');renderRail();if(view==='home')renderHome();openSheet(cardId)});
-  const rv=$('#shReview');if(rv)rv.addEventListener('click',()=>{closeSheet();setView('edit')});
+  const ap=$('#shApprove');if(ap)ap.addEventListener('click',()=>{c.approved=who;c.hist.unshift(['방금',who+'가 승인']);
+    TODO=TODO.filter(t=>t.card!==cardId);toast(`${who}가 승인했어요 — 에이전트가 이어서 만듭니다`);renderRail();if(view==='home')renderHome();openSheet(cardId)});
   const ed=$('#shEdit');if(ed)ed.addEventListener('click',()=>{closeSheet();setView('edit')});
   const mk=$('#shMake');if(mk)mk.addEventListener('click',()=>{closeSheet();genSel='g1';setView('gen')});
 }
@@ -740,31 +837,26 @@ $('#scrim').addEventListener('click',closeSheet);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 
 /* ── 만들기 ── */
+/* 승인된 소재만 목록에 — 접속자 누구나 시작할 수 있다 */
 const GENCARDS=[
- {id:'g1',tr:'japan',ttl:'일본 20대 평균 연봉의 함정',owner:'B',len:'12분'},
- {id:'g2',tr:'drama',ttl:'시청률 역주행 드라마, 왜 지금 터졌나',owner:'A',len:'10분'},
- {id:'g3',tr:'playlist',ttl:'비 오는 밤, 창가의 재즈',owner:null,len:'60분'},
+ {id:'g1',tr:'japan',ttl:'일본 20대 평균 연봉의 함정',by:'A',len:'12분'},
+ {id:'g2',tr:'drama',ttl:'시청률 역주행 드라마, 왜 지금 터졌나',by:'C',len:'10분'},
+ {id:'g3',tr:'playlist',ttl:'비 오는 밤, 창가의 재즈',by:'B',len:'60분'},
 ];
 let genSel='g1', genRun=null;
 function renderGen(){
-  $('#srcList').innerHTML=GENCARDS.map(c=>{
-    const mine=c.owner===who,unowned=!c.owner;
-    return `<button class="src ${genSel===c.id?'on':''}" data-id="${c.id}">
+  $('#srcList').innerHTML=GENCARDS.map(c=>`
+    <button class="src ${genSel===c.id?'on':''}" data-id="${c.id}">
       <span class="mini-th th-${c.tr}"></span>
       <span><span class="t">${c.ttl}</span><br><span class="s">${CH[c.tr].nm}</span></span>
-      <span class="lockmark">${unowned?'아무도 안 맡음':(mine?'내 카드':c.owner+' 카드 · 잠김')}</span></button>`;
-  }).join('');
+      <span class="lockmark">${c.by} 승인</span></button>`).join('');
   $('#srcList').querySelectorAll('.src').forEach(b=>b.addEventListener('click',()=>{genSel=b.dataset.id;renderGen()}));
-  const c=GENCARDS.find(x=>x.id===genSel);const mine=c.owner===who,unowned=!c.owner;
+  const c=GENCARDS.find(x=>x.id===genSel);
   const lens=c.tr==='playlist'?['60분']:['10분','12분','15분'];
   $('#optChips').innerHTML=lens.map(l=>`<span class="opt-chip ${l===c.len?'on':''}">${l}</span>`).join('')
     +`<span class="opt-chip on">${c.tr==='playlist'?'플레이리스트':'롱폼 16:9'}</span><span class="opt-chip">다음 빈 슬롯 발행</span>`;
   renderPromptPanel(c);
-  $('#goLive').innerHTML= genRun?'' :
-    unowned?`<button class="primary big" id="btnClaimG">내가 맡고 시작하기</button>`:
-    mine?`<button class="primary big" id="btnStart">만들기 시작</button>`:
-    `<button class="big" disabled>${c.owner}가 맡은 카드예요</button>`;
-  const bc=$('#btnClaimG');if(bc)bc.addEventListener('click',()=>{c.owner=who;toast('내가 맡았어요');renderGen()});
+  $('#goLive').innerHTML= genRun?'' :`<button class="primary big" id="btnStart">만들기 시작</button>`;
   const bs=$('#btnStart');if(bs)bs.addEventListener('click',startGen);
   paintRun();
 }
@@ -810,18 +902,20 @@ function renderPromptPanel(c){
   $('#promptPanel').open=wasOpen;
 }
 
-const STEPS=['대본','목소리','그림 (사람 7건)','조립'];
+/* 만들기는 재료 준비까지 — 조립(합치기)은 콘테 확인 후 편집 화면에서 */
+const STEPS=['대본','목소리','그림 (사람 7건)'];
 function paintRun(){
   if(!genRun){$('#runArea').innerHTML='';return}
   const c=GENCARDS.find(x=>x.id===genSel);
-  const pct=Math.min(100,Math.round(genRun.step/4*100));
+  const pct=Math.min(100,Math.round(genRun.step/3*100));
   $('#runArea').innerHTML=`<div class="runbox">
     <div class="scene th-${c.tr}">
       <span class="pct num">${pct}%</span>
-      <span class="label">${genRun.step>=4?'다 만들어졌어요':STEPS[genRun.step]+' 만드는 중'}</span>
-      ${genRun.step>=4?`<button class="primary big" id="goEdit" style="margin-top:4px">편집 열기</button>`:''}
+      <span class="label">${genRun.step>=3?'재료가 준비됐어요 — 콘테를 확인해 주세요':STEPS[genRun.step]+' 만드는 중'}</span>
+      ${genRun.step>=3?`<button class="primary big" id="goEdit" style="margin-top:4px">콘테 확인하러 가기</button>`:''}
     </div>
-    <div class="steps">${STEPS.map((s,i)=>`<div class="st ${i<genRun.step?'done':i===genRun.step?'run':''}">${s}</div>`).join('')}</div>
+    <div class="steps">${STEPS.map((s,i)=>`<div class="st ${i<genRun.step?'done':i===genRun.step?'run':''}">${s}</div>`).join('')}
+      <div class="st" style="opacity:.45">합치기 — 콘테 확인 후</div></div>
   </div>`;
   const ge=$('#goEdit');if(ge)ge.addEventListener('click',()=>setView('edit'));
 }
@@ -829,7 +923,7 @@ function startGen(){
   genRun={step:0};renderGen();
   const iv=setInterval(()=>{genRun.step++;
     if(genRun.step===2)toast('그림 7장은 사람이 만들어 올려야 해요 (자동 호출 안 함)');
-    if(genRun.step>=4){clearInterval(iv);toast('다 만들어졌어요 — 검토만 남았어요');}
+    if(genRun.step>=3){clearInterval(iv);toast('재료 준비 끝 — 콘테 확인 큐가 홈에 올라갔어요');}
     if(view==='gen')paintRun();},1500);
 }
 
@@ -871,7 +965,6 @@ const SCENES=[
 /* 편집 단계: scenes(장면 다듬기, voiced) → assembling → rendered(완성본) →
    reviewed → scheduled. 발행 예약은 합치기·검토가 끝나야만 열린다. */
 let edState='scenes', asmStep=0;
-const OWNER='B';
 const ASTEPS=['장면 28개 이어붙이기 (크로스페이드 80ms)','BGM 언더베드 믹스 (-26 LUFS)','자막 번인','챕터 마커 4:00 · 7:00'];
 const MIDROLLS=[240,420];
 function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
@@ -922,24 +1015,22 @@ function renderStoryboard(){
 }
 function renderEditor(){
   renderStoryboard();
-  const isOwner=who===OWNER;
   const manual=SCENES.filter(s=>s.manual).length;
-  // ── 상단 바: 단계별로 액션이 바뀐다 — 합치기 전엔 발행 예약 자체가 없음 ──
+  // ── 상단 바: 단계별로 액션이 바뀐다 — 합치기 전엔 발행 예약 자체가 없음.
+  //    누구나 처리 가능 (큐 승인 구조, 처리자는 기록에 남음) ──
   let right='';
   if(edState==='scenes'){
-    right = isOwner
-      ? `<button class="primary" id="btnAssemble">하나의 영상으로 합치기</button>`
-      : `<button disabled>하나의 영상으로 합치기</button><span class="asm-note">맡은 사람(${OWNER})만 합칠 수 있어요</span>`;
+    right = `<button class="primary" id="btnAssemble">하나의 영상으로 합치기</button>`;
   }else if(edState==='assembling'){
     right = `<span class="tiny" style="color:var(--accent)">합치는 중… ${Math.min(asmStep,4)}/4</span>`;
   }else{
     const approve = edState==='rendered'
-      ? (isOwner?`<button disabled>검토 끝내기</button>`:`<button class="primary" id="btnApprove">검토 끝내기</button>`)
-      : `<span class="state-pill st-pass">검토 끝 (${edApprover||'C'})</span>`;
+      ? `<button class="primary" id="btnApprove">확인 끝 — 이상 없어요</button>`
+      : `<span class="state-pill st-pass">확인 끝 (${edApprover||'C'})</span>`;
     const sched = edState==='scheduled'
       ? `<span class="state-pill st-pass">금 21:00 예약됨</span>`
       : `<button id="btnSched" class="primary" ${edState==='reviewed'?'':'disabled'}>발행 예약</button>`;
-    right = `<button id="btnReq" class="ghost">검토 요청</button>${approve}${sched}`;
+    right = `${approve}${sched}`;
   }
   $('#editBar').innerHTML=`
     <span class="tiny">총 <b class="num">11:42</b> / 목표 <b class="num">12:00</b></span>
@@ -952,7 +1043,7 @@ function renderEditor(){
   // ── 안내 ──
   $('#editNotice').innerHTML =
     edState==='scenes' ? `<div class="notice" style="border-color:var(--line);color:var(--dim)">아직 장면 조각이에요 — 아래 콘테를 다듬은 뒤 <b>하나의 영상으로 합치면</b> 완성본 확인과 발행 예약이 열려요</div>` :
-    edState==='rendered'&&isOwner ? `<div class="notice">내가 만든 영상이라 내가 승인할 수 없어요 — 검토 요청을 보내면 다른 사람 홈에 떠요</div>` : '';
+    edState==='rendered' ? `<div class="notice" style="border-color:var(--line);color:var(--dim)">완성본을 재생해 보고 이상 없으면 확인을 눌러주세요 — 처리한 사람이 기록에 남아요</div>` : '';
   // ── 완성본 영역 ──
   if(edState==='assembling'){
     $('#finalArea').innerHTML=`<div class="runbox">
@@ -968,7 +1059,7 @@ function renderEditor(){
       <div class="fmeta"><span class="ok">이음새 ${SCENES.length-1}곳 크로스페이드 확인</span>
         <span>미드롤 4:00 · 7:00</span><span>내레이션 -14 LUFS / BGM -26 LUFS</span>
         <div style="flex:1"></div><button class="ghost" id="btnSeamAll">이음새만 이어 듣기</button></div></div>`;
-    $('#btnPlay').addEventListener('click',()=>toast('완성본 재생 — 실제 서비스에선 최종 렌더 파일이 재생돼요'));
+    $('#btnPlay').addEventListener('click',()=>openPlayer('엔저 시대 월급의 진실 (완성본)'));
     $('#btnSeamAll').addEventListener('click',()=>toast(`이음새 ${SCENES.length-1}곳을 이어서 재생 중 — 어색한 곳이 있으면 그 장면만 다시 만드세요`));
   }else{
     $('#finalArea').innerHTML='';
@@ -985,9 +1076,7 @@ function renderEditor(){
   });
   const ba=$('#btnApprove');
   if(ba)ba.addEventListener('click',()=>{edState='reviewed';edApprover=who;
-    toast(`검토 끝 (${who}) — 이제 발행 예약이 열렸어요`);renderEditor()});
-  const br=$('#btnReq');
-  if(br)br.onclick=()=>toast('검토 요청 보냈어요 — 다른 두 사람 홈에 떴어요');
+    toast(`${who}가 확인했어요 — 발행 예약이 열렸어요 (기록에 남음)`);renderEditor()});
   const bs=$('#btnSched');
   if(bs)bs.onclick=()=>{if(edState!=='reviewed')return;openConfirm()};
 }
@@ -999,8 +1088,12 @@ function closeConfirm(){$('#confirmSched').classList.remove('on');
   if(!$('#cmdk').classList.contains('on'))$('#ckScrim').classList.remove('on')}
 $('#cfCancel').addEventListener('click',closeConfirm);
 $('#cfOk').addEventListener('click',()=>{closeConfirm();edState='scheduled';
+  // 예약되면 '만들어지는 중'에서 빠지고 '완성된 영상'으로 이동
+  const i=TILES.findIndex(t=>t.id==='k3');if(i>-1)TILES.splice(i,1);
+  if(!DONE.some(d=>d.id==='d4'))DONE.unshift({id:'d4',tr:'japan',ttl:'엔저 시대 월급의 진실',len:'11:42',lenS:702,when:'금 21:00 예약',sched:true});
+  TODO=TODO.filter(t=>t.id!==5);
   toast('예약했어요 — 예약 초안으로 올라갔고, 공개 전환은 사람이 마지막으로 확인해요');
-  if(view==='edit')renderEditor()});
+  renderRail();if(view==='edit')renderEditor()});
 
 /* ── 함께 결정 ── */
 let VOTES=[
@@ -1033,11 +1126,11 @@ function renderVotes(){
 /* ── 기록 ── */
 const LOGS=[
  {t:'오늘 14:22',p:'—',txt:'업로드 확인됨 — 플레이리스트 「비 오는 밤, 창가의 재즈」'},
- {t:'오늘 14:20',p:'C',txt:'발행 예약 — 플레이리스트 · 금 21:00'},
+ {t:'오늘 14:20',p:'C',txt:'발행 예약 승인 — 플레이리스트 · 금 21:00'},
  {t:'오늘 10:48',p:'B',txt:'장면 7 다시 만듦 — 일본 머니'},
- {t:'오늘 09:12',p:'—',txt:'목소리 만들기 멈춤 — 사연 씬 14 (알림 보냄)',warn:true},
- {t:'어제 22:40',p:'A',txt:'소재 확정 — 드라마썰 「3화 떡밥 정리」'},
- {t:'어제 22:38',p:'B',txt:'맡음 — 일본 머니 「일본 20대 평균 연봉의 함정」'},
+ {t:'오늘 09:12',p:'—',txt:'목소리 만들기 멈춤 — 사연 씬 14 (큐 올라감)',warn:true},
+ {t:'어제 22:40',p:'A',txt:'소재 승인 — 드라마썰 「3화 떡밥 정리」'},
+ {t:'어제 22:38',p:'B',txt:'만들기 시작 — 일본 머니 「일본 20대 평균 연봉의 함정」'},
  {t:'어제 21:00',p:'—',txt:'투표 결정 — 썸네일 시안 2안 · A·C'},
 ];
 let logFilter='전체';
@@ -1047,10 +1140,57 @@ function renderLog(){
   $('#logList').innerHTML=LOGS.filter(l=>logFilter==='전체'||l.p===logFilter).map(l=>`
     <div class="logrow ${l.warn?'warned':''}"><span class="t num">${l.t}</span><span class="pill">${l.p}</span><span>${l.txt}</span></div>`).join('');
 }
-$('#tabAudit').addEventListener('click',()=>{$('#auditPane').style.display='';$('#usagePane').style.display='none';
-  $('#tabAudit').classList.add('on');$('#tabUsage').classList.remove('on')});
-$('#tabUsage').addEventListener('click',()=>{$('#auditPane').style.display='none';$('#usagePane').style.display='';
-  $('#tabUsage').classList.add('on');$('#tabAudit').classList.remove('on')});
+function logTab(which){
+  $('#auditPane').style.display = which==='audit'?'':'none';
+  $('#usagePane').style.display = which==='usage'?'':'none';
+  $('#bizPane').style.display = which==='biz'?'':'none';
+  $('#tabAudit').classList.toggle('on',which==='audit');
+  $('#tabUsage').classList.toggle('on',which==='usage');
+  $('#tabBiz').classList.toggle('on',which==='biz');
+  if(which==='biz')renderBiz();
+}
+$('#tabAudit').addEventListener('click',()=>logTab('audit'));
+$('#tabUsage').addEventListener('click',()=>logTab('usage'));
+$('#tabBiz').addEventListener('click',()=>logTab('biz'));
+
+/* ── 경쟁 채널 + 예상 수익 (core/scout.py 리포트 + v5 보고서 §7 역산) ── */
+const COMPETITORS=[
+ {tr:'drama',ch:'경쟁채널-D튜브',week:3.2,median:'4.0만',hot:'시청률 역주행 드라마 3화',mult:4.1},
+ {tr:'japan',ch:'경쟁채널-J머니',week:2.5,median:'4.1만',hot:'일본 20대 평균 연봉의 함정',mult:2.8},
+ {tr:'realestate',ch:'경쟁채널-집코노미',week:1.8,median:'1.2만',hot:'청약 가점 계산의 함정',mult:3.4},
+ {tr:'natepan',ch:'경쟁채널-썰바다',week:4.0,median:'2.6만',hot:'—',mult:null},
+];
+/* RPM(원/1천 뷰×1000 환산 단가): 일본 5,000 / 부동산 3,500 / 드라마·사연 2,000 / 플레이리스트 1,000 */
+const REVENUE=[
+ {tr:'japan',views:4.2,rpm:5000},{tr:'drama',views:6.8,rpm:2000},
+ {tr:'natepan',views:8.1,rpm:2000},{tr:'realestate',views:0.6,rpm:3500},
+ {tr:'playlist',views:3.2,rpm:1000},
+];
+function renderBiz(){
+  $('#compRows').innerHTML=COMPETITORS.map(c=>`
+    <div class="comp-row">
+      <span class="chn"><span class="dot" style="width:7px;height:7px;border-radius:50%;background:${CH[c.tr].c}"></span>${c.ch}</span>
+      <span class="hide-m muted">주 ${c.week}회</span>
+      <span class="hide-m muted">중앙값 <b class="num">${c.median}</b></span>
+      <span class="hot">${c.mult?`「${c.hot}」 <b>${c.mult}×</b>`:'최근 아웃라이어 없음'}</span>
+      ${c.mult?`<button data-mine="${c.tr}">우리 버전 소재로</button>`:'<span></span>'}
+    </div>`).join('');
+  $('#compRows').querySelectorAll('[data-mine]').forEach(b=>b.addEventListener('click',()=>{
+    toast('소재 큐에 올렸어요 — 홈에서 승인하면 시작돼요');}));
+  const rows=REVENUE.map(r=>({...r,won:r.views*10000*r.rpm/1000/10000})); // 만 원
+  const total=rows.reduce((a,r)=>a+r.won,0);
+  const FIXED=60,TARGET=180;
+  $('#revTotal').innerHTML=`<i style="width:${Math.min(100,total/TARGET*100)}%"></i>
+    <span class="rev-mark" style="left:${FIXED/TARGET*100}%"><span>1× 60만</span></span>
+    <span class="rev-mark" style="left:99%"><span>3× 180만</span></span>`;
+  const maxW=Math.max(...rows.map(r=>r.won));
+  $('#revRows').innerHTML=`<div class="rev-row" style="font-weight:700;margin-bottom:12px">
+      <span>합계</span><span class="tiny">고정비 60만 원의 <b style="color:var(--accent)">${(total/FIXED).toFixed(1)}배</b></span>
+      <span class="num" style="text-align:right">${total.toFixed(1)}만 원 / 월</span></div>`
+    +rows.map(r=>`<div class="rev-row"><span>${CH[r.tr].nm}</span>
+      <span class="bar"><i style="width:${Math.max(3,r.won/maxW*100)}%;background:${CH[r.tr].c}"></i></span>
+      <span class="num muted" style="text-align:right">${r.views}만 뷰 × ${(r.rpm/1000).toFixed(1)}천 = ${r.won.toFixed(1)}만</span></div>`).join('');
+}
 $('#usageBars').innerHTML=[['japan',62,18],['drama',34,9],['natepan',28,14],['realestate',12,2],['playlist',6,0]]
  .map(([tr,a,b])=>`<div class="brow"><span>${CH[tr].nm}</span>
    <div class="btrack"><span class="b1" style="width:${a}%"></span><span class="b2" style="width:${b}%"></span></div>
@@ -1061,17 +1201,19 @@ let ckSel=0, ckItems=[];
 function buildCk(){
   const items=[];
   NAV.forEach(([k,n])=>items.push({kind:'이동',label:n,hint:'화면',run:()=>setView(k)}));
-  TODO.filter(t=>!(t.kind==='최종 검토'&&t.owner===who)).forEach(t=>{
-    const run = t.kind==='소재 확인' ? ()=>{const c=CARDS[t.card];if(c){c.approved=who;c.hist.unshift(['방금',who+'가 확정'])}
-        TODO=TODO.filter(x=>x.id!==t.id);toast('확정했어요 — 에이전트가 이어서 만듭니다');renderRail();if(view==='home')renderHome();}
+  items.push({kind:'이동',label:'경쟁 채널 · 예상 수익',hint:'기록 탭',run:()=>{setView('log');logTab('biz')}});
+  TODO.forEach(t=>{
+    const run = t.kind==='소재 승인' ? ()=>{const c=CARDS[t.card];if(c){c.approved=who;c.hist.unshift(['방금',who+'가 승인'])}
+        TODO=TODO.filter(x=>x.id!==t.id);toast(`${who}가 승인했어요 — 에이전트가 이어서 만듭니다`);renderRail();if(view==='home')renderHome();}
       : t.kind==='실패' ? ()=>{TODO=TODO.filter(x=>x.id!==t.id);const tile=TILES.find(x=>x.id==='k6');
         if(tile){tile.st='making';tile.sub='씬 14 다시 녹음 중'}toast('다시 시도 — 이어서 가요');renderRail();if(view==='home')renderHome();}
-      : t.kind==='최종 검토' ? ()=>setView('edit') : ()=>setView('vote');
+      : t.kind==='검토' ? ()=>setView('edit') : ()=>setView('vote');
     items.push({kind:t.kind,label:t.ttl,hint:CH[t.tr].nm,run});
   });
   Object.entries(CARDS).forEach(([id,c])=>items.push({kind:'소재',label:c.ttl,hint:CH[c.tr].nm,run:()=>openSheet(id)}));
-  ['A','B','C'].filter(p=>p!==who).forEach(p=>items.push({kind:'시점',label:`${NAMES[p]}(${p}) 시점으로 보기`,hint:'전환',
-    run:()=>{who=p;renderAvatars();setView(view);toast(`${NAMES[p]} 시점으로 봅니다`)}}));
+  DONE.forEach(d=>items.push({kind:'재생',label:d.ttl,hint:'완성된 영상',run:()=>openPlayer(d.id)}));
+  ['A','B','C'].filter(p=>p!==who).forEach(p=>items.push({kind:'접속',label:`${NAMES[p]}(${p})으로 접속`,hint:'전환',
+    run:()=>{who=p;renderAvatars();setView(view);toast(`${NAMES[p]}(으)로 접속`)}}));
   return items;
 }
 function ckOpen(){
@@ -1103,7 +1245,7 @@ $('#ckScrim').addEventListener('click',()=>{ckClose();closeConfirm()});
 document.addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();
     $('#cmdk').classList.contains('on')?ckClose():ckOpen();return}
-  if(e.key==='Escape'){ckClose();closeConfirm();return}
+  if(e.key==='Escape'){ckClose();closeConfirm();closePlayer();return}
   if(!$('#cmdk').classList.contains('on'))return;
   const list=ckFiltered($('#ckInput').value);
   if(e.key==='ArrowDown'){e.preventDefault();ckSel=Math.min(ckSel+1,list.length-1);ckRender($('#ckInput').value)}
@@ -1130,12 +1272,13 @@ $('#usagePane').insertAdjacentHTML('afterbegin',`<div class="mgrid">
   <div class="mtile"><div class="mk">이번 달 크레딧 누적</div><div class="mv"><span class="num">83%</span> <span class="up">경고선 넘음</span></div>${sparkSVG(CUM14)}</div>
 </div>`);
 
-/* ── 라이브: 일본 머니 조립 진행 ── */
-const LIVE=[[78,'조립 중'],[86,'자막 입히는 중'],[94,'소리 점검 중'],[100,'검토 기다리는 중']];
+/* ── 라이브: 드라마썰 그림 준비 진행 ── */
+const LIVE=[[72,'그림 만드는 중 · 사람 2장 대기'],[84,'그림 만드는 중 · 사람 1장 대기'],[94,'목소리 길이 재는 중'],[100,'콘테 확인 기다리는 중']];
 let li=0;
 const liveTimer=setInterval(()=>{
   if(li>=LIVE.length){clearInterval(liveTimer);return}
-  const [p,msg]=LIVE[li++];const t=TILES.find(x=>x.id==='k3');
+  const [p,msg]=LIVE[li++];const t=TILES.find(x=>x.id==='k4');
+  if(!t){clearInterval(liveTimer);return}
   t.prog=p;t.sub=msg;
   if(p>=100){t.st='waiting';}
   if(view==='home')renderGallery();
