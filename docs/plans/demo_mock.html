@@ -387,6 +387,41 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
 .spark .fillpath{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:none}
 .spark .lastdot{fill:var(--accent)}
 
+/* ═ 소재 허브 ═ */
+.mat-comp{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;
+  box-shadow:var(--edge),var(--shadow);margin-bottom:18px}
+.mat-comp .row{display:flex;gap:8px;flex-wrap:wrap}
+.mat-comp input{flex:1;min-width:200px;background:var(--panel-2);border:1px solid var(--line-strong);
+  border-radius:12px;color:var(--text);font:inherit;font-size:14px;padding:11px 14px;outline:0}
+.mat-comp input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.mat-comp input::placeholder{color:var(--faint)}
+.trsel{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 12px}
+.scoutbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel);
+  border:1px solid var(--line);border-radius:16px;padding:11px 16px;margin-bottom:18px;box-shadow:var(--edge)}
+.scoutbar .pulse{width:8px;height:8px;border-radius:50%;background:var(--good);
+  box-shadow:0 0 8px color-mix(in srgb,var(--good) 60%,transparent);animation:blink 2.4s ease-in-out infinite}
+.mrow{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
+  border-radius:16px;padding:11px 14px;margin-bottom:8px;box-shadow:var(--edge)}
+.mrow .mth{width:72px;aspect-ratio:16/9;border-radius:9px;flex:none;border:1px solid var(--line)}
+.mrow .tt{flex:1;min-width:0}
+.mrow .tt b{font-size:14px;display:block;line-height:1.35}
+.mrow .tt .msrc{font-size:11.5px;color:var(--faint);display:block;background:none;border:0;padding:0}
+.mrow .st-tag{font-size:10.5px;font-weight:800;padding:2px 9px;border-radius:99px;flex:none}
+.st-pend{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.st-appr{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.st-hold{background:var(--panel-2);color:var(--faint)}
+.mrow .acts{display:flex;gap:6px;flex:none}
+.mrow .acts button{padding:6px 13px;font-size:12.5px}
+@media(max-width:640px){.mrow{flex-wrap:wrap}.mrow .acts{width:100%;justify-content:flex-end}}
+
+/* ═ 프롬프트 편집 시트 ═ */
+.pedit-field{margin-bottom:14px}
+.pedit-field .lb{font-size:11.5px;color:var(--faint);margin-bottom:5px;display:flex;justify-content:space-between}
+.pedit-field textarea{width:100%;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:12px;
+  color:var(--text);font:inherit;font-size:13px;line-height:1.6;padding:10px 12px;resize:vertical;outline:0}
+.pedit-field textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.pedit-field .hint{font-size:11px;color:var(--faint);margin-top:4px}
+
 /* ═ 완성된 영상 + 플레이어 ═ */
 .done-tile .thumb{justify-content:flex-end}
 .done-tile .playmini{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
@@ -434,11 +469,11 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
     border-right:0;border-top:1px solid var(--line);z-index:30;
     backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);overflow:visible}
   .rail .tally,.rail .spacer{display:none}
-  #railBtns{display:flex;flex:1;justify-content:space-around;gap:2px}
-  .rbtn{width:auto;min-width:56px;height:50px;flex-direction:column;gap:3px;border-radius:12px}
-  .rbtn svg{width:21px;height:21px}
+  #railBtns{display:flex;flex:1;justify-content:space-around;gap:0}
+  .rbtn{width:auto;min-width:44px;height:50px;flex-direction:column;gap:3px;border-radius:12px;padding:0 4px}
+  .rbtn svg{width:20px;height:20px}
   .rbtn .tip{display:none}
-  .rlbl{display:block;font-size:9.5px;font-weight:600;letter-spacing:-.01em}
+  .rlbl{display:block;font-size:8.5px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
   /* 본문 여백: 탭 바 높이 + 세이프 에어리어 */
   .main{padding:14px 16px calc(92px + env(safe-area-inset-bottom));max-width:100%}
   .top{padding:14px 16px 0}
@@ -519,6 +554,29 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
     <div class="gal" id="doneGal"></div>
   </section>
 
+  <!-- 소재 허브: 계속 만들어지는 소재 -->
+  <section class="view" id="v-mat">
+    <div class="mat-comp">
+      <div style="font-size:15px;font-weight:800;margin-bottom:10px">새 소재 만들기</div>
+      <div class="trsel" id="matTrSel"></div>
+      <div class="row">
+        <input id="matInput" placeholder="주제를 적어주세요 — 예: 엔화 예금, 지금 들어가도 될까" autocomplete="off">
+        <button class="primary big" id="matAdd">소재 올리기</button>
+      </div>
+      <div class="tiny" style="margin-top:8px">올리면 홈의 승인 큐에 떠요 — 경쟁 채널에서 자동으로도 올라와요</div>
+    </div>
+    <div class="scoutbar">
+      <span class="pulse"></span>
+      <span class="tiny" id="scoutStat">자동 발굴 켜짐 · 오늘 2회 확인 · 마지막 14:00</span>
+      <div style="flex:1"></div>
+      <button id="scoutNow">지금 확인</button>
+      <button class="ghost" id="goBiz">경쟁 채널 보기</button>
+    </div>
+    <div class="sec"><h2>소재 목록</h2><span class="tiny">승인하면 만들기로 넘어가요</span></div>
+    <div class="filters" id="matFilters"></div>
+    <div id="matList"></div>
+  </section>
+
   <!-- 만들기 -->
   <section class="view" id="v-gen">
     <div class="maker">
@@ -542,23 +600,25 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
   <!-- 함께 결정 -->
   <section class="view" id="v-vote"><div class="votes" id="voteList"></div></section>
 
+  <!-- 분석: 경쟁 채널 + 예상 수익 -->
+  <section class="view" id="v-biz">
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="font-size:14.5px;margin-bottom:8px">경쟁 채널 — 일 2~4회 자동 확인</h3>
+      <div class="tiny" style="margin-bottom:8px">채널 중앙값보다 크게 튄 영상이 소재 큐로 올라와요 (최근 14일 가중)</div>
+      <div id="compRows"></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:14.5px;margin-bottom:4px">이번 달 예상 수익</h3>
+      <div class="tiny" style="margin-bottom:12px">조회수 × 트랙 단가(RPM) 추정 — 목표: 고정비 60만 원의 3배(180만)</div>
+      <div class="rev-total" id="revTotal"></div>
+      <div id="revRows"></div>
+      <div class="tiny" style="margin-top:10px">11~12월 성수기엔 단가가 1.5~2배 — 같은 조회수로 수익이 올라가요</div>
+    </div>
+  </section>
+
   <!-- 기록 -->
   <section class="view" id="v-log">
-    <div class="tabs"><button class="on" id="tabAudit">기록</button><button id="tabUsage">사용량</button><button id="tabBiz">경쟁·수익</button></div>
-    <div id="bizPane" style="display:none">
-      <div class="card" style="margin-bottom:14px">
-        <h3 style="font-size:14.5px;margin-bottom:8px">경쟁 채널 — 일 2~4회 자동 확인</h3>
-        <div class="tiny" style="margin-bottom:8px">채널 중앙값보다 크게 튄 영상이 소재 큐로 올라와요 (최근 14일 가중)</div>
-        <div id="compRows"></div>
-      </div>
-      <div class="card">
-        <h3 style="font-size:14.5px;margin-bottom:4px">이번 달 예상 수익</h3>
-        <div class="tiny" style="margin-bottom:12px">조회수 × 트랙 단가(RPM) 추정 — 목표: 고정비 60만 원의 3배(180만)</div>
-        <div class="rev-total" id="revTotal"></div>
-        <div id="revRows"></div>
-        <div class="tiny" style="margin-top:10px">11~12월 성수기엔 단가가 1.5~2배 — 같은 조회수로 수익이 올라가요</div>
-      </div>
-    </div>
+    <div class="tabs"><button class="on" id="tabAudit">기록</button><button id="tabUsage">사용량</button></div>
     <div id="auditPane">
       <div class="filters" id="logFilters"></div>
       <div id="logList"></div>
@@ -610,6 +670,28 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
     <span class="num" id="pDur">00:00</span></div>
 </div>
 
+<!-- 프롬프트 편집 시트 -->
+<aside class="sheet" id="peSheet" aria-label="프롬프트 편집">
+  <button class="close" id="peClose" aria-label="닫기" style="position:absolute">✕</button>
+  <div class="body" style="padding-top:20px">
+    <h3>프롬프트 수정</h3>
+    <p class="tiny" style="margin:0 0 4px">저장하면 다음 생성부터 바로 적용돼요 — 누가 언제 고쳤는지 기록에 남아요</p>
+    <div class="trsel" id="peTrSel"></div>
+    <div class="pedit-field"><div class="lb"><span>페르소나 (말투·태도)</span></div>
+      <textarea id="pePersona" rows="3"></textarea></div>
+    <div class="pedit-field"><div class="lb"><span>구성 · 감정 아크</span><span>한 줄에 하나 — 챕터 | 감정</span></div>
+      <textarea id="peStruct" rows="8"></textarea>
+      <div class="hint">순서대로 영상 구성이 돼요. 마지막 챕터는 댓글 유도로 끝나요.</div></div>
+    <div class="pedit-field"><div class="lb"><span>금지어</span><span>쉼표로 구분</span></div>
+      <textarea id="peBanned" rows="2"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+      <button class="ghost" id="peReset">기본값으로</button>
+      <button class="primary" id="peSave">저장</button>
+    </div>
+    <div class="tiny" style="margin-top:10px">길이 제어·사실 시트 규칙·콘테 4요소는 잠금이에요 — 바꾸려면 함께 결정으로.</div>
+  </div>
+</aside>
+
 <!-- 발행 예약 확인 -->
 <div class="confirm" id="confirmSched" role="dialog" aria-label="발행 예약 확인">
   <h3>발행 예약할까요?</h3>
@@ -638,15 +720,39 @@ function chch(tr){return `<span class="chip"><span class="dot" style="background
 let TODO=[
  {id:1,kind:'실패',tr:'natepan',ttl:'목소리 만들기가 멈췄어요',s:'「장례식장에서 만난 사람」 씬 14 · 2시간째',crit:true,
   act:[['다시 시도','retry','primary']]},
- {id:3,kind:'소재 승인',tr:'drama',ttl:'시청률 역주행 드라마 3화 떡밥 정리',s:'터진 소재예요 — 경쟁 중앙값의 4.1배',card:'k1',
-  act:[['승인','ok','primary'],['자세히','detail','ghost']]},
- {id:4,kind:'소재 승인',tr:'japan',ttl:'일본 20대 평균 연봉의 함정',s:'경쟁 중앙값의 2.8배',card:'k2',
-  act:[['승인','ok','primary'],['자세히','detail','ghost']]},
  {id:5,kind:'검토',tr:'japan',ttl:'콘테 확인 — 엔저 시대 월급의 진실',s:'대본·목소리 준비 끝 · 다듬고 하나로 합쳐주세요',
   act:[['콘테 확인','edit','primary']]},
  {id:6,kind:'투표',tr:'japan',ttl:'이번 화 제목, 셋 중 하나만 골라주세요',s:'마감 34시간 남음',
   act:[['고르러 가기','vote','primary']]},
 ];
+/* 소재 저장소 — 자동 발굴 + 직접 추가. pending이 홈 승인 큐로 뜬다. */
+let MSEQ=10;
+let MATERIALS=[
+ {id:'m1',tr:'drama',ttl:'시청률 역주행 드라마 3화 떡밥 정리',src:'자동 발굴 · D튜브 중앙값의 4.1배',status:'pending',card:'k1'},
+ {id:'m2',tr:'japan',ttl:'엔화 예금, 지금 들어가도 될까',src:'자동 발굴 · J-머니 중앙값의 3.1배',status:'pending'},
+ {id:'m3',tr:'japan',ttl:'일본 20대 평균 연봉의 함정',src:'자동 발굴 · A가 승인',status:'approved',card:'k2'},
+ {id:'m4',tr:'natepan',ttl:'택배 기사님의 마지막 편지',src:'직접 추가 (B) · C가 승인',status:'approved'},
+ {id:'m5',tr:'drama',ttl:'악역이 더 사랑받는 이유',src:'직접 추가 (A)',status:'hold'},
+];
+function materialCues(){
+  return MATERIALS.filter(m=>m.status==='pending').map(m=>({
+    id:'mat-'+m.id,kind:'소재 승인',tr:m.tr,ttl:m.ttl,s:m.src,card:m.card,mat:m.id,
+    act:m.card?[['승인','ok','primary'],['자세히','detail','ghost'],['보류','hold','ghost']]
+              :[['승인','ok','primary'],['보류','hold','ghost']],
+  }));
+}
+function approveMaterial(mid){
+  const m=MATERIALS.find(x=>x.id===mid);if(!m)return;
+  m.status='approved';m.src+=` · ${who}가 승인`;
+  if(m.card&&CARDS[m.card]){CARDS[m.card].approved=who;CARDS[m.card].hist.unshift(['방금',who+'가 승인'])}
+  toast(`${who}가 승인했어요 — 만들기에서 시작할 수 있어요 (기록에 남음)`);
+  renderRail();if(view==='home')renderHome();if(view==='mat')renderMat();
+}
+function holdMaterial(mid){
+  const m=MATERIALS.find(x=>x.id===mid);if(!m)return;
+  m.status='hold';toast('보류했어요 — 소재 목록에 남아 있어요');
+  renderRail();if(view==='home')renderHome();if(view==='mat')renderMat();
+}
 const TILES=[
  {id:'k3',tr:'japan',ttl:'엔저 시대 월급의 진실',st:'waiting',prog:100,sub:'콘테 확인 기다리는 중'},
  {id:'k4',tr:'drama',ttl:'3화 떡밥 정리',st:'making',prog:64,sub:'그림 만드는 중 · 사람 3장 대기',live:true},
@@ -684,27 +790,31 @@ const CARDS={
 /* ── 레일 ── */
 const IC={
  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h12V9.5"/></svg>',
+ mat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2 4.5 4.9.5-3.7 3.3 1.1 4.8L12 14l-4.3 2.6 1.1-4.8-3.7-3.3 4.9-.5z"/><path d="M12 18.5v2"/></svg>',
  gen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 8.5v7M8.5 12h7"/></svg>',
  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><path d="M3.5 15h17M8 15v4M14 15v4"/></svg>',
+ biz:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4.5 19.5v-6M10 19.5V9M15.5 19.5v-9.5M21 19.5V4.5"/></svg>',
  vote:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 13l3 3 7-8"/><rect x="3.5" y="4" width="17" height="16" rx="3"/></svg>',
  log:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M5 6.5h14M5 12h14M5 17.5h9"/></svg>'};
-const NAV=[['home','홈'],['gen','만들기'],['edit','편집'],['vote','함께 결정'],['log','기록']];
+const NAV=[['home','홈'],['mat','소재'],['gen','만들기'],['edit','편집'],['biz','분석'],['vote','함께 결정'],['log','기록']];
 function renderRail(){
   $('#railBtns').innerHTML=NAV.map(([k,n])=>`<button class="rbtn ${view===k?'on':''}" data-v="${k}" aria-label="${n}">
     ${IC[k]}${k==='home'&&todoCount()?`<span class="bub">${todoCount()}</span>`:''}<span class="tip">${n}</span><span class="rlbl">${n}</span></button>`).join('');
   $('#railBtns').querySelectorAll('.rbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.v)));
 }
-function todoCount(){return TODO.filter(t=>!(t.kind==='최종 검토'&&t.owner===who)).length}
+function todoCount(){return TODO.length+materialCues().length}
 function setView(v){view=v;
   NAV.forEach(([k])=>$('#v-'+k).classList.toggle('on',k===v));
   $('#viewTitle').textContent=NAV.find(([k])=>k===v)[1];
   $('#hello').textContent = v==='home' ? `${NAMES[who]}님, 기다리는 큐 ${todoCount()}개 — 승인하면 파이프라인이 흘러가요` :
+    v==='mat' ? '직접 올리거나, 경쟁 채널에서 자동으로 올라와요' :
     v==='gen' ? '승인된 소재 고르고, 버튼 하나면 끝' :
     v==='edit' ? '일본 머니 · 엔저 시대 월급의 진실 — 콘테 다듬기 → 합치기 → 확인 → 발행' :
-    v==='vote' ? '2명이 고르면 바로 결정돼요' : '기록 · 사용량 · 경쟁 채널과 예상 수익';
+    v==='biz' ? '경쟁 채널이 뭘로 터지는지, 우리는 얼마나 버는지' :
+    v==='vote' ? '2명이 고르면 바로 결정돼요' : '누가 뭘 했는지 · 돈이 어디 쓰이는지';
   renderRail();
-  if(v==='home')renderHome(); if(v==='gen')renderGen(); if(v==='edit')renderEditor();
-  if(v==='vote')renderVotes(); if(v==='log')renderLog();
+  if(v==='home')renderHome(); if(v==='mat')renderMat(); if(v==='gen')renderGen(); if(v==='edit')renderEditor();
+  if(v==='biz')renderBiz(); if(v==='vote')renderVotes(); if(v==='log')renderLog();
 }
 
 /* ── 접속자(아바타) — 권한이 아니라 기록용 신원. 누구나 큐를 승인한다. ── */
@@ -716,24 +826,75 @@ function renderAvatars(){
 
 /* ── 홈 ── */
 function renderHome(){
-  const vis=TODO;
+  const vis=[...materialCues(),...TODO];
   $('#todoRow').innerHTML= vis.length? vis.slice(0,4).map(t=>`
    <div class="tcard k-${t.tr} ${t.crit?'crit':''}">
      <span class="kind">${t.kind.toUpperCase()}</span>
      <span class="t">${t.ttl}</span><span class="s">${CH[t.tr].nm} · ${t.s}</span>
-     <span class="act">${t.act.map(([label,a,cls])=>`<button class="${cls}" data-a="${a}" data-id="${t.id}" data-card="${t.card||''}">${label}</button>`).join('')}</span>
-   </div>`).join('') : `<div class="done-all">다 했어요 — 다음 발행은 금요일 21시예요</div>`;
+     <span class="act">${t.act.map(([label,a,cls])=>`<button class="${cls}" data-a="${a}" data-id="${t.id}" data-card="${t.card||''}" data-mat="${t.mat||''}">${label}</button>`).join('')}</span>
+   </div>`).join('') : `<div class="done-all">다 했어요 — 새 소재는 소재 탭에서 계속 만들 수 있어요</div>`;
   $('#todoRow').querySelectorAll('[data-a]').forEach(b=>b.addEventListener('click',()=>{
-    const a=b.dataset.a,id=+b.dataset.id;
-    if(a==='ok'){const t=TODO.find(x=>x.id===id);if(t.card&&CARDS[t.card]){CARDS[t.card].approved=who;CARDS[t.card].hist.unshift(['방금',who+'가 승인'])}
-      TODO=TODO.filter(x=>x.id!==id);toast(`${who}가 승인했어요 — 에이전트가 이어서 만듭니다 (기록에 남음)`);renderHome();renderRail();}
-    if(a==='retry'){TODO=TODO.filter(x=>x.id!==id);const tile=TILES.find(x=>x.id==='k6');tile.st='making';tile.sub='씬 14 다시 녹음 중';
+    const a=b.dataset.a,id=b.dataset.id,mat=b.dataset.mat;
+    if(a==='ok'&&mat){approveMaterial(mat);return}
+    if(a==='hold'&&mat){holdMaterial(mat);return}
+    if(a==='retry'){TODO=TODO.filter(x=>x.id!==+id);const tile=TILES.find(x=>x.id==='k6');tile.st='making';tile.sub='씬 14 다시 녹음 중';
       toast('다시 시도 — 씬 14부터 이어서 가요');renderHome();renderRail();}
     if(a==='detail')openSheet(b.dataset.card);
     if(a==='edit')setView('edit'); if(a==='vote')setView('vote');
   }));
   renderGalFilters();renderGallery();renderDone();
 }
+
+/* ── 소재 허브 ── */
+let matFilter='pending', matTr='japan';
+const MSTAT={pending:['대기','st-pend'],approved:['승인됨','st-appr'],hold:['보류','st-hold']};
+function renderMat(){
+  $('#matTrSel').innerHTML=Object.entries(CH).map(([k,v])=>`
+    <button class="gf ${matTr===k?'on':''}" data-mtr="${k}"><span class="dot" style="background:${v.c}"></span>${v.nm}</button>`).join('');
+  $('#matTrSel').querySelectorAll('[data-mtr]').forEach(b=>b.addEventListener('click',()=>{matTr=b.dataset.mtr;renderMat()}));
+  const counts=s=>MATERIALS.filter(m=>m.status===s).length;
+  $('#matFilters').innerHTML=[['pending','대기'],['approved','승인됨'],['hold','보류'],['all','전체']].map(([k,n])=>`
+    <button class="opt-chip ${matFilter===k?'on':''}" data-mf="${k}">${n}${k!=='all'?` <b class="num">${counts(k)}</b>`:''}</button>`).join('');
+  $('#matFilters').querySelectorAll('[data-mf]').forEach(b=>b.addEventListener('click',()=>{matFilter=b.dataset.mf;renderMat()}));
+  const list=MATERIALS.filter(m=>matFilter==='all'||m.status===matFilter);
+  $('#matList').innerHTML= list.length? list.map(m=>`
+    <div class="mrow">
+      <span class="mth th-${m.tr}"></span>
+      <span class="tt"><b>${m.ttl}</b><span class="msrc">${CH[m.tr].nm} · ${m.src}</span></span>
+      <span class="st-tag ${MSTAT[m.status][1]}">${MSTAT[m.status][0]}</span>
+      <span class="acts">${
+        m.status==='pending'?`<button class="primary" data-mok="${m.id}">승인</button><button class="ghost" data-mhold="${m.id}">보류</button>`:
+        m.status==='approved'?`<button class="primary" data-mgo="${m.id}">만들기</button>`:
+        `<button data-mre="${m.id}">다시 올리기</button>`}</span>
+    </div>`).join('') : `<div class="gal-empty">여기엔 아직 없어요</div>`;
+  $('#matList').querySelectorAll('[data-mok]').forEach(b=>b.addEventListener('click',()=>approveMaterial(b.dataset.mok)));
+  $('#matList').querySelectorAll('[data-mhold]').forEach(b=>b.addEventListener('click',()=>holdMaterial(b.dataset.mhold)));
+  $('#matList').querySelectorAll('[data-mgo]').forEach(b=>b.addEventListener('click',()=>setView('gen')));
+  $('#matList').querySelectorAll('[data-mre]').forEach(b=>b.addEventListener('click',()=>{
+    const m=MATERIALS.find(x=>x.id===b.dataset.mre);m.status='pending';toast('승인 큐에 다시 올렸어요');renderMat();renderRail()}));
+}
+function addMaterial(tr,ttl,src){
+  MATERIALS.unshift({id:'m'+(MSEQ++),tr,ttl,src,status:'pending'});
+  renderRail();if(view==='mat')renderMat();if(view==='home')renderHome();
+}
+$('#matAdd').addEventListener('click',()=>{
+  const v=$('#matInput').value.trim();
+  if(!v){toast('주제를 먼저 적어주세요');$('#matInput').focus();return}
+  addMaterial(matTr,v,`직접 추가 (${who})`);
+  $('#matInput').value='';
+  toast('소재를 올렸어요 — 홈 승인 큐에 떴어요');
+});
+$('#matInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#matAdd').click()});
+let scoutBusy=false;
+$('#scoutNow').addEventListener('click',()=>{
+  if(scoutBusy)return;scoutBusy=true;
+  $('#scoutStat').textContent='경쟁 채널 12곳 확인 중…';
+  setTimeout(()=>{scoutBusy=false;
+    addMaterial('realestate','청약 가점 계산의 함정','자동 발굴 · 집코노미 중앙값의 3.4배');
+    $('#scoutStat').textContent='자동 발굴 켜짐 · 오늘 3회 확인 · 방금 1건 발견';
+    toast('새 소재 1건 발견 — 승인 큐에 올렸어요');},1400);
+});
+$('#goBiz').addEventListener('click',()=>setView('biz'));
 /* ── 완성된 영상 ── */
 function renderDone(){
   $('#doneGal').innerHTML=DONE.map(d=>`
@@ -827,14 +988,18 @@ function openSheet(cardId){
    </div>`;
   $('#sheet').classList.add('on');$('#scrim').classList.add('on');
   $('#shClose').addEventListener('click',closeSheet);
-  const ap=$('#shApprove');if(ap)ap.addEventListener('click',()=>{c.approved=who;c.hist.unshift(['방금',who+'가 승인']);
-    TODO=TODO.filter(t=>t.card!==cardId);toast(`${who}가 승인했어요 — 에이전트가 이어서 만듭니다`);renderRail();if(view==='home')renderHome();openSheet(cardId)});
+  const ap=$('#shApprove');if(ap)ap.addEventListener('click',()=>{
+    const m=MATERIALS.find(x=>x.card===cardId);
+    if(m)approveMaterial(m.id);
+    else{c.approved=who;c.hist.unshift(['방금',who+'가 승인']);toast(`${who}가 승인했어요`)}
+    openSheet(cardId)});
   const ed=$('#shEdit');if(ed)ed.addEventListener('click',()=>{closeSheet();setView('edit')});
   const mk=$('#shMake');if(mk)mk.addEventListener('click',()=>{closeSheet();genSel='g1';setView('gen')});
 }
-function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on')}
-$('#scrim').addEventListener('click',closeSheet);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+function closeSheet(){$('#sheet').classList.remove('on');
+  if(!$('#peSheet').classList.contains('on'))$('#scrim').classList.remove('on')}
+$('#scrim').addEventListener('click',()=>{closeSheet();closePe()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeSheet();closePe()}});
 
 /* ── 만들기 ── */
 /* 승인된 소재만 목록에 — 접속자 누구나 시작할 수 있다 */
@@ -898,9 +1063,43 @@ function renderPromptPanel(c){
      <div class="prow"><span class="k">훅·미드롤</span><span class="v">훅 40초 내 · ${sp.mid.length?sp.mid.join('/')+' 직전 클리프행어':'미드롤 없음'}</span></div>
      <div class="prow"><span class="k">숫자 규칙</span><span class="v">수치는 <span class="num">{{fact:키}}</span> 토큰만 허용 — 직접 쓰면 검사에서 걸러져요</span></div>
      <div class="prow"><span class="k">다시 만들기</span><span class="v">장면 하나만 · 앞뒤 문장(prev_tail/next_head)과 바이블이 자동으로 들어가요</span></div>
+     <div class="prow"><span class="k"></span><span class="v"><button id="pEditBtn">이 채널 프롬프트 수정하기</button></span></div>
    </div>`;
   $('#promptPanel').open=wasOpen;
+  $('#pEditBtn').addEventListener('click',()=>openPe(c.tr));
 }
+
+/* ── 프롬프트 편집 시트 — 페르소나·구성·금지어 자유 수정 (저장 즉시 반영) ── */
+const PE_DEFAULTS={PERSONA:{...PERSONA},STRUCT:JSON.parse(JSON.stringify(STRUCT)),BANNED:JSON.parse(JSON.stringify(BANNED))};
+let peTr='japan';
+function openPe(tr){
+  peTr=tr||peTr;
+  $('#peTrSel').innerHTML=Object.entries(CH).map(([k,v])=>`
+    <button class="gf ${peTr===k?'on':''}" data-petr="${k}"><span class="dot" style="background:${v.c}"></span>${v.nm}</button>`).join('');
+  $('#peTrSel').querySelectorAll('[data-petr]').forEach(b=>b.addEventListener('click',()=>openPe(b.dataset.petr)));
+  $('#pePersona').value=PERSONA[peTr];
+  $('#peStruct').value=STRUCT[peTr].map(([ch,em])=>`${ch} | ${em}`).join('\n');
+  $('#peBanned').value=BANNED[peTr].join(', ');
+  $('#peSheet').classList.add('on');$('#scrim').classList.add('on');
+}
+function closePe(){$('#peSheet').classList.remove('on');
+  if(!$('#sheet').classList.contains('on'))$('#scrim').classList.remove('on')}
+$('#peClose').addEventListener('click',closePe);
+$('#peReset').addEventListener('click',()=>{
+  PERSONA[peTr]=PE_DEFAULTS.PERSONA[peTr];
+  STRUCT[peTr]=JSON.parse(JSON.stringify(PE_DEFAULTS.STRUCT[peTr]));
+  BANNED[peTr]=[...PE_DEFAULTS.BANNED[peTr]];
+  openPe(peTr);toast('기본값으로 되돌렸어요');});
+$('#peSave').addEventListener('click',()=>{
+  PERSONA[peTr]=$('#pePersona').value.trim()||PERSONA[peTr];
+  const rows=$('#peStruct').value.split('\n').map(l=>l.split('|').map(s=>s.trim())).filter(r=>r[0]);
+  if(rows.length<3){toast('구성은 최소 3단계가 필요해요');return}
+  STRUCT[peTr]=rows.map(r=>[r[0],r[1]||'']);
+  BANNED[peTr]=$('#peBanned').value.split(',').map(s=>s.trim()).filter(Boolean);
+  LOGS.unshift({t:'방금',p:who,txt:`프롬프트 수정 — ${CH[peTr].nm} (구성 ${STRUCT[peTr].length}단계 · 금지어 ${BANNED[peTr].length}개)`});
+  closePe();
+  if(view==='gen'){const c=GENCARDS.find(x=>x.id===genSel);if(c)renderPromptPanel(c)}
+  toast(`저장했어요 — 다음 생성부터 적용돼요 (${who} 수정, 기록에 남음)`);});
 
 /* 만들기는 재료 준비까지 — 조립(합치기)은 콘테 확인 후 편집 화면에서 */
 const STEPS=['대본','목소리','그림 (사람 7건)'];
@@ -1143,15 +1342,11 @@ function renderLog(){
 function logTab(which){
   $('#auditPane').style.display = which==='audit'?'':'none';
   $('#usagePane').style.display = which==='usage'?'':'none';
-  $('#bizPane').style.display = which==='biz'?'':'none';
   $('#tabAudit').classList.toggle('on',which==='audit');
   $('#tabUsage').classList.toggle('on',which==='usage');
-  $('#tabBiz').classList.toggle('on',which==='biz');
-  if(which==='biz')renderBiz();
 }
 $('#tabAudit').addEventListener('click',()=>logTab('audit'));
 $('#tabUsage').addEventListener('click',()=>logTab('usage'));
-$('#tabBiz').addEventListener('click',()=>logTab('biz'));
 
 /* ── 경쟁 채널 + 예상 수익 (core/scout.py 리포트 + v5 보고서 §7 역산) ── */
 const COMPETITORS=[
@@ -1176,7 +1371,9 @@ function renderBiz(){
       ${c.mult?`<button data-mine="${c.tr}">우리 버전 소재로</button>`:'<span></span>'}
     </div>`).join('');
   $('#compRows').querySelectorAll('[data-mine]').forEach(b=>b.addEventListener('click',()=>{
-    toast('소재 큐에 올렸어요 — 홈에서 승인하면 시작돼요');}));
+    const c=COMPETITORS.find(x=>x.tr===b.dataset.mine);
+    addMaterial(c.tr,c.hot,`자동 발굴 · ${c.ch} 중앙값의 ${c.mult}배`);
+    toast('소재 큐에 올렸어요 — 홈이나 소재 탭에서 승인하면 시작돼요');}));
   const rows=REVENUE.map(r=>({...r,won:r.views*10000*r.rpm/1000/10000})); // 만 원
   const total=rows.reduce((a,r)=>a+r.won,0);
   const FIXED=60,TARGET=180;
@@ -1201,11 +1398,10 @@ let ckSel=0, ckItems=[];
 function buildCk(){
   const items=[];
   NAV.forEach(([k,n])=>items.push({kind:'이동',label:n,hint:'화면',run:()=>setView(k)}));
-  items.push({kind:'이동',label:'경쟁 채널 · 예상 수익',hint:'기록 탭',run:()=>{setView('log');logTab('biz')}});
+  items.push({kind:'설정',label:'프롬프트 수정하기',hint:'페르소나·구성·금지어',run:()=>openPe(peTr)});
+  materialCues().forEach(t=>items.push({kind:'소재 승인',label:t.ttl,hint:CH[t.tr].nm,run:()=>approveMaterial(t.mat)}));
   TODO.forEach(t=>{
-    const run = t.kind==='소재 승인' ? ()=>{const c=CARDS[t.card];if(c){c.approved=who;c.hist.unshift(['방금',who+'가 승인'])}
-        TODO=TODO.filter(x=>x.id!==t.id);toast(`${who}가 승인했어요 — 에이전트가 이어서 만듭니다`);renderRail();if(view==='home')renderHome();}
-      : t.kind==='실패' ? ()=>{TODO=TODO.filter(x=>x.id!==t.id);const tile=TILES.find(x=>x.id==='k6');
+    const run = t.kind==='실패' ? ()=>{TODO=TODO.filter(x=>x.id!==t.id);const tile=TILES.find(x=>x.id==='k6');
         if(tile){tile.st='making';tile.sub='씬 14 다시 녹음 중'}toast('다시 시도 — 이어서 가요');renderRail();if(view==='home')renderHome();}
       : t.kind==='검토' ? ()=>setView('edit') : ()=>setView('vote');
     items.push({kind:t.kind,label:t.ttl,hint:CH[t.tr].nm,run});
