@@ -317,6 +317,76 @@ section.view.on{display:block;animation:rise .45s var(--ease)}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--dim);margin-bottom:10px}
 .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+/* ═ 커맨드 팔레트 (⌘K) ═ */
+.ck-scrim{position:fixed;inset:0;background:rgba(4,6,12,.5);backdrop-filter:blur(3px);
+  opacity:0;pointer-events:none;transition:opacity .25s var(--ease);z-index:70}
+.ck-scrim.on{opacity:1;pointer-events:auto}
+.cmdk{position:fixed;top:14%;left:50%;transform:translateX(-50%) translateY(-8px) scale(.98);
+  width:min(560px,92vw);background:var(--panel);border:1px solid var(--line-strong);border-radius:16px;
+  box-shadow:var(--edge),0 30px 80px -20px rgba(2,5,14,.9);z-index:71;overflow:hidden;
+  opacity:0;pointer-events:none;transition:opacity .25s var(--ease),transform .25s var(--ease)}
+.cmdk.on{opacity:1;pointer-events:auto;transform:translateX(-50%) none}
+.cmdk input{width:100%;background:transparent;border:0;outline:0;color:var(--text);
+  font:inherit;font-size:15px;padding:15px 18px;border-bottom:1px solid var(--line)}
+.cmdk input::placeholder{color:var(--faint)}
+.ck-list{max-height:min(48vh,380px);overflow-y:auto;padding:6px}
+.ck-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;
+  border-radius:10px;background:transparent;border:1px solid transparent;font-size:13.5px}
+.ck-item:hover{transform:none;box-shadow:none}
+.ck-item.sel{background:var(--panel-2);border-color:var(--line)}
+.ck-item .kind{font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;flex:none;
+  background:var(--panel-2);color:var(--faint);border:1px solid var(--line)}
+.ck-item.sel .kind{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+.ck-item .lb{flex:1}
+.ck-item .hint{font-size:11px;color:var(--faint)}
+.ck-empty{padding:26px;text-align:center;color:var(--faint);font-size:13px}
+.ck-foot{display:flex;gap:14px;padding:8px 16px;border-top:1px solid var(--line);font-size:11px;color:var(--faint)}
+kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px solid var(--line-strong);
+  border-radius:5px;padding:1px 5px;color:var(--dim)}
+.searchbtn{width:34px;height:34px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center}
+.searchbtn svg{width:16px;height:16px}
+
+/* ═ 확인 다이얼로그 (발행 예약) ═ */
+.confirm{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.97);
+  width:min(400px,90vw);background:var(--panel);border:1px solid var(--line-strong);border-radius:18px;
+  box-shadow:var(--edge),0 30px 80px -20px rgba(2,5,14,.9);z-index:71;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .25s var(--ease),transform .25s var(--ease)}
+.confirm.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+.confirm h3{font-size:16px;margin-bottom:10px}
+.confirm .cl{display:flex;flex-direction:column;gap:0;margin-bottom:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.confirm .cl>div{display:flex;gap:9px;padding:9px 12px;font-size:12.5px;color:var(--dim);background:var(--panel-2)}
+.confirm .cl>div+div{border-top:1px dashed var(--line)}
+.confirm .cl .ok{color:var(--good);font-weight:800;flex:none}
+.confirm .btns{display:flex;gap:8px;justify-content:flex-end}
+
+/* ═ 편집 통독(포커스) 모드 ═ */
+.focusread .visual,.focusread .cmeta,.focusread .acts,.focusread .capline{display:none}
+.focusread .srow{grid-template-columns:1fr;padding:14px 18px}
+.focusread .nar{font-size:16.5px;line-height:1.8;margin:0}
+.focusread .top-line{margin-bottom:2px}
+#btnFocus.on{border-color:color-mix(in srgb,var(--accent) 65%,transparent);color:var(--accent)}
+
+/* ═ 홈 갤러리 채널 필터 칩 ═ */
+.galfilters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.gf{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:5px 13px;border-radius:99px;
+  border:1px solid var(--line-strong);background:var(--panel-2)}
+.gf .dot{width:7px;height:7px;border-radius:50%}
+.gf.on{border-color:color-mix(in srgb,var(--accent) 65%,transparent);color:var(--accent);font-weight:700}
+.gal-empty{border:1px dashed var(--line-strong);border-radius:18px;padding:30px;text-align:center;color:var(--faint);font-size:13px}
+
+/* ═ 스파크라인 메트릭 ═ */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:700px){.mgrid{grid-template-columns:1fr 1fr}}
+.mtile{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--edge)}
+.mtile .mk{font-size:11.5px;color:var(--faint)}
+.mtile .mv{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;margin:2px 0 6px}
+.mtile .mv .up{font-size:11px;color:var(--crit);font-weight:700}
+.mtile .mv .dn{font-size:11px;color:var(--good);font-weight:700}
+.spark{width:100%;height:30px;display:block}
+.spark polyline{fill:none;stroke:var(--accent);stroke-width:1.5}
+.spark .fillpath{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:none}
+.spark .lastdot{fill:var(--accent)}
+
 /* ═ 반응형: 태블릿·모바일 = 앱 UI ═ */
 @media(max-width:900px){
   .app{grid-template-columns:1fr}
@@ -393,6 +463,8 @@ section.view.on{display:block;animation:rise .45s var(--ease)}
   <div class="top">
     <div><h1 id="viewTitle">홈</h1><div class="hello" id="hello"></div></div>
     <div class="spacer"></div>
+    <button class="searchbtn" id="btnCmdk" aria-label="빠른 이동 (Cmd+K)" title="빠른 이동 ⌘K">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
     <div class="avatars" id="avatars" role="group" aria-label="보는 사람"></div>
   </div>
 
@@ -403,6 +475,7 @@ section.view.on{display:block;animation:rise .45s var(--ease)}
     <div class="sec"><h2>지금 할 일</h2><span class="tiny">눌러서 바로 처리 — 끝나면 사라져요</span></div>
     <div class="todo-row" id="todoRow"></div>
     <div class="sec"><h2>만들어지는 중</h2><span class="tiny">누르면 자세히 보여요</span></div>
+    <div class="galfilters" id="galFilters"></div>
     <div class="gal" id="gallery"></div>
   </section>
 
@@ -462,6 +535,26 @@ section.view.on{display:block;animation:rise .45s var(--ease)}
 <!-- 슬라이드 오버 상세 -->
 <div class="scrim" id="scrim"></div>
 <aside class="sheet" id="sheet" aria-label="상세"></aside>
+
+<!-- ⌘K 커맨드 팔레트 -->
+<div class="ck-scrim" id="ckScrim"></div>
+<div class="cmdk" id="cmdk" role="dialog" aria-label="빠른 이동">
+  <input id="ckInput" placeholder="화면, 소재, 할 일 검색… (예: 검토, 드라마, 확정)" autocomplete="off">
+  <div class="ck-list" id="ckList"></div>
+  <div class="ck-foot"><span><kbd>↑</kbd><kbd>↓</kbd> 이동</span><span><kbd>Enter</kbd> 실행</span><span><kbd>Esc</kbd> 닫기</span></div>
+</div>
+
+<!-- 발행 예약 확인 -->
+<div class="confirm" id="confirmSched" role="dialog" aria-label="발행 예약 확인">
+  <h3>발행 예약할까요?</h3>
+  <div class="cl">
+    <div><span class="ok">✓</span>예약 초안으로 업로드돼요 — 바로 공개되지 않아요</div>
+    <div><span class="ok">✓</span>공개 전환은 사람이 마지막으로 확인해요 (규칙)</div>
+    <div><span class="ok">✓</span>슬롯: 금 21:00 · 업로드 후 상태 확인(verify)까지 자동</div>
+  </div>
+  <div class="btns"><button class="ghost" id="cfCancel">취소</button>
+    <button class="primary" id="cfOk">예약 확정</button></div>
+</div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -567,7 +660,7 @@ function renderHome(){
     if(a==='detail')openSheet(b.dataset.card);
     if(a==='edit')setView('edit'); if(a==='vote')setView('vote');
   }));
-  renderGallery();
+  renderGalFilters();renderGallery();
 }
 function stChip(t){
   if(t.st==='making')return `<span class="chip state amber">만드는 중 ${t.prog}%</span>`;
@@ -576,8 +669,21 @@ function stChip(t){
   if(t.st==='sched')return `<span class="chip state green">예약됨</span>`;
   return '';
 }
+let galFilter='all';
+function renderGalFilters(){
+  const chips=[['all','전체',null],...Object.entries(CH).map(([k,v])=>[k,v.nm,v.c])];
+  $('#galFilters').innerHTML=chips.map(([k,nm,c])=>`
+    <button class="gf ${galFilter===k?'on':''}" data-gf="${k}">${c?`<span class="dot" style="background:${c}"></span>`:''}${nm}</button>`).join('');
+  $('#galFilters').querySelectorAll('[data-gf]').forEach(b=>b.addEventListener('click',()=>{
+    galFilter=b.dataset.gf;renderGalFilters();renderGallery();}));
+}
 function renderGallery(){
-  $('#gallery').innerHTML=TILES.map(t=>`
+  const list=TILES.filter(t=>galFilter==='all'||t.tr===galFilter);
+  if(!list.length){
+    $('#gallery').innerHTML=`<div class="gal-empty" style="grid-column:1/-1">${CH[galFilter].nm} 채널은 지금 만드는 게 없어요 — 만들기에서 소재를 골라 시작해 보세요</div>`;
+    return;
+  }
+  $('#gallery').innerHTML=list.map(t=>`
    <button class="tile ${t.st==='waiting'?'waiting':''}" data-card="${t.id}">
      <span class="thumb th-${t.tr}">
        ${t.st==='making'?`<span class="prog"><i style="width:${t.prog}%"></i></span>`:''}
@@ -838,8 +944,11 @@ function renderEditor(){
   $('#editBar').innerHTML=`
     <span class="tiny">총 <b class="num">11:42</b> / 목표 <b class="num">12:00</b></span>
     <span class="tiny">그림: 사람 <b class="num">${manual}</b>건 · 자동 <b class="num">${SCENES.length-manual}</b>건</span>
-    <span class="tiny">BGM은 에피소드 전체 한 곡</span>
+    <button class="ghost ${edFocus?'on':''}" id="btnFocus" title="콘테를 접고 대본 흐름만 읽어요">통독 모드</button>
     <div style="flex:1"></div>${right}`;
+  $('#storyboard').classList.toggle('focusread',edFocus);
+  $('#btnFocus').addEventListener('click',()=>{edFocus=!edFocus;renderEditor();
+    toast(edFocus?'통독 모드 — 대본 흐름만 위에서 아래로 읽어보세요':'콘테 전체 보기로 돌아왔어요')});
   // ── 안내 ──
   $('#editNotice').innerHTML =
     edState==='scenes' ? `<div class="notice" style="border-color:var(--line);color:var(--dim)">아직 장면 조각이에요 — 아래 콘테를 다듬은 뒤 <b>하나의 영상으로 합치면</b> 완성본 확인과 발행 예약이 열려요</div>` :
@@ -880,10 +989,18 @@ function renderEditor(){
   const br=$('#btnReq');
   if(br)br.onclick=()=>toast('검토 요청 보냈어요 — 다른 두 사람 홈에 떴어요');
   const bs=$('#btnSched');
-  if(bs)bs.onclick=()=>{if(edState!=='reviewed')return;edState='scheduled';
-    toast('예약했어요 — 예약 초안으로 올라가고, 공개 전환은 사람이 마지막으로 확인해요');renderEditor()};
+  if(bs)bs.onclick=()=>{if(edState!=='reviewed')return;openConfirm()};
 }
-let edApprover=null;
+let edApprover=null, edFocus=false;
+
+/* ── 발행 예약 확인 다이얼로그 (규칙: 예약 초안 → 사람 공개 전환) ── */
+function openConfirm(){$('#confirmSched').classList.add('on');$('#ckScrim').classList.add('on')}
+function closeConfirm(){$('#confirmSched').classList.remove('on');
+  if(!$('#cmdk').classList.contains('on'))$('#ckScrim').classList.remove('on')}
+$('#cfCancel').addEventListener('click',closeConfirm);
+$('#cfOk').addEventListener('click',()=>{closeConfirm();edState='scheduled';
+  toast('예약했어요 — 예약 초안으로 올라갔고, 공개 전환은 사람이 마지막으로 확인해요');
+  if(view==='edit')renderEditor()});
 
 /* ── 함께 결정 ── */
 let VOTES=[
@@ -938,6 +1055,80 @@ $('#usageBars').innerHTML=[['japan',62,18],['drama',34,9],['natepan',28,14],['re
  .map(([tr,a,b])=>`<div class="brow"><span>${CH[tr].nm}</span>
    <div class="btrack"><span class="b1" style="width:${a}%"></span><span class="b2" style="width:${b}%"></span></div>
    <span class="num muted">${(a*1000).toLocaleString()} + ${(b*1000).toLocaleString()}자</span></div>`).join('');
+
+/* ── ⌘K 커맨드 팔레트 — 화면 이동 + 할 일 즉시 실행 ── */
+let ckSel=0, ckItems=[];
+function buildCk(){
+  const items=[];
+  NAV.forEach(([k,n])=>items.push({kind:'이동',label:n,hint:'화면',run:()=>setView(k)}));
+  TODO.filter(t=>!(t.kind==='최종 검토'&&t.owner===who)).forEach(t=>{
+    const run = t.kind==='소재 확인' ? ()=>{const c=CARDS[t.card];if(c){c.approved=who;c.hist.unshift(['방금',who+'가 확정'])}
+        TODO=TODO.filter(x=>x.id!==t.id);toast('확정했어요 — 에이전트가 이어서 만듭니다');renderRail();if(view==='home')renderHome();}
+      : t.kind==='실패' ? ()=>{TODO=TODO.filter(x=>x.id!==t.id);const tile=TILES.find(x=>x.id==='k6');
+        if(tile){tile.st='making';tile.sub='씬 14 다시 녹음 중'}toast('다시 시도 — 이어서 가요');renderRail();if(view==='home')renderHome();}
+      : t.kind==='최종 검토' ? ()=>setView('edit') : ()=>setView('vote');
+    items.push({kind:t.kind,label:t.ttl,hint:CH[t.tr].nm,run});
+  });
+  Object.entries(CARDS).forEach(([id,c])=>items.push({kind:'소재',label:c.ttl,hint:CH[c.tr].nm,run:()=>openSheet(id)}));
+  ['A','B','C'].filter(p=>p!==who).forEach(p=>items.push({kind:'시점',label:`${NAMES[p]}(${p}) 시점으로 보기`,hint:'전환',
+    run:()=>{who=p;renderAvatars();setView(view);toast(`${NAMES[p]} 시점으로 봅니다`)}}));
+  return items;
+}
+function ckOpen(){
+  ckItems=buildCk();ckSel=0;
+  $('#ckInput').value='';ckRender('');
+  $('#cmdk').classList.add('on');$('#ckScrim').classList.add('on');
+  setTimeout(()=>$('#ckInput').focus(),50);
+}
+function ckClose(){$('#cmdk').classList.remove('on');
+  if(!$('#confirmSched').classList.contains('on'))$('#ckScrim').classList.remove('on')}
+function ckFiltered(q){q=q.trim().toLowerCase();
+  return q?ckItems.filter(i=>(i.label+i.kind+i.hint).toLowerCase().includes(q)):ckItems}
+function ckRender(q){
+  const list=ckFiltered(q);
+  if(ckSel>=list.length)ckSel=Math.max(0,list.length-1);
+  $('#ckList').innerHTML=list.length?list.map((i,idx)=>`
+    <button class="ck-item ${idx===ckSel?'sel':''}" data-ck="${idx}">
+      <span class="kind">${i.kind}</span><span class="lb">${i.label}</span><span class="hint">${i.hint}</span></button>`).join('')
+    :`<div class="ck-empty">"${q}"에 맞는 게 없어요</div>`;
+  $('#ckList').querySelectorAll('[data-ck]').forEach(b=>{
+    b.addEventListener('click',()=>{const it=ckFiltered($('#ckInput').value)[+b.dataset.ck];ckClose();it.run()});
+    b.addEventListener('mousemove',()=>{const i=+b.dataset.ck;if(i!==ckSel){ckSel=i;ckRender($('#ckInput').value)}});
+  });
+  const sel=$('#ckList').querySelector('.ck-item.sel');if(sel)sel.scrollIntoView({block:'nearest'});
+}
+$('#ckInput').addEventListener('input',e=>{ckSel=0;ckRender(e.target.value)});
+$('#btnCmdk').addEventListener('click',ckOpen);
+$('#ckScrim').addEventListener('click',()=>{ckClose();closeConfirm()});
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();
+    $('#cmdk').classList.contains('on')?ckClose():ckOpen();return}
+  if(e.key==='Escape'){ckClose();closeConfirm();return}
+  if(!$('#cmdk').classList.contains('on'))return;
+  const list=ckFiltered($('#ckInput').value);
+  if(e.key==='ArrowDown'){e.preventDefault();ckSel=Math.min(ckSel+1,list.length-1);ckRender($('#ckInput').value)}
+  if(e.key==='ArrowUp'){e.preventDefault();ckSel=Math.max(ckSel-1,0);ckRender($('#ckInput').value)}
+  if(e.key==='Enter'&&list[ckSel]){e.preventDefault();ckClose();list[ckSel].run()}
+});
+
+/* ── 사용량 스파크라인 메트릭 (최근 14일) ── */
+function sparkSVG(data){
+  const W=100,H=30,min=Math.min(...data),max=Math.max(...data);
+  const pts=data.map((v,i)=>[i/(data.length-1)*W,H-3-((v-min)/(max-min||1))*(H-8)]);
+  const line=pts.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ');
+  const [lx,ly]=pts[pts.length-1];
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+    <path class="fillpath" d="M${pts[0][0]},${H} L${line.split(' ').join(' L')} L${lx.toFixed(1)},${H} Z"/>
+    <polyline points="${line}"/><circle class="lastdot" cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="2"/></svg>`;
+}
+const TTS14=[4.2,5.1,3.8,6.0,5.5,4.9,7.2,6.8,5.9,8.1,7.4,9.0,8.6,9.4];
+const REGEN14=[22,19,24,17,20,18,16,19,15,18,17,16,18,18];
+const CUM14=[12,18,23,31,36,41,49,55,60,66,71,77,80,83];
+$('#usagePane').insertAdjacentHTML('afterbegin',`<div class="mgrid">
+  <div class="mtile"><div class="mk">오늘 목소리 사용</div><div class="mv"><span class="num">9,400자</span> <span class="up">▲ 9%</span></div>${sparkSVG(TTS14)}</div>
+  <div class="mtile"><div class="mk">다시 만들기 비중 (주)</div><div class="mv"><span class="num">18%</span> <span class="dn">▼ 2%p</span></div>${sparkSVG(REGEN14)}</div>
+  <div class="mtile"><div class="mk">이번 달 크레딧 누적</div><div class="mv"><span class="num">83%</span> <span class="up">경고선 넘음</span></div>${sparkSVG(CUM14)}</div>
+</div>`);
 
 /* ── 라이브: 일본 머니 조립 진행 ── */
 const LIVE=[[78,'조립 중'],[86,'자막 입히는 중'],[94,'소리 점검 중'],[100,'검토 기다리는 중']];
