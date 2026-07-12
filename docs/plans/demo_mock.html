@@ -1,4 +1,5 @@
 <title>channel-factory — 스튜디오 데모</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
 :root{
   --ink:#0C0D11; --panel:#14161C; --panel-2:#1B1E26;
@@ -35,7 +36,7 @@
 html,body{margin:0;padding:0}
 body{background:var(--ink);color:var(--text);
   font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
-  font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:clip}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:80;opacity:var(--grain);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E")}
 h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-.02em}
@@ -59,8 +60,9 @@ button:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
 @keyframes pulse{50%{opacity:.5}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 
-/* ═ 앱 프레임: 슬림 아이콘 레일 (Runway식) ═ */
+/* ═ 앱 프레임: 슬림 아이콘 레일 (Runway식) — 모바일에선 하단 탭 바 ═ */
 .app{display:grid;grid-template-columns:64px 1fr;min-height:100dvh}
+.rlbl{display:none}
 .rail{position:sticky;top:0;height:100dvh;display:flex;flex-direction:column;align-items:center;
   padding:14px 0;gap:6px;border-right:1px solid var(--line);background:color-mix(in srgb,var(--panel) 70%,transparent)}
 .rail .tally{width:10px;height:10px;border-radius:50%;background:var(--accent);margin-bottom:14px;
@@ -315,6 +317,69 @@ section.view.on{display:block;animation:rise .45s var(--ease)}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--dim);margin-bottom:10px}
 .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+/* ═ 반응형: 태블릿·모바일 = 앱 UI ═ */
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  /* 레일 → 하단 탭 바 (앱 내비게이션) */
+  .rail{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;
+    justify-content:space-around;padding:6px 10px calc(6px + env(safe-area-inset-bottom));
+    border-right:0;border-top:1px solid var(--line);z-index:30;
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);overflow:visible}
+  .rail .tally,.rail .spacer{display:none}
+  #railBtns{display:flex;flex:1;justify-content:space-around;gap:2px}
+  .rbtn{width:auto;min-width:56px;height:50px;flex-direction:column;gap:3px;border-radius:12px}
+  .rbtn svg{width:21px;height:21px}
+  .rbtn .tip{display:none}
+  .rlbl{display:block;font-size:9.5px;font-weight:600;letter-spacing:-.01em}
+  /* 본문 여백: 탭 바 높이 + 세이프 에어리어 */
+  .main{padding:14px 16px calc(92px + env(safe-area-inset-bottom));max-width:100%}
+  .top{padding:14px 16px 0}
+  .top h1{font-size:19px}
+  .hello{font-size:12px}
+  .av{width:34px;height:34px}
+  /* 홈: 함대는 가로 스냅 스크롤, 할 일은 1열, 요약은 2열 */
+  .fleet{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;
+    margin:0 -16px 20px;padding:2px 16px 6px;scrollbar-width:none}
+  .fleet::-webkit-scrollbar{display:none}
+  .fcard{min-width:216px;scroll-snap-align:start}
+  .strip{grid-template-columns:repeat(2,1fr)}
+  .todo-row{grid-template-columns:1fr}
+  .tcard{min-height:0}
+  /* 터치 타깃 */
+  button{padding:9px 16px}
+  .tcard .act .ghost{padding:9px 13px}
+  /* 만들기 */
+  .maker .lead{font-size:18px;margin-top:8px}
+  .src{gap:10px}
+  .src .mini-th{width:84px}
+  .src .lockmark{display:none}
+  .runbox .scene{aspect-ratio:16/9}
+  .runbox .st{font-size:11px;padding:9px 2px}
+  .pp .prow{grid-template-columns:1fr;gap:3px;padding:9px 0}
+  /* 편집 */
+  .finalbox .screen{aspect-ratio:16/9}
+  .finalbox .fmeta{gap:8px;font-size:11.5px}
+  .ebar{padding:11px 13px;gap:8px}
+  .srow{padding:10px}
+  .crow{grid-template-columns:40px 1fr;padding:7px 10px}
+  /* 기록 */
+  .logrow{grid-template-columns:76px 24px 1fr;font-size:12px;gap:8px}
+  .brow{grid-template-columns:64px 1fr 96px;font-size:11.5px}
+  .filters{overflow-x:auto;flex-wrap:nowrap;margin:0 -16px 12px;padding:0 16px}
+  /* 토스트 */
+  .toast{max-width:92vw;bottom:calc(78px + env(safe-area-inset-bottom))}
+}
+/* 폰: 상세 시트 → 바텀 시트 */
+@media(max-width:640px){
+  .sheet{top:auto;left:0;right:0;bottom:0;width:100vw;height:88dvh;
+    border-left:0;border-top:1px solid var(--line-strong);border-radius:22px 22px 0 0;
+    transform:translateY(103%)}
+  .sheet.on{transform:none}
+  .sheet .sthumb{border-radius:22px 22px 0 0}
+  .sheet .body{padding:16px 16px calc(22px + env(safe-area-inset-bottom))}
+  .vopt{padding:12px}
+  .vopt .txt{font-size:13.5px}
+}
 </style>
 
 <div class="app">
@@ -461,7 +526,7 @@ const IC={
 const NAV=[['home','홈'],['gen','만들기'],['edit','편집'],['vote','함께 결정'],['log','기록']];
 function renderRail(){
   $('#railBtns').innerHTML=NAV.map(([k,n])=>`<button class="rbtn ${view===k?'on':''}" data-v="${k}" aria-label="${n}">
-    ${IC[k]}${k==='home'&&todoCount()?`<span class="bub">${todoCount()}</span>`:''}<span class="tip">${n}</span></button>`).join('');
+    ${IC[k]}${k==='home'&&todoCount()?`<span class="bub">${todoCount()}</span>`:''}<span class="tip">${n}</span><span class="rlbl">${n}</span></button>`).join('');
   $('#railBtns').querySelectorAll('.rbtn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.v)));
 }
 function todoCount(){return TODO.filter(t=>!(t.kind==='최종 검토'&&t.owner===who)).length}
