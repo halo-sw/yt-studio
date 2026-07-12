@@ -442,6 +442,36 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
   background:rgba(0,0,0,.5);border-color:transparent;color:#fff;backdrop-filter:blur(4px)}
 .player .ptitle{position:absolute;top:14px;left:16px;color:#fff;font-weight:700;text-shadow:0 1px 8px rgba(0,0,0,.7)}
 
+/* ═ 경쟁 채널 상세 ═ */
+.comp-row.clickable{cursor:pointer;border-radius:10px;transition:background .2s var(--ease)}
+.comp-row.clickable:hover{background:var(--panel-2)}
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 6px}
+@media(max-width:640px){.statgrid{grid-template-columns:repeat(2,1fr)}}
+.statgrid .sg{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:9px 11px}
+.statgrid .sg .k{font-size:10.5px;color:var(--faint)}
+.statgrid .sg .v{font-size:15.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.statgrid .sg .v .up{font-size:10.5px;color:var(--good);font-weight:700}
+.cv-row{display:grid;grid-template-columns:1fr 96px;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);align-items:center}
+.cv-row:last-child{border:0}
+.cv-row .t{font-size:12.5px;line-height:1.4;display:block;min-width:0}
+.cv-row .t .ago{font-size:11px;color:var(--faint);margin-left:6px}
+.cv-row .vb{display:block;height:9px;border-radius:4px;background:var(--panel-2);overflow:hidden;margin-top:5px}
+.cv-row .vb i{display:block;height:100%;border-radius:4px;background:var(--faint)}
+.cv-row.hot .vb i{background:var(--accent);box-shadow:0 0 8px color-mix(in srgb,var(--accent) 45%,transparent)}
+.cv-row .right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.cv-row .vv{font-family:var(--mono);font-size:11.5px;color:var(--dim)}
+.cv-row .mult-tag{font-size:10px;font-weight:800;padding:1px 7px;border-radius:99px;
+  background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.cv-row button{padding:3px 10px;font-size:11px}
+.wk{display:flex;gap:4px;align-items:flex-end;height:44px;margin-top:6px}
+.wk .d{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.wk .d i{width:100%;border-radius:3px 3px 0 0;background:color-mix(in srgb,var(--ch-realestate) 55%,transparent)}
+.wk .d.peak i{background:var(--accent);box-shadow:0 0 8px color-mix(in srgb,var(--accent) 40%,transparent)}
+.wk .d span{font-size:9px;color:var(--faint)}
+.insight{border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:12px;padding:10px 13px;
+  font-size:12.5px;color:var(--dim);background:color-mix(in srgb,var(--accent) 5%,transparent)}
+.insight b{color:var(--text)}
+
 /* ═ 경쟁·수익 ═ */
 .comp-row{display:grid;grid-template-columns:1.3fr .7fr .8fr 1.4fr auto;gap:10px;align-items:center;
   padding:10px 4px;border-bottom:1px dashed var(--line);font-size:12.5px}
@@ -1350,12 +1380,88 @@ $('#tabUsage').addEventListener('click',()=>logTab('usage'));
 
 /* ── 경쟁 채널 + 예상 수익 (core/scout.py 리포트 + v5 보고서 §7 역산) ── */
 const COMPETITORS=[
- {tr:'drama',ch:'경쟁채널-D튜브',week:3.2,median:'4.0만',hot:'시청률 역주행 드라마 3화',mult:4.1},
- {tr:'japan',ch:'경쟁채널-J머니',week:2.5,median:'4.1만',hot:'일본 20대 평균 연봉의 함정',mult:2.8},
- {tr:'realestate',ch:'경쟁채널-집코노미',week:1.8,median:'1.2만',hot:'청약 가점 계산의 함정',mult:3.4},
- {tr:'natepan',ch:'경쟁채널-썰바다',week:4.0,median:'2.6만',hot:'—',mult:null},
+ {tr:'drama',ch:'경쟁채널-D튜브',week:3.2,median:'4.0만',medK:4.0,hot:'시청률 역주행 드라마 3화',mult:4.1,
+  subs:'12.4만',growth:'+8%',peak:'금·토 20시',spark:[3.6,4.1,3.8,4.4,4.0,3.9,5.2,4.6,4.2,7.8,12.4,16.8,14.2,11.9],
+  wk:[2,1,3,2,4,9,7],
+  videos:[
+   {t:'시청률 역주행 드라마 3화, 왜 지금 터졌나',v:16.8,d:3,hot:true},
+   {t:'이 드라마 대사가 자꾸 생각나는 이유',v:5.2,d:6},
+   {t:'요즘 드라마 악역이 달라졌다',v:4.4,d:8},
+   {t:'주말극 시청률의 비밀',v:4.1,d:11},
+   {t:'배우 조합만 봐도 각이 나온다?',v:3.9,d:13},
+   {t:'올해 최고의 오프닝 5개',v:3.6,d:15}]},
+ {tr:'japan',ch:'경쟁채널-J머니',week:2.5,median:'4.1만',medK:4.1,hot:'일본 20대 평균 연봉의 함정',mult:2.8,
+  subs:'8.9만',growth:'+5%',peak:'일 20시',spark:[3.9,4.2,4.0,4.4,4.1,4.3,4.0,5.1,4.6,4.4,9.2,11.5,10.1,8.8],
+  wk:[1,2,1,2,3,4,8],
+  videos:[
+   {t:'일본 20대 평균 연봉의 함정',v:11.5,d:5,hot:true},
+   {t:'엔화 예금, 지금 들어가도 될까',v:12.7,d:4,hot:true},
+   {t:'일본 연금 수령액 계산해 봤습니다',v:5.1,d:9},
+   {t:'도쿄 1인 가구 한 달 생활비',v:4.4,d:12},
+   {t:'일본 은행 금리의 진실',v:4.2,d:14},
+   {t:'잃어버린 30년, 무슨 뜻일까',v:3.9,d:16}]},
+ {tr:'realestate',ch:'경쟁채널-집코노미',week:1.8,median:'1.2만',medK:1.2,hot:'청약 가점 계산의 함정',mult:3.4,
+  subs:'3.1만',growth:'+12%',peak:'월 19시',spark:[1.0,1.2,1.1,1.3,1.2,1.1,1.4,1.2,1.3,2.1,4.1,3.6,3.2,2.9],
+  wk:[6,3,2,2,3,1,1],
+  videos:[
+   {t:'청약 가점 계산의 함정',v:4.1,d:4,hot:true},
+   {t:'3기 신도시 사전청약 총정리',v:1.4,d:9},
+   {t:'전세보증보험, 이런 집은 안 돼요',v:1.3,d:12},
+   {t:'LTV·DSR 한 번에 정리',v:1.2,d:15}]},
+ {tr:'natepan',ch:'경쟁채널-썰바다',week:4.0,median:'2.6만',medK:2.6,hot:'—',mult:null,
+  subs:'21.7만',growth:'+2%',peak:'매일 21시',spark:[2.5,2.7,2.6,2.8,2.5,2.6,2.7,2.6,2.8,2.7,2.6,2.5,2.7,2.6],
+  wk:[5,5,5,5,5,5,5],
+  videos:[
+   {t:'회사 탕비실에서 생긴 일',v:2.8,d:2},
+   {t:'결혼식 축의금 논쟁',v:2.7,d:4},
+   {t:'이사 첫날 벌어진 일',v:2.6,d:6}]},
 ];
 /* RPM(원/1천 뷰×1000 환산 단가): 일본 5,000 / 부동산 3,500 / 드라마·사연 2,000 / 플레이리스트 1,000 */
+/* ── 경쟁 채널 상세 시트 — 최근 영상·업로드 패턴·추이까지 (scout.py 리포트) ── */
+function openCompSheet(tr){
+  const c=COMPETITORS.find(x=>x.tr===tr);if(!c)return;
+  const maxV=Math.max(...c.videos.map(v=>v.v));
+  const maxW=Math.max(...c.wk);
+  const DAYS=['월','화','수','목','금','토','일'];
+  const peakIdx=c.wk.indexOf(maxW);
+  $('#sheet').innerHTML=`
+   <div class="thumb sthumb th-${c.tr}"></div>
+   <button class="close" id="shClose" aria-label="닫기">✕</button>
+   <div class="body">
+     <div class="meta">${chch(c.tr)}<span class="chip state">경쟁 채널</span></div>
+     <h3>${c.ch}</h3>
+     <div class="statgrid">
+       <div class="sg"><div class="k">구독</div><div class="v num">${c.subs} <span class="up">${c.growth}</span></div></div>
+       <div class="sg"><div class="k">중앙값 조회</div><div class="v num">${c.median}</div></div>
+       <div class="sg"><div class="k">업로드</div><div class="v num">주 ${c.week}회</div></div>
+       <div class="sg"><div class="k">주 시간대</div><div class="v" style="font-size:13px">${c.peak}</div></div>
+     </div>
+     <div class="insight">${c.mult
+       ?`최근 <b>「${c.hot}」</b>이(가) 중앙값의 <b>${c.mult}배</b>로 튀었어요 — 같은 결의 소재가 우리 채널에서도 통할 확률이 높아요.`
+       :`꾸준하지만 튀는 영상이 없어요 — 소재보다 <b>업로드 리듬(${c.peak})</b>을 참고할 채널이에요.`}</div>
+     <div class="tiny" style="margin-top:2px">최근 14일 조회 추이</div>
+     ${sparkSVG(c.spark)}
+     <div class="tiny" style="margin-top:6px">요일별 업로드</div>
+     <div class="wk">${c.wk.map((n,i)=>`<span class="d ${i===peakIdx?'peak':''}"><i style="height:${Math.max(8,n/maxW*36)}px"></i><span>${DAYS[i]}</span></span>`).join('')}</div>
+     <div class="tiny" style="margin-top:10px">최근 영상 ${c.videos.length}개 — 막대는 조회수, 노란색이 아웃라이어</div>
+     <div>${c.videos.map((v,i)=>`
+       <div class="cv-row ${v.hot?'hot':''}">
+         <span class="t">${v.t}<span class="ago">${v.d}일 전</span>
+           <span class="vb"><i style="width:${Math.max(4,v.v/maxV*100)}%"></i></span></span>
+         <span class="right"><span class="vv">${v.v}만 회</span>
+           ${v.hot?`<span class="mult-tag">${(v.v/c.medK).toFixed(1)}×</span><button data-cvmine="${i}">소재로</button>`:''}</span>
+       </div>`).join('')}</div>
+     <div class="tiny">일 2~4회 자동 확인 · 중앙값 기준 아웃라이어 감지 (core/scout.py)</div>
+   </div>`;
+  $('#sheet').classList.add('on');$('#scrim').classList.add('on');
+  $('#shClose').addEventListener('click',closeSheet);
+  $('#sheet').querySelectorAll('[data-cvmine]').forEach(b=>b.addEventListener('click',()=>{
+    const v=c.videos[+b.dataset.cvmine];
+    addMaterial(c.tr,v.t,`자동 발굴 · ${c.ch} 중앙값의 ${(v.v/c.medK).toFixed(1)}배`);
+    toast('소재 큐에 올렸어요 — 홈이나 소재 탭에서 승인하면 시작돼요');
+  }));
+}
+
 const REVENUE=[
  {tr:'japan',views:4.2,rpm:5000},{tr:'drama',views:6.8,rpm:2000},
  {tr:'natepan',views:8.1,rpm:2000},{tr:'realestate',views:0.6,rpm:3500},
@@ -1363,17 +1469,23 @@ const REVENUE=[
 ];
 function renderBiz(){
   $('#compRows').innerHTML=COMPETITORS.map(c=>`
-    <div class="comp-row">
+    <div class="comp-row clickable" data-comp="${c.tr}" role="button" tabindex="0" aria-label="${c.ch} 자세히">
       <span class="chn"><span class="dot" style="width:7px;height:7px;border-radius:50%;background:${CH[c.tr].c}"></span>${c.ch}</span>
       <span class="hide-m muted">주 ${c.week}회</span>
       <span class="hide-m muted">중앙값 <b class="num">${c.median}</b></span>
       <span class="hot">${c.mult?`「${c.hot}」 <b>${c.mult}×</b>`:'최근 아웃라이어 없음'}</span>
-      ${c.mult?`<button data-mine="${c.tr}">우리 버전 소재로</button>`:'<span></span>'}
+      ${c.mult?`<button data-mine="${c.tr}">우리 버전 소재로</button>`:'<span class="tiny">자세히 →</span>'}
     </div>`).join('');
-  $('#compRows').querySelectorAll('[data-mine]').forEach(b=>b.addEventListener('click',()=>{
+  $('#compRows').querySelectorAll('[data-mine]').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
     const c=COMPETITORS.find(x=>x.tr===b.dataset.mine);
     addMaterial(c.tr,c.hot,`자동 발굴 · ${c.ch} 중앙값의 ${c.mult}배`);
     toast('소재 큐에 올렸어요 — 홈이나 소재 탭에서 승인하면 시작돼요');}));
+  $('#compRows').querySelectorAll('[data-comp]').forEach(r=>{
+    const open=()=>openCompSheet(r.dataset.comp);
+    r.addEventListener('click',open);
+    r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
+  });
   const rows=REVENUE.map(r=>({...r,won:r.views*10000*r.rpm/1000/10000})); // 만 원
   const total=rows.reduce((a,r)=>a+r.won,0);
   const FIXED=60,TARGET=180;
@@ -1407,6 +1519,7 @@ function buildCk(){
     items.push({kind:t.kind,label:t.ttl,hint:CH[t.tr].nm,run});
   });
   Object.entries(CARDS).forEach(([id,c])=>items.push({kind:'소재',label:c.ttl,hint:CH[c.tr].nm,run:()=>openSheet(id)}));
+  COMPETITORS.forEach(c=>items.push({kind:'경쟁',label:c.ch,hint:CH[c.tr].nm,run:()=>{setView('biz');openCompSheet(c.tr)}}));
   DONE.forEach(d=>items.push({kind:'재생',label:d.ttl,hint:'완성된 영상',run:()=>openPlayer(d.id)}));
   ['A','B','C'].filter(p=>p!==who).forEach(p=>items.push({kind:'접속',label:`${NAMES[p]}(${p})으로 접속`,hint:'전환',
     run:()=>{who=p;renderAvatars();setView(view);toast(`${NAMES[p]}(으)로 접속`)}}));
