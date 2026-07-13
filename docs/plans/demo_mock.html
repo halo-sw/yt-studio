@@ -473,6 +473,11 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
 .insight b{color:var(--text)}
 
 /* ═ 경쟁·수익 ═ */
+.biz-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:1100px){
+  .biz-grid{grid-template-columns:1fr 1.15fr;align-items:start}
+  .biz-comp{order:-1} /* 데스크톱: 경쟁 좌 · 수익 우 — 둘 다 첫 화면에 */
+}
 .comp-row{display:grid;grid-template-columns:1.3fr .7fr .8fr 1.4fr auto;gap:10px;align-items:center;
   padding:10px 4px;border-bottom:1px dashed var(--line);font-size:12.5px}
 .comp-row:last-child{border:0}
@@ -630,19 +635,21 @@ kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px 
   <!-- 함께 결정 -->
   <section class="view" id="v-vote"><div class="votes" id="voteList"></div></section>
 
-  <!-- 분석: 경쟁 채널 + 예상 수익 -->
+  <!-- 분석: 경쟁 채널 + 예상 수익 (데스크톱 2열, 모바일은 수익 먼저) -->
   <section class="view" id="v-biz">
-    <div class="card" style="margin-bottom:14px">
-      <h3 style="font-size:14.5px;margin-bottom:8px">경쟁 채널 — 일 2~4회 자동 확인</h3>
-      <div class="tiny" style="margin-bottom:8px">채널 중앙값보다 크게 튄 영상이 소재 큐로 올라와요 (최근 14일 가중)</div>
-      <div id="compRows"></div>
-    </div>
-    <div class="card">
-      <h3 style="font-size:14.5px;margin-bottom:4px">이번 달 예상 수익</h3>
-      <div class="tiny" style="margin-bottom:12px">조회수 × 트랙 단가(RPM) 추정 — 목표: 고정비 60만 원의 3배(180만)</div>
-      <div class="rev-total" id="revTotal"></div>
-      <div id="revRows"></div>
-      <div class="tiny" style="margin-top:10px">11~12월 성수기엔 단가가 1.5~2배 — 같은 조회수로 수익이 올라가요</div>
+    <div class="biz-grid">
+      <div class="card biz-rev">
+        <h3 style="font-size:14.5px;margin-bottom:4px">이번 달 예상 수익</h3>
+        <div class="tiny" style="margin-bottom:12px">조회수 × 트랙 단가(RPM) 추정 — 목표: 고정비 60만 원의 3배(180만)</div>
+        <div class="rev-total" id="revTotal"></div>
+        <div id="revRows"></div>
+        <div class="tiny" style="margin-top:10px">11~12월 성수기엔 단가가 1.5~2배 — 같은 조회수로 수익이 올라가요</div>
+      </div>
+      <div class="card biz-comp">
+        <h3 style="font-size:14.5px;margin-bottom:8px">경쟁 채널 — 일 2~4회 자동 확인</h3>
+        <div class="tiny" style="margin-bottom:8px">행을 누르면 채널 상세가 열려요 · 튄 영상이 소재 큐로 올라와요</div>
+        <div id="compRows"></div>
+      </div>
     </div>
   </section>
 
