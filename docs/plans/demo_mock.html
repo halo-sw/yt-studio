@@ -765,6 +765,7 @@ let TODO=[
 /* 소재 저장소 — 자동 발굴 + 직접 추가. pending이 홈 승인 큐로 뜬다. */
 let MSEQ=10;
 let MATERIALS=[
+ {id:'m0',tr:'natepan',ttl:'고양이 시점으로 본 우리 집 — 동물 시점 사연 재창작',src:'경쟁 분석 · ドジ猫のチョロ 포맷 벤치마크 (원작 모방 아닌 포맷 응용)',status:'pending'},
  {id:'m1',tr:'drama',ttl:'시청률 역주행 드라마 3화 떡밥 정리',src:'자동 발굴 · D튜브 중앙값의 4.1배',status:'pending',card:'k1'},
  {id:'m2',tr:'japan',ttl:'엔화 예금, 지금 들어가도 될까',src:'자동 발굴 · J-머니 중앙값의 3.1배',status:'pending'},
  {id:'m3',tr:'japan',ttl:'일본 20대 평균 연봉의 함정',src:'자동 발굴 · A가 승인',status:'approved',card:'k2'},
@@ -1415,6 +1416,10 @@ const COMPETITORS=[
    {t:'3기 신도시 사전청약 총정리',v:1.4,d:9},
    {t:'전세보증보험, 이런 집은 안 돼요',v:1.3,d:12},
    {t:'LTV·DSR 한 번에 정리',v:1.2,d:15}]},
+ {tr:'natepan',ch:'ドジ猫のチョロ',pending:true,week:null,median:'수집 대기',medK:null,hot:null,mult:null,
+  subs:'수집 대기',growth:'',peak:'매일 20시 (JST)',
+  concept:'고양이 「초로」의 시점으로 인간 사회(편의점·전철·식당)를 그리는 창작 스토리. AI 보조 일러스트 + 캐릭터 외형 고정, 기획·대본·연출 1인 제작.',
+  lesson:'우리 파이프라인과 같은 구조예요 — 캐릭터 외형 잠금(인물 카드), AI 그림 + 사람 큐레이션, 고정 시간 업로드. 사연 트랙에 「동물 시점 재창작」 포맷으로 응용할 수 있어요.'},
  {tr:'natepan',ch:'경쟁채널-썰바다',week:4.0,median:'2.6만',medK:2.6,hot:'—',mult:null,
   subs:'21.7만',growth:'+2%',peak:'매일 21시',spark:[2.5,2.7,2.6,2.8,2.5,2.6,2.7,2.6,2.8,2.7,2.6,2.5,2.7,2.6],
   wk:[5,5,5,5,5,5,5],
@@ -1425,8 +1430,29 @@ const COMPETITORS=[
 ];
 /* RPM(원/1천 뷰×1000 환산 단가): 일본 5,000 / 부동산 3,500 / 드라마·사연 2,000 / 플레이리스트 1,000 */
 /* ── 경쟁 채널 상세 시트 — 최근 영상·업로드 패턴·추이까지 (scout.py 리포트) ── */
-function openCompSheet(tr){
-  const c=COMPETITORS.find(x=>x.tr===tr);if(!c)return;
+function openCompSheet(idx){
+  const c=typeof idx==='number'?COMPETITORS[idx]:COMPETITORS.find(x=>x.tr===idx);if(!c)return;
+  if(c.pending){ // 방금 등록된 채널 — 지표 폴링 전, 정성 프로필만
+    $('#sheet').innerHTML=`
+     <div class="thumb sthumb th-${c.tr}"></div>
+     <button class="close" id="shClose" aria-label="닫기">✕</button>
+     <div class="body">
+       <div class="meta">${chch(c.tr)}<span class="chip state amber">지표 수집 대기</span></div>
+       <h3>${c.ch}</h3>
+       <p class="muted" style="margin:0;font-size:13.5px">${c.concept}</p>
+       <div class="statgrid">
+         <div class="sg"><div class="k">구독</div><div class="v" style="font-size:12.5px;color:var(--faint)">수집 대기</div></div>
+         <div class="sg"><div class="k">중앙값 조회</div><div class="v" style="font-size:12.5px;color:var(--faint)">수집 대기</div></div>
+         <div class="sg"><div class="k">업로드</div><div class="v" style="font-size:12.5px;color:var(--faint)">수집 대기</div></div>
+         <div class="sg"><div class="k">주 시간대</div><div class="v" style="font-size:13px">${c.peak}</div></div>
+       </div>
+       <div class="insight">${c.lesson}</div>
+       <div class="tiny">다음 자동 확인 때 최근 영상·조회 분포·아웃라이어가 채워져요 (일 2~4회 · core/scout.py)</div>
+     </div>`;
+    $('#sheet').classList.add('on');$('#scrim').classList.add('on');
+    $('#shClose').addEventListener('click',closeSheet);
+    return;
+  }
   const maxV=Math.max(...c.videos.map(v=>v.v));
   const maxW=Math.max(...c.wk);
   const DAYS=['월','화','수','목','금','토','일'];
@@ -1475,12 +1501,12 @@ const REVENUE=[
  {tr:'playlist',views:3.2,rpm:1000},
 ];
 function renderBiz(){
-  $('#compRows').innerHTML=COMPETITORS.map(c=>`
-    <div class="comp-row clickable" data-comp="${c.tr}" role="button" tabindex="0" aria-label="${c.ch} 자세히">
+  $('#compRows').innerHTML=COMPETITORS.map((c,ci)=>`
+    <div class="comp-row clickable" data-comp="${ci}" role="button" tabindex="0" aria-label="${c.ch} 자세히">
       <span class="chn"><span class="dot" style="width:7px;height:7px;border-radius:50%;background:${CH[c.tr].c}"></span>${c.ch}</span>
-      <span class="hide-m muted">주 ${c.week}회</span>
-      <span class="hide-m muted">중앙값 <b class="num">${c.median}</b></span>
-      <span class="hot">${c.mult?`「${c.hot}」 <b>${c.mult}×</b>`:'최근 아웃라이어 없음'}</span>
+      <span class="hide-m muted">${c.week?`주 ${c.week}회`:'—'}</span>
+      <span class="hide-m muted">${c.pending?'수집 대기':`중앙값 <b class="num">${c.median}</b>`}</span>
+      <span class="hot">${c.mult?`「${c.hot}」 <b>${c.mult}×</b>`:(c.pending?'방금 등록 — 다음 폴링 때 지표가 채워져요':'최근 아웃라이어 없음')}</span>
       ${c.mult?`<button data-mine="${c.tr}">우리 버전 소재로</button>`:'<span class="tiny">자세히 →</span>'}
     </div>`).join('');
   $('#compRows').querySelectorAll('[data-mine]').forEach(b=>b.addEventListener('click',e=>{
@@ -1489,7 +1515,7 @@ function renderBiz(){
     addMaterial(c.tr,c.hot,`자동 발굴 · ${c.ch} 중앙값의 ${c.mult}배`);
     toast('소재 큐에 올렸어요 — 홈이나 소재 탭에서 승인하면 시작돼요');}));
   $('#compRows').querySelectorAll('[data-comp]').forEach(r=>{
-    const open=()=>openCompSheet(r.dataset.comp);
+    const open=()=>openCompSheet(+r.dataset.comp);
     r.addEventListener('click',open);
     r.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
   });
@@ -1526,7 +1552,7 @@ function buildCk(){
     items.push({kind:t.kind,label:t.ttl,hint:CH[t.tr].nm,run});
   });
   Object.entries(CARDS).forEach(([id,c])=>items.push({kind:'소재',label:c.ttl,hint:CH[c.tr].nm,run:()=>openSheet(id)}));
-  COMPETITORS.forEach(c=>items.push({kind:'경쟁',label:c.ch,hint:CH[c.tr].nm,run:()=>{setView('biz');openCompSheet(c.tr)}}));
+  COMPETITORS.forEach((c,i)=>items.push({kind:'경쟁',label:c.ch,hint:CH[c.tr].nm,run:()=>{setView('biz');openCompSheet(i)}}));
   DONE.forEach(d=>items.push({kind:'재생',label:d.ttl,hint:'완성된 영상',run:()=>openPlayer(d.id)}));
   ['A','B','C'].filter(p=>p!==who).forEach(p=>items.push({kind:'접속',label:`${NAMES[p]}(${p})으로 접속`,hint:'전환',
     run:()=>{who=p;renderAvatars();setView(view);toast(`${NAMES[p]}(으)로 접속`)}}));
