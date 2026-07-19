@@ -69,11 +69,16 @@ def parse_scene_times(ffmpeg_stderr: str, total_duration: float) -> list[Shot]:
 def prepare(video_path: str, total_duration: float,
             threshold: float = 0.4) -> list[Shot]:
     """씬 경계 감지 실행. ffmpeg가 없거나 실패하면 균등 분할 목 폴백."""
+    if not os.path.exists(video_path):
+        return _mock_shots(total_duration)
     try:
         proc = subprocess.run(
             scene_detect_command(video_path, threshold),
             capture_output=True, text=True, timeout=600,
         )
+        # 실행 실패 시 stderr에 씬 타임이 없어 단일 샷이 만들어진다 — 폴백으로.
+        if proc.returncode != 0:
+            return _mock_shots(total_duration)
         shots = parse_scene_times(proc.stderr, total_duration)
         if shots:
             return shots
