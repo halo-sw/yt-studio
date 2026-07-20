@@ -48,7 +48,7 @@ def apply_guideline_substitutions(text: str) -> str:
 _ENDING_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("는데", re.compile(r"[는은]데[\s,.]|[는은]데$")),
     ("고", re.compile(r"[했랐갔왔넸됐졌섰컸팠았었였쳤뒀줬쐈]고[\s,.]|[했랐갔왔넸됐졌섰컸팠았었였쳤뒀줬쐈]고$")),
-    ("자", re.compile(r"[하보이가오지치서니리키드]자[\s,.]|[하보이가오지치서니리키드]자$")),
+    ("자", re.compile(r"[하보이가오지치서니리키드대내]자[\s,.]|[하보이가오지치서니리키드대내]자$")),
     ("죠", re.compile(r"[죠쬬][\s,.!?]|[죠쬬]$")),
     ("습니다", re.compile(r"습니다|ㅂ니다")),
 ]

@@ -187,6 +187,84 @@ DEMO_RECAP_STORY = (
 )
 
 
+def cmd_produce(args) -> None:
+    """대본 파일 → 완성 영상 + 메타. 90일 시스템(plans/13)의 제작 표준 경로.
+
+    대본 형식: 한 행 = 한 절(= 씬 = 자막). docs/prompts/02·03 출력 규격.
+    """
+    from tracks.recap.style_lint import apply_guideline_substitutions, lint_nyaong
+
+    track = Track(args.track)
+    bible = load_bible(track)
+    script_path = Path(args.script)
+    lines = [
+        ln.strip() for ln in script_path.read_text(encoding="utf-8").splitlines()
+        if ln.strip()
+    ]
+    if len(lines) < 3:
+        raise SystemExit("대본이 3행 미만 — docs/prompts/02 출력 규격 확인")
+
+    slug = args.slug or script_path.stem
+    workdir = Path("data/assets/produce") / slug
+    workdir.mkdir(parents=True, exist_ok=True)
+
+    print(f"1) 대본 {len(lines)}행 → 씬 구성 + 스타일 검수")
+    scenes = []
+    for i, line in enumerate(lines):
+        chapter = "훅" if i < 2 else ("마무리" if i == len(lines) - 1 else "본편")
+        text = apply_guideline_substitutions(line)
+        scenes.append(Scene(
+            scene_id=i + 1, track=track, chapter=chapter,
+            narration=text, caption=text[:38],
+            visual=SceneVisual(
+                type="slide", ref=f"produce/{slug}/{i + 1}",
+                effect="kenburns" if i % 2 == 0 else "none",
+            ),
+            conte=Conte(
+                info_point=text[:40],
+                emotion=Emotion(tone="텐션 유지", delivery="빠르게, 행 끝 반 박자 쉼"),
+                composition="중앙 구도, 하단 자막 여백",
+                visual_direction=f"'{text[:30]}' 분위기의 삽화",
+            ),
+        ))
+    issues = lint_nyaong(scenes)
+    if issues:
+        print("   ⚠ 스타일 린트 위반 (계속 진행, 해당 행 재생성 권장):")
+        for it in issues[:8]:
+            print(f"     - {it}")
+    else:
+        print("   린트 통과")
+
+    print("2) TTS (실측 길이 기입)")
+    sheet = FactSheet()
+    audios = tts.synthesize_episode(scenes, bible, sheet, workdir / "audio")
+    total = tts.total_duration(audios)
+    print(f"   합계 {total:.0f}초 ({audios[0].backend})")
+
+    print("3) 렌더")
+    result = assemble.preset_longform_16x9(
+        scenes, bible, sheet, workdir / "work", workdir / "episode.mp4",
+        audio_paths={a.scene_id: a.path for a in audios},
+        bgm_path=args.bgm or None,
+    )
+    outputs = [result.out_path]
+    if args.shorts:
+        shorts_path = assemble.preset_shorts(
+            workdir / "work", [s.scene_id for s in scenes], workdir / "shorts.mp4",
+        )
+        outputs.append(shorts_path)
+        print(f"   쇼츠(9:16) → {shorts_path}")
+
+    meta = workdir / "meta.txt"
+    meta.write_text(
+        f"제목: {args.title}\n\n[설명란 초안 — docs/prompts/04로 확정]\n"
+        f"{args.title}\n\n{result.chapters_text}\n\n#쇼츠 #스토리\n",
+        encoding="utf-8",
+    )
+    print(f"   → {result.out_path} ({result.duration:.1f}s)")
+    print(f"   → {meta} (제목·챕터·설명 초안)")
+
+
 def cmd_recap_demo(args) -> None:
     from core import source_ingest
     from tracks.recap.nyaong_writer import write_recap
@@ -273,6 +351,15 @@ def main() -> None:
 
     p4 = sub.add_parser("recap-demo", help="리캡 트랙 e2e: 수집→냐옹체→컷싱크→쇼츠")
     p4.set_defaults(fn=cmd_recap_demo)
+
+    p5 = sub.add_parser("produce", help="대본 파일 → 완성 영상+메타 (제작 표준 경로)")
+    p5.add_argument("--script", required=True, help="대본 .txt (한 행 = 한 절)")
+    p5.add_argument("--title", required=True)
+    p5.add_argument("--track", default="recap", choices=[t.value for t in Track])
+    p5.add_argument("--shorts", action="store_true", help="9:16 세로판 추가 생성")
+    p5.add_argument("--bgm", default="", help="BGM 파일 (글로벌 -26 LUFS 언더베드)")
+    p5.add_argument("--slug", default="", help="출력 폴더명 (기본: 대본 파일명)")
+    p5.set_defaults(fn=cmd_produce)
 
     p3 = sub.add_parser("e2e", help="script→tts→assemble 전체 e2e")
     p3.add_argument("--track", default="japan", choices=[t.value for t in Track])
