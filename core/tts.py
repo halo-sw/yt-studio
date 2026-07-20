@@ -22,6 +22,8 @@ from pathlib import Path
 from core.schemas import FACT_REF_PATTERN, Bible, FactSheet, Scene
 
 ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+TYPECAST_API_BASE = "https://api.typecast.ai/v1"
+TYPECAST_MODEL = "ssfm-v21"
 
 # espeak-ng 기본 낭독 속도(wpm). 바이블 voice_params.speed를 곱해 쓴다.
 _ESPEAK_BASE_WPM = 165
@@ -96,6 +98,59 @@ def _synthesize_elevenlabs(
     return out_path
 
 
+def list_typecast_voices(api_key: str) -> list[dict]:
+    """타입캐스트 보이스 목록 — 바이블 voice_id 확정용."""
+    import requests
+
+    resp = requests.get(
+        f"{TYPECAST_API_BASE}/voices",
+        headers={"X-API-KEY": api_key},
+        params={"model": TYPECAST_MODEL},
+        timeout=30,
+    )
+    if resp.status_code != 200:
+        raise TTSError(f"Typecast voices {resp.status_code}: {resp.text[:300]}")
+    return resp.json()
+
+
+def _synthesize_typecast(
+    text: str, bible: Bible, out_path: Path, api_key: str
+) -> Path:
+    """타입캐스트 REST 호출. 바이블 voice_id가 미확정(TODO_*)이면
+    보이스 목록의 첫 한국어 보이스로 자동 선택하고 로그를 남긴다."""
+    import requests
+
+    voice_id = bible.voice_id
+    if voice_id.startswith("TODO"):
+        voices = list_typecast_voices(api_key)
+        if not voices:
+            raise TTSError("Typecast 보이스 목록이 비어 있음")
+        voice_id = voices[0].get("voice_id") or voices[0].get("id", "")
+        print(f"   [tts] 바이블 voice_id 미확정 → Typecast 자동 선택: {voice_id} "
+              f"({voices[0].get('voice_name', '?')}) — data/bibles에 확정 기입 권장")
+
+    resp = requests.post(
+        f"{TYPECAST_API_BASE}/text-to-speech",
+        headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
+        json={
+            "voice_id": voice_id,
+            "text": text,
+            "model": TYPECAST_MODEL,
+            "language": "kor",
+            "output": {
+                "audio_format": "wav",
+                "audio_tempo": bible.voice_params.speed,
+            },
+        },
+        timeout=120,
+    )
+    if resp.status_code != 200:
+        raise TTSError(f"Typecast {resp.status_code}: {resp.text[:300]}")
+    wav_path = out_path.with_suffix(".wav")
+    wav_path.write_bytes(resp.content)
+    return wav_path
+
+
 def _synthesize_espeak(text: str, bible: Bible, out_path: Path) -> Path:
     """espeak-ng 폴백 — 키 없이 e2e를 돌리기 위한 로컬 합성.
 
@@ -143,16 +198,18 @@ def synthesize_scene(
     out_dir.mkdir(parents=True, exist_ok=True)
     text = resolve_fact_tokens(scene.narration, fact_sheet)
 
-    key = api_key or os.getenv("ELEVENLABS_API_KEY")
-    if key:
-        path = _synthesize_elevenlabs(
-            text, bible, out_dir / f"scene_{scene.scene_id:03d}.mp3", key
-        )
+    # 백엔드 우선순위: Typecast > ElevenLabs > espeak-ng 폴백
+    tc_key = os.getenv("TYPECAST_API_KEY")
+    el_key = api_key or os.getenv("ELEVENLABS_API_KEY")
+    base = out_dir / f"scene_{scene.scene_id:03d}.mp3"
+    if tc_key:
+        path = _synthesize_typecast(text, bible, base, tc_key)
+        backend = "typecast"
+    elif el_key:
+        path = _synthesize_elevenlabs(text, bible, base, el_key)
         backend = "elevenlabs"
     else:
-        path = _synthesize_espeak(
-            text, bible, out_dir / f"scene_{scene.scene_id:03d}.mp3"
-        )
+        path = _synthesize_espeak(text, bible, base)
         backend = "espeak"
 
     duration = probe_duration(path)

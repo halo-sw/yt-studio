@@ -337,7 +337,21 @@ def cmd_e2e(args) -> None:
     print(result.chapters_text)
 
 
+def _load_dotenv(path: Path = Path(".env")) -> None:
+    """가벼운 .env 로더 — 키는 레포에 커밋하지 않고 여기서만 읽는다."""
+    import os
+
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, _, v = line.partition("=")
+            os.environ.setdefault(k.strip(), v.strip())
+
+
 def main() -> None:
+    _load_dotenv()
     ap = argparse.ArgumentParser(description="channel-factory M1 파이프라인 CLI")
     sub = ap.add_subparsers(dest="cmd", required=True)
 

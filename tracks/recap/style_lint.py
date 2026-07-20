@@ -47,11 +47,15 @@ def apply_guideline_substitutions(text: str) -> str:
 # 절 단위 어미 패턴 — 냐옹체는 연결어마다 행을 바꾸므로 행 단위로도 검사 가능
 _ENDING_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("는데", re.compile(r"[는은]데[\s,.]|[는은]데$")),
-    ("고", re.compile(r"[했랐갔왔넸됐졌섰컸팠았었였쳤뒀줬쐈]고[\s,.]|[했랐갔왔넸됐졌섰컸팠았었였쳤뒀줬쐈]고$")),
-    ("자", re.compile(r"[하보이가오지치서니리키드대내]자[\s,.]|[하보이가오지치서니리키드대내]자$")),
+    ("고", re.compile(r"[했랐갔났왔넸됐졌섰컸팠았었였쳤뒀줬쐈]고[\s,.]|[했랐갔났왔넸됐졌섰컸팠았었였쳤뒀줬쐈]고$")),
+    ("자", re.compile(r"[가-힣]자$")),
     ("죠", re.compile(r"[죠쬬][\s,.!?]|[죠쬬]$")),
     ("습니다", re.compile(r"습니다|ㅂ니다")),
 ]
+
+# '자'로 끝나지만 연결어가 아닌 명사 종결 — 오탐 방지
+_JA_NOUN_BLACKLIST = ("남자", "여자", "혼자", "과자", "모자", "의자", "박자",
+                      "사자", "왕자", "제자", "글자", "숫자", "부자", "감자")
 
 # 허용 범위 (스펙 ± 오차 — 생성 모델의 자연스러움을 위한 완충)
 _DISTRIBUTION_RANGES = {
@@ -73,6 +77,8 @@ def _ending_of(clause: str) -> str | None:
     tail = clause[-12:] if len(clause) > 12 else clause
     for name, pat in _ENDING_PATTERNS:
         if pat.search(tail):
+            if name == "자" and clause.endswith(_JA_NOUN_BLACKLIST):
+                continue
             return name
     return None
 
