@@ -1,6 +1,6 @@
 # 72시간 수익 스프린트 — "100만원 벌어와" 실행 계획
 
-> ⚠ **대체됨**: 이 문서는 검토 이력이다. 운영 기준은 `docs/PLAYBOOK.md` 하나만 따른다.
+> ⚠ **대체됨**: 검토 이력 원본. 통합본은 `docs/plans/00_master-plan.md`, 실행 기준은 `docs/PLAYBOOK.md`.
 
 > 참고 요청: [윤자동 | AI 자동화 크리에이터 (@yun_ja_dong)](https://www.threads.com/@yun_ja_dong)
 > — 전 토스 PO, 자동화 회사 운영(직원 5명), 유튜브 구독자 5만+, 자동화 강의·에이전시.
