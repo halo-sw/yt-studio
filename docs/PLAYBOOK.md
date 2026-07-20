@@ -41,12 +41,27 @@
 ⑥ 발행 직후 — 고정 댓글 1개 (질문 or 다음 화 예고)
 ```
 
-클리핑 레인일 때 ③만 다르다:
+클리핑 레인일 때는 ②③이 원커맨드로 합쳐진다 — **다운로드→클립 컷→대본→TTS→자막 번인→편집→쇼츠**:
 ```
-# 원본 등록 (라이선스 근거 필수 — 없으면 여기서 멈춘다)
-python -c "from core.source_ingest import ingest_source; ..."  # 소재 카드에서 실행
-# 대본은 nyaong_writer가 원본 이벤트 기반 생성 → preset_recap이 컷싱크
+python cli.py clip \
+  --source "URL 또는 로컬파일" --title "제목" \
+  --license-source "권리자" --license "CC-BY|제휴계약|자체제작" --permission-ref "근거" \
+  --transcript 자막또는사건요약.txt --shorts
 ```
+- `--source`에 URL을 주면 yt-dlp가 다운로드하고, 샷 경계를 자동 감지해 내레이션 길이에 맞춰 컷싱크한다.
+- **허가 3종 인자가 없으면 다운로드 전에 멈춘다.** 이건 불편이 아니라 채널 보호 장치다 —
+  타인의 유튜브·Douyin·영화 영상을 무단으로 넣는 순간 Content ID·경고로 채널 자산이 날아간다.
+
+### 클리핑 소스 공급처 (허가 게이트를 통과하는 곳)
+
+| 공급처 | 라이선스 | 용도 |
+|---|---|---|
+| Pexels · Pixabay · Mixkit | 무료 스톡 (상업 가능) | 분위기 컷·B롤 |
+| Internet Archive | 퍼블릭 도메인 | 고전 영화 리캡 포맷 |
+| 공공누리 1유형 | 출처 표시 | 공공기관 영상 |
+| YouTube CC-BY 필터 | 저작자 표시 필수 | 업로더=권리자 검증 후만 |
+| **숏무비 제작사 제휴 (핵심)** | 서면 허가 | 메일 1통 = 소스 수백 편. prompts/05 아웃리치 활용 |
+| 자체 촬영/생성분 | 자체 제작 | 항상 가능 |
 
 ---
 
@@ -140,6 +155,11 @@ python cli.py produce --script data/scripts/파일.txt --title "제목" --shorts
 
 # BGM 언더베드 포함 (에피소드 글로벌 트랙, -26 LUFS)
 python cli.py produce --script ... --title ... --shorts --bgm bgm.m4a
+
+# 클리핑 레인: 다운로드→클립→자막·TTS→편집→쇼츠 원커맨드
+python cli.py clip --source URL --title "..." \
+  --license-source ... --license ... --permission-ref ... \
+  --transcript 자막.txt --shorts
 
 # 클리핑 레인 e2e 데모 / 전체 파이프라인 점검
 python cli.py recap-demo

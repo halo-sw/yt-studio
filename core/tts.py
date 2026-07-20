@@ -198,17 +198,26 @@ def synthesize_scene(
     out_dir.mkdir(parents=True, exist_ok=True)
     text = resolve_fact_tokens(scene.narration, fact_sheet)
 
-    # 백엔드 우선순위: Typecast > ElevenLabs > espeak-ng 폴백
+    # 백엔드 우선순위: Typecast > ElevenLabs > espeak-ng 폴백.
+    # 상위 백엔드가 네트워크 차단·키 오류로 실패하면 경고 후 다음으로 폴백한다
+    # — 발행 파이프라인이 외부 장애로 멈추지 않게 (규칙 5-8 정신).
     tc_key = os.getenv("TYPECAST_API_KEY")
     el_key = api_key or os.getenv("ELEVENLABS_API_KEY")
     base = out_dir / f"scene_{scene.scene_id:03d}.mp3"
+    path, backend = None, ""
     if tc_key:
-        path = _synthesize_typecast(text, bible, base, tc_key)
-        backend = "typecast"
-    elif el_key:
-        path = _synthesize_elevenlabs(text, bible, base, el_key)
-        backend = "elevenlabs"
-    else:
+        try:
+            path = _synthesize_typecast(text, bible, base, tc_key)
+            backend = "typecast"
+        except Exception as e:  # 프록시 차단/키 오류 포함
+            print(f"   [tts] Typecast 실패 → 폴백 ({type(e).__name__}: {str(e)[:100]})")
+    if path is None and el_key:
+        try:
+            path = _synthesize_elevenlabs(text, bible, base, el_key)
+            backend = "elevenlabs"
+        except Exception as e:
+            print(f"   [tts] ElevenLabs 실패 → 폴백 ({type(e).__name__}: {str(e)[:100]})")
+    if path is None:
         path = _synthesize_espeak(text, bible, base)
         backend = "espeak"
 

@@ -13,6 +13,7 @@ API 키가 하나도 없어도 끝까지 돈다 (script는 목 생성기, tts는
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -265,6 +266,73 @@ def cmd_produce(args) -> None:
     print(f"   → {meta} (제목·챕터·설명 초안)")
 
 
+def cmd_clip(args) -> None:
+    """클리핑 레인 원커맨드: URL/파일 → 다운로드 → 클립 컷 → 냐옹체 대본
+    → TTS → 자막 번인 → 컷싱크 편집 → 쇼츠 파생.
+
+    허가 정보 3종(--license-source/--license/--permission-ref)이 없으면
+    ingest 게이트에서 멈춘다 — 이 게이트가 채널을 지킨다 (규칙 5-5).
+    """
+    from core import source_ingest
+    from tracks.recap.nyaong_writer import write_recap
+    from tracks.recap.style_lint import lint_nyaong
+
+    bible = load_bible(Track.RECAP)
+    slug = args.slug or "clip_" + re.sub(r"[^a-zA-Z0-9가-힣]+", "_", args.title)[:30]
+    workdir = Path("data/assets/produce") / slug
+    workdir.mkdir(parents=True, exist_ok=True)
+
+    print("1) 원본 수집 (라이선스 게이트 → 다운로드 → 샷 감지)")
+    transcript = ""
+    if args.transcript:
+        transcript = Path(args.transcript).read_text(encoding="utf-8")
+    meta = source_ingest.ingest_source(
+        args.source, args.title,
+        {
+            "source": args.license_source,
+            "license": args.license,
+            "permission_ref": args.permission_ref,
+        },
+        workdir, transcript=transcript,
+    )
+    print(f"   {meta.duration:.1f}s, 샷 {len(meta.shots)}개")
+
+    print("2) 이벤트 시퀀스 → 냐옹체 대본")
+    if not meta.transcript:
+        raise SystemExit(
+            "자막/줄거리 텍스트가 필요합니다: --transcript 파일 지정\n"
+            "(원본 자막 덤프 또는 시간순 사건 요약 — 이것이 대본의 원재료)"
+        )
+    events = source_ingest.events_from_transcript(meta.transcript)
+    scenes = write_recap(events, meta.shots, bible, title=meta.title)
+    issues = lint_nyaong(scenes)
+    print(f"   씬 {len(scenes)}개, 린트: {'통과' if not issues else issues[:4]}")
+
+    print("3) TTS → 컷싱크 렌더 (자막 번인 + 2트랙)")
+    sheet = FactSheet()
+    audios = tts.synthesize_episode(scenes, bible, sheet, workdir / "audio")
+    result = assemble.preset_recap(
+        scenes, bible, sheet, meta.path, workdir / "work", workdir / "episode.mp4",
+        audio_paths={a.scene_id: a.path for a in audios},
+        bgm_path=args.bgm or None,
+    )
+    print(f"   → {result.out_path} ({result.duration:.1f}s)")
+
+    if args.shorts:
+        n = min(3, len(scenes))
+        shorts = assemble.preset_shorts(
+            workdir / "work", [s.scene_id for s in scenes[:n]], workdir / "shorts.mp4",
+        )
+        print(f"4) 쇼츠(9:16, 훅 {n}씬) → {shorts}")
+
+    (workdir / "meta.txt").write_text(
+        f"제목: {args.title}\n원본: {args.source}\n"
+        f"허가: {args.license_source} / {args.license} / {args.permission_ref}\n\n"
+        f"{result.chapters_text}\n", encoding="utf-8",
+    )
+    print(f"   메타 → {workdir / 'meta.txt'}")
+
+
 def cmd_recap_demo(args) -> None:
     from core import source_ingest
     from tracks.recap.nyaong_writer import write_recap
@@ -365,6 +433,18 @@ def main() -> None:
 
     p4 = sub.add_parser("recap-demo", help="리캡 트랙 e2e: 수집→냐옹체→컷싱크→쇼츠")
     p4.set_defaults(fn=cmd_recap_demo)
+
+    p6 = sub.add_parser("clip", help="클리핑 레인: URL/파일→다운로드→클립→자막·TTS→편집→쇼츠")
+    p6.add_argument("--source", required=True, help="영상 URL(yt-dlp) 또는 로컬 파일")
+    p6.add_argument("--title", required=True)
+    p6.add_argument("--license-source", required=True, help="권리자/출처 (예: 제작사명)")
+    p6.add_argument("--license", required=True, help="라이선스 종류 (예: CC-BY, 제휴계약)")
+    p6.add_argument("--permission-ref", required=True, help="허가 근거 (계약ID/CC URL/자체제작)")
+    p6.add_argument("--transcript", default="", help="자막 덤프 또는 사건 요약 텍스트 파일")
+    p6.add_argument("--shorts", action="store_true")
+    p6.add_argument("--bgm", default="")
+    p6.add_argument("--slug", default="")
+    p6.set_defaults(fn=cmd_clip)
 
     p5 = sub.add_parser("produce", help="대본 파일 → 완성 영상+메타 (제작 표준 경로)")
     p5.add_argument("--script", required=True, help="대본 .txt (한 행 = 한 절)")
