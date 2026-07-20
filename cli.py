@@ -151,6 +151,82 @@ def cmd_longform_demo(args) -> None:
         print(replaced.chapters_text)
 
 
+def _gen_demo_source(path: Path, n_shots: int = 6, shot_seconds: int = 4) -> None:
+    """리캡 데모용 자체 제작 원본 — 색상이 다른 샷 n개 (라이선스: self-produced)."""
+    # 고대비 색 — ffmpeg scene 점수(프레임 차분)가 임계값 0.4를 확실히 넘도록
+    colors = ["0xC03030", "0x3080C0", "0x30A050", "0xE0C030", "0x8040B0", "0xE07030"]
+    parts = []
+    for i in range(n_shots):
+        seg = path.parent / f"src_shot_{i}.mp4"
+        subprocess.run([
+            "ffmpeg", "-y", "-f", "lavfi",
+            "-i", f"color=c={colors[i % len(colors)]}:s=1280x720:d={shot_seconds}",
+            "-vf", (
+                "drawtext=fontfile=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc:"
+                f"text='원본 샷 {i + 1}':fontsize=96:fontcolor=white:"
+                "x=(w-text_w)/2:y=(h-text_h)/2"
+            ),
+            "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p", str(seg),
+        ], check=True, capture_output=True)
+        parts.append(seg)
+    lst = path.parent / "src_concat.txt"
+    lst.write_text("".join(f"file '{p.resolve()}'\n" for p in parts), encoding="utf-8")
+    subprocess.run([
+        "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst),
+        "-c", "copy", str(path),
+    ], check=True, capture_output=True)
+
+
+DEMO_RECAP_STORY = (
+    "한 남자가 폐쇄된 등대를 관리하러 섬에 도착했습니다. "
+    "첫날 밤 등대 불빛이 저절로 꺼졌습니다. "
+    "남자는 발전실로 내려가 스위치를 올렸습니다. "
+    "벽에 전임자가 남긴 27개의 금이 새겨져 있었습니다. "
+    "다음날 배가 오기로 한 날짜에 배가 오지 않았습니다. "
+    "남자는 벽에 스물여덟 번째 금을 그었습니다."
+)
+
+
+def cmd_recap_demo(args) -> None:
+    from core import source_ingest
+    from tracks.recap.nyaong_writer import write_recap
+    from tracks.recap.style_lint import lint_nyaong
+
+    bible = load_bible(Track.RECAP)
+    workdir = DEMO_DIR / "recap"
+    workdir.mkdir(parents=True, exist_ok=True)
+
+    print("1) 자체 제작 데모 원본 생성 + 라이선스 게이트 통과 ingest")
+    src = workdir / "source.mp4"
+    _gen_demo_source(src)
+    meta = source_ingest.ingest_source(
+        str(src), "등대지기 (자체 제작 데모)",
+        {"source": "self-produced", "license": "internal-demo", "permission_ref": "demo-001"},
+        workdir, transcript=DEMO_RECAP_STORY,
+    )
+    print(f"   {meta.duration:.1f}s, 샷 {len(meta.shots)}개 감지")
+
+    print("2) 이벤트 시퀀스 → 냐옹체 대본 (키 없으면 결정적 목)")
+    events = source_ingest.events_from_transcript(meta.transcript)
+    scenes = write_recap(events, meta.shots, bible, title=meta.title)
+    issues = lint_nyaong(scenes)
+    print(f"   씬 {len(scenes)}개, 스타일 린트: {'통과' if not issues else issues}")
+
+    print("3) TTS + preset_recap 렌더 (컷 싱크 + 자막 + 2트랙)")
+    manifest = Manifest(episode_id="recap-demo", track=Track.RECAP,
+                        outline=meta.title, fact_sheet=FactSheet())
+    audios = tts.synthesize_episode(scenes, bible, manifest.fact_sheet, workdir / "audio")
+    result = assemble.preset_recap(
+        scenes, bible, manifest.fact_sheet, meta.path, workdir / "work",
+        workdir / "recap.mp4", audio_paths={a.scene_id: a.path for a in audios},
+    )
+    print(f"   → {result.out_path} ({result.duration:.1f}s)")
+
+    print("4) 쇼츠 파생 (훅 씬 2개 → 9:16)")
+    shorts = assemble.preset_shorts(workdir / "work", [1, 2], workdir / "shorts_01.mp4")
+    print(f"   → {shorts}")
+
+
 def cmd_e2e(args) -> None:
     track = Track(args.track)
     bible = load_bible(track)
@@ -194,6 +270,9 @@ def main() -> None:
     p2 = sub.add_parser("longform-demo", help="씬 3개 롱폼 + (--replace) 씬 교체 비교")
     p2.add_argument("--replace", action="store_true")
     p2.set_defaults(fn=cmd_longform_demo)
+
+    p4 = sub.add_parser("recap-demo", help="리캡 트랙 e2e: 수집→냐옹체→컷싱크→쇼츠")
+    p4.set_defaults(fn=cmd_recap_demo)
 
     p3 = sub.add_parser("e2e", help="script→tts→assemble 전체 e2e")
     p3.add_argument("--track", default="japan", choices=[t.value for t in Track])

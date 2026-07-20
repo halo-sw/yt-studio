@@ -423,6 +423,158 @@ def preset_longform_16x9(
     )
 
 
+# ---------------------------------------------------------------------------
+# preset_recap — 리캡 트랙: 라이선스 확보 원본 클립 + 냐옹체 내레이션 (plans/12)
+# ---------------------------------------------------------------------------
+
+def parse_clip_ref(ref: str) -> tuple[float, float]:
+    """visual.ref '12.40-18.20' → (start, end)초. nyaong_writer가 생성한다."""
+    import re as _re
+
+    m = _re.fullmatch(r"([\d.]+)-([\d.]+)", ref.strip())
+    if not m:
+        raise AssembleError(f"클립 타임코드 형식 아님: {ref!r}")
+    start, end = float(m.group(1)), float(m.group(2))
+    if end <= start:
+        raise AssembleError(f"클립 구간 역전: {ref!r}")
+    return start, end
+
+
+def render_clip_segment(
+    scene: Scene,
+    audio_path: str | Path,
+    source_path: str | Path,
+    seg_path: str | Path,
+    bible: Bible,
+    fact_sheet: FactSheet,
+) -> Path:
+    """리캡 씬 세그먼트: 원본 샷 구간을 내레이션 길이에 맞춰 컷.
+
+    - 원본 오디오는 쓰지 않는다 (저작권 방어 + 규칙 5-1: 씬 오디오는
+      내레이션 -14 LUFS만). 클립이 내레이션보다 짧으면 마지막 프레임 홀드.
+    - source_path는 source_ingest의 라이선스 게이트(규칙 5-5)를 통과한
+      원본만 온다 — 여기서 다시 검증하지 않는 대신 우회 경로를 만들지 않는다.
+    """
+    seg_path = Path(seg_path)
+    seg_path.parent.mkdir(parents=True, exist_ok=True)
+    target = scene.duration or probe_duration(audio_path)
+    clip_start, clip_end = parse_clip_ref(scene.visual.ref)
+
+    caption = resolve_fact_tokens(scene.caption, fact_sheet).replace("'", "’").replace(":", "\\:")
+    font = _font_file(bible)
+    fontsize = int(bible.subtitle_tokens.get("size", "54"))
+    fontcolor = bible.subtitle_tokens.get("color", "#FFFFFF")
+    w, h = VIDEO_SIZE
+
+    vf = (
+        f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
+        f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,fps={FPS},"
+        f"tpad=stop_mode=clone:stop_duration={target:.3f}"
+    )
+    if caption:
+        vf += (
+            f",drawtext=fontfile={font}:text='{caption}':"
+            f"fontsize={fontsize}:fontcolor={fontcolor}:"
+            f"x=(w-text_w)/2:y=h-{fontsize * 3}:"
+            f"box=1:boxcolor=black@0.45:boxborderw=18"
+        )
+    vf += ",format=yuv420p"
+
+    _run([
+        "ffmpeg", "-y",
+        "-ss", f"{clip_start:.3f}", "-t", f"{clip_end - clip_start:.3f}",
+        "-i", str(source_path), "-i", str(audio_path),
+        "-map", "0:v", "-map", "1:a", "-t", f"{target:.3f}",
+        "-vf", vf,
+        "-af", f"loudnorm=I={NARRATION_LUFS}:TP=-1.5:LRA=11,aresample=44100",
+        "-c:v", "libx264", "-preset", "veryfast",
+        "-c:a", "aac", "-b:a", "160k", "-ar", "44100",
+        str(seg_path),
+    ])
+    return seg_path
+
+
+def preset_recap(
+    scenes: list[Scene],
+    bible: Bible,
+    fact_sheet: FactSheet,
+    source_path: str | Path,
+    workdir: str | Path,
+    out_path: str | Path,
+    *,
+    audio_paths: dict[int, str | Path],
+    bgm_path: str | Path | None = None,
+) -> EpisodeRender:
+    """리캡 프리셋: 원본 샷 컷 싱크 + 자막 번인 + 2트랙 믹스 + 챕터.
+
+    세그먼트 파일 규약(seg_XXX.mp4)이 longform과 같아 씬 교체 흐름도
+    동일하게 동작한다 (규칙 5-2).
+    """
+    workdir = Path(workdir)
+    workdir.mkdir(parents=True, exist_ok=True)
+    out_path = Path(out_path)
+    ordered = sorted(scenes, key=lambda s: s.scene_id)
+
+    segments: list[Path] = []
+    for s in ordered:
+        seg = workdir / f"seg_{s.scene_id:03d}.mp4"
+        render_clip_segment(s, audio_paths[s.scene_id], source_path, seg, bible, fact_sheet)
+        segments.append(seg)
+
+    master = workdir / "master.mp4"
+    _concat_plain(segments, master, workdir)
+    total = probe_duration(master)
+    chapters = _chapters_from_scenes(ordered)
+    _embed_chapters_and_bgm(master, out_path, chapters, total, workdir, bgm_path)
+
+    chapters_text = "\n".join(f"{_fmt_ts(t)} {name}" for name, t in chapters)
+    return EpisodeRender(
+        out_path=str(out_path), duration=round(total, 2),
+        chapters_text=chapters_text, segment_paths=[str(p) for p in segments],
+    )
+
+
+SHORTS_SIZE = (1080, 1920)
+
+
+def preset_shorts(
+    workdir: str | Path,
+    scene_ids: list[int],
+    out_path: str | Path,
+) -> str:
+    """쇼츠 파생: 렌더된 세그먼트에서 훅 씬들을 골라 9:16 세로 재컷.
+
+    본편 세그먼트를 재사용하므로 재렌더 비용이 크롭 인코딩뿐이다.
+    """
+    workdir = Path(workdir)
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    segs = [workdir / f"seg_{sid:03d}.mp4" for sid in scene_ids]
+    for s in segs:
+        if not s.exists():
+            raise AssembleError(f"세그먼트 없음: {s} — 본편 프리셋을 먼저 렌더")
+
+    sw, sh = SHORTS_SIZE
+    inputs: list[str] = []
+    for s in segs:
+        inputs += ["-i", str(s)]
+    chains = []
+    for i in range(len(segs)):
+        chains.append(
+            f"[{i}:v]crop=ih*{sw}/{sh}:ih:(iw-ih*{sw}/{sh})/2:0,"
+            f"scale={sw}:{sh},fps={FPS},format=yuv420p[v{i}]"
+        )
+    concat_in = "".join(f"[v{i}][{i}:a]" for i in range(len(segs)))
+    chains.append(f"{concat_in}concat=n={len(segs)}:v=1:a=1[vout][aout]")
+    _run([
+        "ffmpeg", "-y", *inputs, "-filter_complex", ";".join(chains),
+        "-map", "[vout]", "-map", "[aout]",
+        "-c:v", "libx264", "-preset", "veryfast",
+        "-c:a", "aac", "-b:a", "160k", str(out_path),
+    ])
+    return str(out_path)
+
+
 def replace_scene(
     scenes: list[Scene],
     new_scene: Scene,

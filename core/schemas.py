@@ -26,6 +26,7 @@ class Track(str, Enum):
     DRAMA = "drama"            # 드라마썰
     NATEPAN = "natepan"        # 사연
     PLAYLIST = "playlist"      # 플레이리스트 (60분 롱폼)
+    RECAP = "recap"            # 리캡(냐옹체) — 라이선스 확보 원본만 (규칙 5-5, plans/12)
 
 
 class VisualType(str, Enum):

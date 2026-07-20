@@ -1,0 +1,28 @@
+# 채널 바이블 — 리캡(냐옹체) 트랙 (잠금 자산, 변경은 3인 합의 후에만)
+# plans/12: 원본 푸티지는 라이선스 확보(B전략) 소재만. 원본 오디오는 쓰지 않는다.
+channel: recap
+voice_id: TODO_ELEVENLABS_VOICE_ID
+voice_params:
+  stability: 0.45   # 리캡 특유의 텐션 — 낮은 안정성으로 억양 변화 허용
+  similarity: 0.80
+  speed: 1.12       # 빠른 템포 (냐옹체 스펙)
+style_anchors: []
+subtitle_tokens:
+  font: "Noto Sans CJK KR"
+  size: "54"
+  color: "#FFFFFF"
+  stroke: "#000000"
+  position: "lower-third"
+lut: ""
+bgm_set: []          # 언더베드는 에피소드 글로벌 트랙 (규칙 5-1)
+character_refs: []
+glossary: {}
+banned_phrases:
+  # 냐옹체 원본 충실성 규칙 — 관객 반응 언급 금지
+  - "관객"
+  - "시청자"
+  - "보는 사람들"
+  # 유튜브 가이드라인 직접 표현 금지 (style_lint가 치환표로 자동 교정)
+  - "살해"
+  - "자살"
+  - "마약"
