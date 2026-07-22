@@ -226,6 +226,40 @@ python -m pytest tests/ -q                     # 파이프라인 점검 (60 test
 프롬프트가 되고 사람이 주 1회 몰아서 생성·드롭(수동 배치가 설계의 일부). CapCut 동일 —
 편집은 파이프라인 FFmpeg가 대체.
 
+## 4-1-1. 로컬 실행 퀵스타트 (1회 세팅 ~20분)
+
+파이프라인은 서버가 필요 없다 — **각자 컴퓨터에서 바로 돈다.** 클라우드 세션과 달리
+로컬은 네트워크 제한이 없어 **타입캐스트가 즉시 동작**한다.
+
+```bash
+# 1) 클론 + 파이썬 의존성 (Python 3.11+)
+git clone <repo> && cd yt-studio
+pip install pydantic pyyaml requests pillow yt-dlp pytest
+
+# 2) 시스템 도구
+#   macOS:   brew install ffmpeg espeak-ng
+#   Windows: winget install ffmpeg  (espeak-ng는 선택 — 폴백용)
+#   Linux:   apt install ffmpeg espeak-ng fonts-noto-cjk
+
+# 3) 키 설정 — 레포 루트에 .env 파일 (절대 커밋 금지)
+#   TYPECAST_API_KEY=발급키          ← 이것만 있으면 실음성 렌더 시작
+#   CF_FONT_PATH=...                 ← 자막 폰트 자동 탐색 실패 시만 (맥/윈은 시스템 폰트 자동 탐색)
+#   ANTHROPIC_API_KEY=...            ← 대본 자동 생성 원할 때 (없으면 Claude 앱에서 PART 3 프롬프트로 대본 파일 생성)
+#   YOUTUBE_API_KEY / YOUTUBE_OAUTH_* ← 스킬 8·9·7 가동 시
+
+# 4) 동작 확인 → 첫 편 렌더
+python -m pytest tests/ -q
+python cli.py produce --script data/scripts/gyeongbiwon.txt \
+  --title "30년간 지하실 문을 지킨 경비원의 비밀" --shorts
+# → data/assets/produce/gyeongbiwon/{episode.mp4, shorts.mp4, meta.txt}
+```
+
+**로컬에서 오늘 되는 것**: 대본→TTS(타입캐스트)→렌더→쇼츠→메타 (재고 10편 즉시 렌더 가능),
+클리핑 레인(clip), 일본 트랙 e2e.
+**아직 사람이 하는 것**: 업로드(Studio 10분 — 스킬 7 구현 전), MJ 비주얼 생성(수동 배치가 설계),
+지표 시트(스킬 9 구현 전). **자동 생성 대본**은 ANTHROPIC_API_KEY 연동 전까지 Claude 앱에
+PART 2·3 프롬프트를 붙여 대본 파일로 저장하는 방식으로 동일하게 동작한다.
+
 ## 4-2. 주간 배치 루틴 (3인 공동)
 
 | 요일 | 실행 | 도구 |

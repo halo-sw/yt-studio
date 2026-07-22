@@ -36,9 +36,17 @@ SCENE_XFADE_SEC = 0.08
 VIDEO_SIZE = (1920, 1080)
 FPS = 30
 
+# 자막 번인용 한글 폰트 탐색 순서 — CF_FONT_PATH 환경변수가 최우선 (로컬 실행 대응)
 _KOREAN_FONTS = (
+    # Linux (fonts-noto-cjk)
     "/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc",
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    # macOS
+    "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+    "/Library/Fonts/AppleSDGothicNeo.ttc",
+    # Windows (맑은 고딕)
+    "C:/Windows/Fonts/malgun.ttf",
+    "C:/Windows/Fonts/malgunbd.ttf",
 )
 
 
@@ -54,10 +62,20 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess:
 
 
 def _font_file(bible: Bible | None = None) -> str:
+    import os
+
+    override = os.getenv("CF_FONT_PATH")
+    if override:
+        if Path(override).exists():
+            return override
+        raise AssembleError(f"CF_FONT_PATH 경로에 폰트 없음: {override}")
     for p in _KOREAN_FONTS:
         if Path(p).exists():
             return p
-    raise AssembleError("한글 폰트를 찾지 못함 (fonts-noto-cjk 설치 필요)")
+    raise AssembleError(
+        "한글 폰트를 찾지 못함 — Linux: fonts-noto-cjk 설치 / "
+        "기타 OS: .env에 CF_FONT_PATH=폰트파일경로 지정"
+    )
 
 
 def _fmt_ts(seconds: float) -> str:
