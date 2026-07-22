@@ -236,8 +236,19 @@ def cmd_produce(args) -> None:
     else:
         print("   린트 통과")
 
-    print("2) TTS (실측 길이 기입)")
+    # 규칙 5-3: {script}.facts.json이 있으면 사실 시트로 로드 — 수치는 토큰으로만
     sheet = FactSheet()
+    facts_path = script_path.with_suffix(".facts.json")
+    if facts_path.exists():
+        import json as _json
+
+        sheet = FactSheet(facts=_json.loads(facts_path.read_text(encoding="utf-8")))
+        print(f"   사실 시트 로드: {facts_path.name} ({len(sheet.facts)}개 키)")
+    missing = [k for s in scenes for k in s.fact_refs() if k not in sheet.facts]
+    if missing:
+        raise SystemExit(f"사실 시트에 없는 키 (규칙 5-3): {sorted(set(missing))}")
+
+    print("2) TTS (실측 길이 기입)")
     audios = tts.synthesize_episode(scenes, bible, sheet, workdir / "audio")
     total = tts.total_duration(audios)
     print(f"   합계 {total:.0f}초 ({audios[0].backend})")
