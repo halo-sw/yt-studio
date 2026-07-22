@@ -260,6 +260,51 @@ python cli.py produce --script data/scripts/gyeongbiwon.txt \
 지표 시트(스킬 9 구현 전). **자동 생성 대본**은 ANTHROPIC_API_KEY 연동 전까지 Claude 앱에
 PART 2·3 프롬프트를 붙여 대본 파일로 저장하는 방식으로 동일하게 동작한다.
 
+## 4-1-2. 실무 3문답 — BGM · 씬 비주얼 · 채널 선택 · 일괄 실행
+
+**① BGM은 어디서?** (규칙 1-5-1: 에피소드 글로벌 트랙, -26 LUFS 언더베드, `--bgm 파일`)
+
+| 단계 | 소스 | 비고 |
+|---|---|---|
+| 시작 (D1~) | **유튜브 오디오 라이브러리** (Studio→오디오 보관함) | 무료·상업 가능. 무드별 3~5곡 받아 `data/assets/bgm/`에 저장 |
+| 정착 (M2~) | **Suno 자체 생성** (플레이리스트 트랙과 겸용) | 자기 영상 언더베드 사용은 유통 약관 이슈 없음. 채널 시그니처 사운드화 |
+| 선택 | 유료 구독 (Artlist 등, 월 2~3만) | 툴 고정비에 이미 반영 범위 |
+| 금지 | 출처 불명 음원 | Content ID — 라이선스 게이트 원칙과 동일 |
+
+쇼츠는 **무BGM 시작도 정답** — 내레이션+자막이 본체라 없어도 발행 품질이며, 스토리 쇼츠
+상당수가 무BGM이다. BGM은 A/B로 붙여보고 완주율로 판단.
+
+**② 씬 비주얼은?** 기본은 플레이스홀더 슬라이드 자동 생성(발행 가능 수준). 품질을 올릴 땐
+MJ로 생성한 이미지를 폴더에 넣고 `--images 폴더` — 파일명의 숫자가 씬 번호로 매핑되고
+(1.png, 003.jpg…), 없는 씬은 플레이스홀더로 채워진다. 대본 행 순서 = 씬 번호.
+
+**③ 채널 선택은?** `--track`이 곧 채널이다 — 트랙별 바이블(`data/bibles/{track}.yaml`)이
+보이스·자막 스타일을 잠근다. 업로드 실수 방지: meta.txt에 트랙이 찍히므로 Studio 업로드 전
+확인. (스킬 7 구현 시 채널별 OAuth 토큰 `data/tokens/{track}`으로 자동 분기)
+
+| --track | 채널 | 보이스 |
+|---|---|---|
+| recap | 숏폼 선봉 (피봇 채널) | 타입캐스트 한국어 (빠른 템포) |
+| natepan | 톡톡 네이트판 | 기존 보이스 |
+| japan | シニアのお金 | 타입캐스트 일본어 성우 |
+| realestate | 예린이의 부동산 뽀개기 | 예린 보이스 |
+| drama | 톡톡 드라마썰 | 톡톡 패밀리 |
+| playlist | 파인애플 뮤직 | (내레이션 최소) |
+
+**④ 여러 채널 1회 실행?** 된다 — **배치 커맨드**. 큐 YAML에 트랙 섞어 나열하면 한 번 실행으로
+전 채널 영상이 일괄 산출된다 (한 편 실패해도 계속, 마지막에 리포트):
+
+```bash
+python cli.py batch --queue data/scripts/batch_week1.yaml   # 1주차 재고 10편 일괄
+```
+```yaml
+# 큐 형식 — 트랙 혼합 가능
+- {script: data/scripts/phishing.txt, title: "...", track: recap}
+- {script: data/scripts/jp_ep01.txt,  title: "...", track: japan, bgm: data/assets/bgm/calm.mp3}
+- {script: data/scripts/yerin_01.txt, title: "...", track: realestate, images: assets/yerin01/}
+```
+월요일 대본 배치 생성 → 이 큐 1회 실행 = 주간 물량 전체 렌더가 §4-2 루틴의 실체다.
+
 ## 4-2. 주간 배치 루틴 (3인 공동)
 
 | 요일 | 실행 | 도구 |

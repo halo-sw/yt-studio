@@ -253,10 +253,23 @@ def cmd_produce(args) -> None:
     total = tts.total_duration(audios)
     print(f"   합계 {total:.0f}초 ({audios[0].backend})")
 
+    # 씬 이미지 드롭인: --images 폴더의 파일명 숫자 → scene_id 매핑
+    # (예: 1.png, 003.jpg, scene_07.png). 없는 씬은 플레이스홀더 자동 생성.
+    visual_paths: dict[int, Path] = {}
+    if args.images:
+        img_dir = Path(args.images)
+        for f in sorted(img_dir.iterdir()):
+            if f.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
+                m = re.search(r"(\d+)", f.stem)
+                if m:
+                    visual_paths[int(m.group(1))] = f
+        print(f"   씬 이미지 {len(visual_paths)}개 매핑 (미지정 씬은 플레이스홀더)")
+
     print("3) 렌더")
     result = assemble.preset_longform_16x9(
         scenes, bible, sheet, workdir / "work", workdir / "episode.mp4",
         audio_paths={a.scene_id: a.path for a in audios},
+        visual_paths=visual_paths or None,
         bgm_path=args.bgm or None,
     )
     outputs = [result.out_path]
@@ -269,7 +282,9 @@ def cmd_produce(args) -> None:
 
     meta = workdir / "meta.txt"
     meta.write_text(
-        f"제목: {args.title}\n\n[설명란 초안 — docs/prompts/04로 확정]\n"
+        f"제목: {args.title}\n"
+        f"트랙: {track.value}  ← 업로드 채널 확인용 (GUIDELINE §4-1-2 매핑표)\n\n"
+        f"[설명란 초안 — GUIDELINE 3-6 메타 프롬프트로 확정]\n"
         f"{args.title}\n\n{result.chapters_text}\n\n#쇼츠 #스토리\n",
         encoding="utf-8",
     )
@@ -342,6 +357,45 @@ def cmd_clip(args) -> None:
         f"{result.chapters_text}\n", encoding="utf-8",
     )
     print(f"   메타 → {workdir / 'meta.txt'}")
+
+
+def cmd_batch(args) -> None:
+    """배치 렌더: 큐 파일(YAML) 한 번 실행으로 여러 트랙(채널) 영상 일괄 산출.
+
+    큐 항목: {script, title, track?, shorts?, bgm?, images?, slug?}
+    한 편 실패해도 멈추지 않고 다음으로 — 마지막에 성공/실패 리포트.
+    """
+    import argparse as _ap
+
+    import yaml
+
+    queue = yaml.safe_load(Path(args.queue).read_text(encoding="utf-8"))
+    if not isinstance(queue, list) or not queue:
+        raise SystemExit("큐 형식: 항목 리스트 YAML (GUIDELINE §4-1-2)")
+
+    results = []
+    for i, item in enumerate(queue, 1):
+        print(f"\n===== [{i}/{len(queue)}] {item.get('title', item.get('script'))} =====")
+        ns = _ap.Namespace(
+            script=item["script"], title=item["title"],
+            track=item.get("track", "recap"),
+            shorts=bool(item.get("shorts", True)),
+            bgm=item.get("bgm", ""), images=item.get("images", ""),
+            slug=item.get("slug", ""),
+        )
+        try:
+            cmd_produce(ns)
+            results.append((item["title"], "OK"))
+        except SystemExit as e:
+            results.append((item["title"], f"실패: {e}"))
+        except Exception as e:
+            results.append((item["title"], f"실패: {type(e).__name__}: {str(e)[:80]}"))
+
+    print("\n===== 배치 결과 =====")
+    ok = sum(1 for _, s in results if s == "OK")
+    for title, status in results:
+        print(f"  {'✅' if status == 'OK' else '❌'} {title} — {status}")
+    print(f"성공 {ok}/{len(results)}")
 
 
 def cmd_recap_demo(args) -> None:
@@ -463,8 +517,13 @@ def main() -> None:
     p5.add_argument("--track", default="recap", choices=[t.value for t in Track])
     p5.add_argument("--shorts", action="store_true", help="9:16 세로판 추가 생성")
     p5.add_argument("--bgm", default="", help="BGM 파일 (글로벌 -26 LUFS 언더베드)")
+    p5.add_argument("--images", default="", help="씬 이미지 폴더 (파일명 숫자=씬 번호, 미지정 씬은 플레이스홀더)")
     p5.add_argument("--slug", default="", help="출력 폴더명 (기본: 대본 파일명)")
     p5.set_defaults(fn=cmd_produce)
+
+    p7 = sub.add_parser("batch", help="큐 YAML 1회 실행 → 여러 트랙 영상 일괄 렌더")
+    p7.add_argument("--queue", required=True, help="큐 파일 (예: data/scripts/batch_week1.yaml)")
+    p7.set_defaults(fn=cmd_batch)
 
     p3 = sub.add_parser("e2e", help="script→tts→assemble 전체 e2e")
     p3.add_argument("--track", default="japan", choices=[t.value for t in Track])

@@ -1,0 +1,22 @@
+# 1주차 발행 큐 — python cli.py batch --queue data/scripts/batch_week1.yaml
+# 항목별 옵션: track(기본 recap) / shorts(기본 true) / bgm / images(씬 이미지 폴더) / slug
+- script: data/scripts/gyeongbiwon.txt
+  title: "30년간 지하실 문을 지킨 경비원의 비밀"
+- script: data/scripts/drawer.txt
+  title: "20년 무결근 직원이 가장 먼저 해고된 이유"
+- script: data/scripts/bakery.txt
+  title: "문 닫은 빵집에 매일 밤 12시 불이 켜진 이유"
+- script: data/scripts/milk.txt
+  title: "매일 밤 우유를 들고 오던 할아버지의 비밀"
+- script: data/scripts/delivery.txt
+  title: "3년간 빈 박스를 배달하면 생기는 일"
+- script: data/scripts/phishing.txt
+  title: "창구에서 5,301만원을 지킨 신입 행원"
+- script: data/scripts/jeonse.txt
+  title: "전세사기 피해 3만8천건, 다른 결말을 만든 사람들"
+- script: data/scripts/junggo.txt
+  title: "판매자와 구매자가 서로를 범인으로 안 사기"
+- script: data/scripts/yuryubun.txt
+  title: "장례식장에 나타난 오빠의 소송이 무산된 이유"
+- script: data/scripts/gantong.txt
+  title: "공인중개사도 피해자였던 빌라 한 동의 비밀"
