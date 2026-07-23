@@ -505,6 +505,48 @@ def cmd_ui(args) -> None:
     uvicorn.run("service.api.app:app", host="127.0.0.1", port=args.port, log_level="warning")
 
 
+def cmd_release(args) -> None:
+    """제작 산출물을 발행용 단일 폴더로 수집 — data/releases/<슬러그>/.
+
+    영상(인트로 결합본 우선) + 썸네일 + 업로드 텍스트를 한곳에 모아
+    업로드할 때 폴더 하나만 열면 되게 한다.
+    """
+    import shutil
+
+    slug = args.slug
+    workdir = Path("data/assets/produce") / slug
+    if not workdir.exists():
+        raise SystemExit(f"제작 폴더 없음: {workdir}")
+    out = Path("data/releases") / slug
+    out.mkdir(parents=True, exist_ok=True)
+
+    # 영상: --video 지정 > 인트로 결합본 > 기본 렌더본
+    video = Path(args.video) if args.video else None
+    if video is None:
+        for cand in ("episode_with_intro.mp4", "episode.mp4"):
+            if (workdir / cand).exists():
+                video = workdir / cand
+                break
+    if video is None or not video.exists():
+        raise SystemExit(f"영상 파일 없음: {workdir}/episode*.mp4")
+    shutil.copy2(video, out / f"{slug}.mp4")
+
+    # 썸네일: --thumb 지정 > thumbs/thumb_A.png
+    thumb = Path(args.thumb) if args.thumb else workdir / "thumbs" / "thumb_A.png"
+    if thumb.exists():
+        shutil.copy2(thumb, out / f"{slug}_thumbnail.png")
+
+    # 업로드 텍스트: upload.txt > meta.txt
+    for cand in ("upload.txt", "meta.txt"):
+        if (workdir / cand).exists():
+            shutil.copy2(workdir / cand, out / f"{slug}_upload.txt")
+            break
+
+    print(f"릴리스 수집 완료 → {out}/")
+    for f in sorted(out.iterdir()):
+        print(f"   {f.name} ({f.stat().st_size // 1024:,}KB)")
+
+
 def cmd_batch(args) -> None:
     """배치 렌더: 큐 파일(YAML) 한 번 실행으로 여러 트랙(채널) 영상 일괄 산출.
 
@@ -668,6 +710,12 @@ def main() -> None:
                     help="대본이 같을 때 기존 합성 음성 재사용 (TTS 재과금 방지)")
     p5.add_argument("--slug", default="", help="출력 폴더명 (기본: 대본 파일명)")
     p5.set_defaults(fn=cmd_produce)
+
+    p10 = sub.add_parser("release", help="영상+썸네일+업로드 텍스트를 data/releases/<슬러그>/ 한 폴더로 수집")
+    p10.add_argument("--slug", required=True, help="제작 폴더명 (data/assets/produce/<슬러그>)")
+    p10.add_argument("--video", default="", help="영상 직접 지정 (기본: 인트로 결합본 우선 자동 선택)")
+    p10.add_argument("--thumb", default="", help="썸네일 직접 지정 (기본: thumbs/thumb_A.png)")
+    p10.set_defaults(fn=cmd_release)
 
     p9 = sub.add_parser("ui", help="로컬 웹 UI 실행 (http://127.0.0.1:8787)")
     p9.add_argument("--port", type=int, default=8787)
