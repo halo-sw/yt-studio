@@ -472,6 +472,14 @@ def cmd_write(args) -> None:
         cmd_produce(ns)
 
 
+def cmd_ui(args) -> None:
+    """로컬 웹 UI — 대본 재고·생성·갤러리·지표 4화면 (Astryx 디자인 언어)."""
+    import uvicorn
+
+    print(f"yt-studio-multi UI → http://127.0.0.1:{args.port}  (종료: Ctrl+C)")
+    uvicorn.run("service.api.app:app", host="127.0.0.1", port=args.port, log_level="warning")
+
+
 def cmd_batch(args) -> None:
     """배치 렌더: 큐 파일(YAML) 한 번 실행으로 여러 트랙(채널) 영상 일괄 산출.
 
@@ -633,6 +641,10 @@ def main() -> None:
     p5.add_argument("--images", default="", help="씬 이미지 폴더 (파일명 숫자=씬 번호, 미지정 씬은 플레이스홀더)")
     p5.add_argument("--slug", default="", help="출력 폴더명 (기본: 대본 파일명)")
     p5.set_defaults(fn=cmd_produce)
+
+    p9 = sub.add_parser("ui", help="로컬 웹 UI 실행 (http://127.0.0.1:8787)")
+    p9.add_argument("--port", type=int, default=8787)
+    p9.set_defaults(fn=cmd_ui)
 
     p8 = sub.add_parser("write", help="소재 한 줄 → 대본 자동 생성(린트 자동 재시도) → (--render 시 영상까지)")
     p8.add_argument("--topic", required=True, help="소재: 로그라인 / 반전 / 마지막 질문")

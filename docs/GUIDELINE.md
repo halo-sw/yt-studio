@@ -252,6 +252,14 @@ python -m pytest tests/ -q
 python cli.py produce --script data/scripts/gyeongbiwon.txt \
   --title "30년간 지하실 문을 지킨 경비원의 비밀" --shorts
 # → data/assets/produce/gyeongbiwon/{episode.mp4, shorts.mp4, meta.txt}
+
+# 5) (권장) 로컬 웹 UI — 비개발자용 4화면 (Astryx 디자인 언어, 라이트/다크 자동)
+pip install fastapi uvicorn
+python cli.py ui        # → http://127.0.0.1:8787
+#   대본 재고(게이트 1: 카테고리·린트·훅 확인 → 렌더 버튼)
+#   생성(배치 일괄 실행 · write 소재→영상 · 실시간 로그)
+#   갤러리(영상 미리보기 · meta 복붙 · CapCut 명령 — 게이트 2 준비)
+#   지표(기록 시트 + 카테고리 랭킹 자동 계산)
 ```
 
 **로컬에서 오늘 되는 것**: 대본→TTS(타입캐스트)→렌더→쇼츠→메타 (재고 10편 즉시 렌더 가능),
