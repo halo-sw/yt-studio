@@ -386,6 +386,92 @@ def cmd_clip(args) -> None:
     print(f"   메타 → {workdir / 'meta.txt'}")
 
 
+_WRITE_SYSTEM = """너는 스토리텔링 쇼츠 채널의 작가다. 채널 정체성은 "돈과 사람이 얽힌 반전 사연"이다.
+규칙 (예외 없음):
+- 첫 출력 행은 `제목: ...` 한 줄 (숫자형/모순형/결과형 중 하나, 대본에 없는 것 약속 금지). 그 다음 빈 줄, 그 다음 대본.
+- 대본은 한 행 = 한 절. 연결어(~했는데/~했고/~하자/~했죠/~했습니다)마다 행을 바꾼다.
+- 15~20행. 존댓말 고정. 행동 중심, 내면 묘사 금지. 실존 작품·실화 재현 금지.
+- 연결어 분포: 했는데 40% / 했고 25% / 하자 15% / 했죠 10% / 했습니다 5%. 같은 연결어 3연속 금지.
+- "관객/시청자/보는 사람들" 언급 절대 금지.
+- 첫 행 = 가장 강한 문장(구체 수치·시간/모순/인물갈등 중 2개 이상). 마지막 행 = 댓글 유도 질문.
+- 죽었다→세상을 떠났다, 살해→제거, 시체→쓰러진 사람.
+- 실제 통계 인용 시 {{fact:키이름}} 토큰으로만.
+- 제목 줄과 대본 행 외에 어떤 텍스트도 출력하지 않는다 (번호·해설·빈말 금지)."""
+
+
+def _claude_write(topic: str, feedback: str = "") -> tuple[str, list[str]]:
+    """Claude API로 대본 생성 → (제목, 대본 행들). ANTHROPIC_API_KEY 필요."""
+    import os
+
+    import requests
+
+    key = os.getenv("ANTHROPIC_API_KEY")
+    if not key:
+        raise SystemExit(
+            "ANTHROPIC_API_KEY가 없습니다 (.env에 추가).\n"
+            "키 없이 쓰려면: Claude 앱에 GUIDELINE §B6 프롬프트를 붙여 대본을 만들고\n"
+            "data/scripts/파일.txt로 저장 → produce/batch로 렌더하세요."
+        )
+    user = f"[소재]\n{topic}\n\n위 소재로 60~90초 대본을 규칙대로 써라."
+    if feedback:
+        user += f"\n\n[직전 출력의 린트 위반 — 반드시 해소하고 다시 써라]\n{feedback}"
+    resp = requests.post(
+        "https://api.anthropic.com/v1/messages",
+        headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                 "content-type": "application/json"},
+        json={"model": "claude-sonnet-5", "max_tokens": 2000,
+              "system": _WRITE_SYSTEM,
+              "messages": [{"role": "user", "content": user}]},
+        timeout=120,
+    )
+    if resp.status_code != 200:
+        raise SystemExit(f"Claude API {resp.status_code}: {resp.text[:200]}")
+    text = resp.json()["content"][0]["text"].strip()
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    title = ""
+    if lines and lines[0].startswith("제목:"):
+        title = lines[0].split(":", 1)[1].strip()
+        lines = lines[1:]
+    return title, lines
+
+
+def cmd_write(args) -> None:
+    """대본 자동 생성: 소재 한 줄 → Claude 생성 → 린트 자동 검수(위반 시 1회
+    자동 재생성) → data/scripts/ 저장 → (--render 시 영상까지 원샷)."""
+    import argparse as _ap
+
+    from tracks.recap.style_lint import lint_nyaong
+
+    def _lint(lines: list[str]) -> list[str]:
+        scenes = [Scene(scene_id=i + 1, track=Track.RECAP, chapter="본편",
+                        narration=ln, caption=ln[:30],
+                        visual=SceneVisual(type="slide", ref="x"))
+                  for i, ln in enumerate(lines)]
+        return lint_nyaong(scenes)
+
+    print("1) 대본 생성 (Claude)")
+    title, lines = _claude_write(args.topic)
+    issues = _lint(lines)
+    if issues:
+        print(f"   린트 위반 {len(issues)}건 → 자동 재생성")
+        title2, lines2 = _claude_write(args.topic, feedback="\n".join(issues))
+        if len(_lint(lines2)) <= len(issues):
+            title, lines = (title2 or title), lines2
+        issues = _lint(lines)
+
+    out = Path(args.out or f"data/scripts/{args.slug}.txt")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    final_title = args.title or title or args.slug
+    print(f"   → {out} ({len(lines)}행) / 제목: {final_title}")
+    print(f"   린트: {'통과' if not issues else f'잔여 {len(issues)}건 — 해당 행 수동 확인: ' + '; '.join(issues[:3])}")
+
+    if args.render:
+        ns = _ap.Namespace(script=str(out), title=final_title, track=args.track,
+                           shorts=True, bgm=args.bgm, images="", slug=args.slug)
+        cmd_produce(ns)
+
+
 def cmd_batch(args) -> None:
     """배치 렌더: 큐 파일(YAML) 한 번 실행으로 여러 트랙(채널) 영상 일괄 산출.
 
@@ -547,6 +633,16 @@ def main() -> None:
     p5.add_argument("--images", default="", help="씬 이미지 폴더 (파일명 숫자=씬 번호, 미지정 씬은 플레이스홀더)")
     p5.add_argument("--slug", default="", help="출력 폴더명 (기본: 대본 파일명)")
     p5.set_defaults(fn=cmd_produce)
+
+    p8 = sub.add_parser("write", help="소재 한 줄 → 대본 자동 생성(린트 자동 재시도) → (--render 시 영상까지)")
+    p8.add_argument("--topic", required=True, help="소재: 로그라인 / 반전 / 마지막 질문")
+    p8.add_argument("--slug", required=True, help="대본 파일명 (data/scripts/{slug}.txt)")
+    p8.add_argument("--title", default="", help="제목 (미지정 시 Claude 생성 제목 사용)")
+    p8.add_argument("--track", default="recap", choices=[t.value for t in Track])
+    p8.add_argument("--out", default="", help="저장 경로 (기본 data/scripts/{slug}.txt)")
+    p8.add_argument("--bgm", default="")
+    p8.add_argument("--render", action="store_true", help="생성 직후 영상까지 원샷")
+    p8.set_defaults(fn=cmd_write)
 
     p7 = sub.add_parser("batch", help="큐 YAML 1회 실행 → 여러 트랙 영상 일괄 렌더")
     p7.add_argument("--queue", required=True, help="큐 파일 (예: data/scripts/batch_week1.yaml)")
