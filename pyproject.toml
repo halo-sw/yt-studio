@@ -1,7 +1,7 @@
 [project]
-name = "channel-factory"
-version = "0.1.0"
-description = "3인 공동 운영 유튜브 자동화 스튜디오 — 카테고리 에이전트 5트랙 파이프라인"
+name = "yt-studio-multi"
+version = "1.0.0"
+description = "멀티 트랙 유튜브 자동화 스튜디오 — 5트랙+숏폼 선봉, 대본→TTS→렌더→쇼츠 파이프라인"
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.5",
