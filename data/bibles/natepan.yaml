@@ -2,11 +2,11 @@
 # 규칙 5-5: 원문 각색이 아니라 복수 사연의 모티프를 결합한 재창작
 # (tracks/natepan/remix_writer.py). 원문 문장 재사용은 금지어로도 방어.
 channel: natepan
-voice_id: TODO_ELEVENLABS_VOICE_ID
+voice_id: tc_632a7588e7c78a412f5a36cd  # Typecast Junho — 차분한 남성 스토리텔러 (soft/tonedown 등 감정 7종)
 voice_params:
   stability: 0.50
   similarity: 0.80
-  speed: 1.05
+  speed: 1.0   # 편안한 낭독 페이스 (사연 트랙)
 style_anchors:
   - data/assets/natepan/anchor_01_texting_ui.png
   - data/assets/natepan/anchor_02_mood_night.png

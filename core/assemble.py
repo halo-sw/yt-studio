@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -76,6 +77,98 @@ def _font_file(bible: Bible | None = None) -> str:
         "한글 폰트를 찾지 못함 — Linux: fonts-noto-cjk 설치 / "
         "기타 OS: .env에 CF_FONT_PATH=폰트파일경로 지정"
     )
+
+
+_HAS_DRAWTEXT: bool | None = None
+
+
+def _has_drawtext() -> bool:
+    """ffmpeg 빌드에 drawtext(freetype)가 있는지 1회 감지.
+
+    Homebrew 등 일부 빌드는 freetype 없이 배포된다 — 없으면 자막을
+    PIL 투명 PNG + overlay(내장 필터)로 합성하는 폴백을 쓴다.
+    """
+    global _HAS_DRAWTEXT
+    if _HAS_DRAWTEXT is None:
+        proc = subprocess.run(["ffmpeg", "-hide_banner", "-filters"],
+                              capture_output=True, text=True)
+        _HAS_DRAWTEXT = proc.returncode == 0 and "drawtext" in proc.stdout
+    return _HAS_DRAWTEXT
+
+
+def _drawtext_filter(caption: str, font: str, fontsize: int, fontcolor: str) -> str:
+    esc = caption.replace("'", "’").replace(":", "\\:")
+    return (
+        f"drawtext=fontfile={font}:text='{esc}':"
+        f"fontsize={fontsize}:fontcolor={fontcolor}:"
+        f"x=(w-text_w)/2:y=h-{fontsize * 3}:"
+        f"box=1:boxcolor=black@0.45:boxborderw=18"
+    )
+
+
+_SENTENCE_RE = re.compile(r"(?<=[.?!…])\s+")
+
+
+def _caption_windows(caption: str, duration: float) -> list[tuple[str, float, float]]:
+    """내레이션을 문장 단위로 쪼개 (문장, 시작, 끝) 타임 윈도우를 만든다.
+
+    단어 타임스탬프 없이 글자수 비례로 배분 — TTS 낭독 속도가 대체로
+    일정해서 문장 경계 오차는 ±0.5초 안쪽이다 (씬 단위라 누적되지 않음).
+    """
+    sentences = [s.strip() for s in _SENTENCE_RE.split(caption.strip()) if s.strip()]
+    if not sentences:
+        return []
+    total = sum(len(s) for s in sentences)
+    windows, cursor = [], 0.0
+    for s in sentences:
+        share = duration * len(s) / total
+        windows.append((s, cursor, min(cursor + share, duration)))
+        cursor += share
+    # 마지막 문장은 씬 끝까지 유지 (반올림 공백 방지)
+    s, start, _ = windows[-1]
+    windows[-1] = (s, start, duration)
+    return windows
+
+
+def _wrap_caption(draw, text: str, f, max_width: int) -> list[str]:
+    """픽셀 폭 기준 어절 줄바꿈 — 자막 한 덩어리 최대 2~3줄."""
+    lines, line = [], ""
+    for word in text.split():
+        trial = f"{line} {word}".strip()
+        if draw.textlength(trial, font=f) <= max_width or not line:
+            line = trial
+        else:
+            lines.append(line)
+            line = word
+    if line:
+        lines.append(line)
+    return lines
+
+
+def _caption_overlay_png(caption: str, font: str, fontsize: int,
+                         fontcolor: str, out_path: Path) -> Path:
+    """자막 PNG (중앙 하단, 반투명 박스, 어절 단위 줄바꿈) — overlay 합성용."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    w, h = VIDEO_SIZE
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    f = ImageFont.truetype(font, fontsize)
+    lines = _wrap_caption(draw, caption, f, max_width=w - 320)
+    line_h = round(fontsize * 1.35)
+    pad = 18
+    block_h = line_h * len(lines)
+    y0 = h - fontsize * 3 - (len(lines) - 1) * line_h  # 줄 수가 늘면 위로 확장
+    widths = [draw.textlength(ln, font=f) for ln in lines]
+    box_w = max(widths)
+    bx = (w - box_w) // 2
+    draw.rectangle((bx - pad, y0 - pad, bx + box_w + pad, y0 + block_h + pad - line_h + fontsize),
+                   fill=(0, 0, 0, 115))  # black@0.45
+    for i, ln in enumerate(lines):
+        x = (w - widths[i]) // 2
+        draw.text((x, y0 + i * line_h), ln, font=f, fill=fontcolor)
+    img.save(out_path)
+    return out_path
 
 
 def _fmt_ts(seconds: float) -> str:
@@ -263,39 +356,58 @@ def render_scene_segment(
             palette=scene.scene_id,
         )
 
-    caption = resolve_fact_tokens(scene.caption, fact_sheet).replace("'", "’").replace(":", "\\:")
+    caption = resolve_fact_tokens(scene.caption, fact_sheet)
     font = _font_file(bible)
     fontsize = int(bible.subtitle_tokens.get("size", "48"))
     fontcolor = bible.subtitle_tokens.get("color", "#FFFFFF")
 
     frames = max(int(duration * FPS), 1)
     w, h = VIDEO_SIZE
-    if scene.visual.effect is VisualEffect.KENBURNS:
-        # 느린 줌인 1.0→1.08 — 업스케일 후 zoompan으로 서브픽셀 떨림 완화
+    # 씬 비주얼이 영상(모션 클립)이면 1회 재생 후 마지막 프레임 홀드 —
+    # 루프 반복은 티가 나므로 쓰지 않는다 (모션이 정지화면으로 자연히 가라앉음).
+    is_video = Path(visual_path).suffix.lower() in {".mp4", ".mov", ".webm", ".mkv"}
+    if is_video:
+        vin = ["-i", str(visual_path)]
         vf = (
-            f"scale={w * 2}:{h * 2},"
-            f"zoompan=z='1+0.08*on/{frames}':d={frames}:s={w}x{h}:fps={FPS}"
+            f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
+            f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,fps={FPS},"
+            f"tpad=stop_mode=clone:stop_duration={duration:.3f}"
         )
     else:
-        vf = f"scale={w}:{h},fps={FPS}"
-    if caption:
-        vf += (
-            f",drawtext=fontfile={font}:text='{caption}':"
-            f"fontsize={fontsize}:fontcolor={fontcolor}:"
-            f"x=(w-text_w)/2:y=h-{fontsize * 3}:"
-            f"box=1:boxcolor=black@0.45:boxborderw=18"
-        )
-    vf += ",format=yuv420p"
+        vin = ["-loop", "1", "-i", str(visual_path)]
+        if scene.visual.effect is VisualEffect.KENBURNS:
+            # 느린 줌인 1.0→1.08 — 업스케일 후 zoompan으로 서브픽셀 떨림 완화
+            vf = (
+                f"scale={w * 2}:{h * 2},"
+                f"zoompan=z='1+0.08*on/{frames}':d={frames}:s={w}x{h}:fps={FPS}"
+            )
+        else:
+            vf = f"scale={w}:{h},fps={FPS}"
 
-    _run([
-        "ffmpeg", "-y", "-loop", "1", "-i", str(visual_path), "-i", str(audio_path),
+    tail = [
         "-t", f"{duration:.3f}",
-        "-vf", vf,
         "-af", f"loudnorm=I={NARRATION_LUFS}:TP=-1.5:LRA=11,aresample=44100",
         "-c:v", "libx264", "-preset", "veryfast",
         "-c:a", "aac", "-b:a", "160k", "-ar", "44100",
         str(seg_path),
-    ])
+    ]
+    # 타임드 자막: 문장 단위로 쪼개 글자수 비례 타이밍으로 교체 표시.
+    # drawtext 유무와 무관하게 PIL 오버레이 한 경로만 쓴다 (빌드 이식성).
+    windows = _caption_windows(caption, duration)
+    cmd = ["ffmpeg", "-y", *vin, "-i", str(audio_path)]
+    fc = f"[0:v]{vf}[bg]"
+    last = "bg"
+    for idx, (sentence, start, end) in enumerate(windows):
+        png = _caption_overlay_png(
+            sentence, font, fontsize, fontcolor,
+            seg_path.with_suffix(f".cap{idx}.png"))
+        cmd += ["-loop", "1", "-i", str(png)]
+        nxt = f"c{idx}"
+        fc += (f";[{last}][{2 + idx}:v]overlay=0:0"
+               f":enable='between(t,{start:.2f},{end:.2f})'[{nxt}]")
+        last = nxt
+    fc += f";[{last}]format=yuv420p[v]"
+    _run([*cmd, "-filter_complex", fc, "-map", "[v]", "-map", "1:a", *tail])
     return seg_path
 
 
@@ -478,7 +590,7 @@ def render_clip_segment(
     target = scene.duration or probe_duration(audio_path)
     clip_start, clip_end = parse_clip_ref(scene.visual.ref)
 
-    caption = resolve_fact_tokens(scene.caption, fact_sheet).replace("'", "’").replace(":", "\\:")
+    caption = resolve_fact_tokens(scene.caption, fact_sheet)
     font = _font_file(bible)
     fontsize = int(bible.subtitle_tokens.get("size", "54"))
     fontcolor = bible.subtitle_tokens.get("color", "#FFFFFF")
@@ -489,25 +601,31 @@ def render_clip_segment(
         f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,fps={FPS},"
         f"tpad=stop_mode=clone:stop_duration={target:.3f}"
     )
-    if caption:
-        vf += (
-            f",drawtext=fontfile={font}:text='{caption}':"
-            f"fontsize={fontsize}:fontcolor={fontcolor}:"
-            f"x=(w-text_w)/2:y=h-{fontsize * 3}:"
-            f"box=1:boxcolor=black@0.45:boxborderw=18"
-        )
-    vf += ",format=yuv420p"
-
-    _run([
-        "ffmpeg", "-y",
-        "-ss", f"{clip_start:.3f}", "-t", f"{clip_end - clip_start:.3f}",
-        "-i", str(source_path), "-i", str(audio_path),
-        "-map", "0:v", "-map", "1:a", "-t", f"{target:.3f}",
-        "-vf", vf,
+    src = ["-ss", f"{clip_start:.3f}", "-t", f"{clip_end - clip_start:.3f}",
+           "-i", str(source_path), "-i", str(audio_path)]
+    tail = [
+        "-t", f"{target:.3f}",
         "-af", f"loudnorm=I={NARRATION_LUFS}:TP=-1.5:LRA=11,aresample=44100",
         "-c:v", "libx264", "-preset", "veryfast",
         "-c:a", "aac", "-b:a", "160k", "-ar", "44100",
         str(seg_path),
+    ]
+    if caption and not _has_drawtext():
+        cap_png = _caption_overlay_png(
+            caption, font, fontsize, fontcolor, seg_path.with_suffix(".cap.png"))
+        _run([
+            "ffmpeg", "-y", *src, "-loop", "1", "-i", str(cap_png),
+            "-filter_complex", f"[0:v]{vf}[bg];[bg][2:v]overlay=0:0,format=yuv420p[v]",
+            "-map", "[v]", "-map", "1:a", *tail,
+        ])
+        return seg_path
+
+    if caption:
+        vf += "," + _drawtext_filter(caption, font, fontsize, fontcolor)
+    vf += ",format=yuv420p"
+    _run([
+        "ffmpeg", "-y", *src,
+        "-map", "0:v", "-map", "1:a", "-vf", vf, *tail,
     ])
     return seg_path
 

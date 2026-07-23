@@ -18,7 +18,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from core import assemble, tts
+from core import assemble, script, tts
 from core.schemas import (
     Conte, Emotion, FactSheet, Manifest, Scene, SceneVisual, Track, load_bible,
 )
@@ -210,20 +210,24 @@ def cmd_produce(args) -> None:
     workdir.mkdir(parents=True, exist_ok=True)
 
     print(f"1) 대본 {len(lines)}행 → 씬 구성 + 스타일 검수")
+    # 트랙 감정 아크(script.TRACK_STRUCTURES)를 씬 위치에 비례 배분 —
+    # tts가 씬별 emotion_preset으로 매핑해 낭독 감정 낙차를 만든다.
+    arc = [tone for _, _, tone in script.TRACK_STRUCTURES[track]]
     scenes = []
     for i, line in enumerate(lines):
         chapter = "훅" if i < 2 else ("마무리" if i == len(lines) - 1 else "본편")
         text = apply_guideline_substitutions(line)
+        tone = arc[min(i * len(arc) // len(lines), len(arc) - 1)]
         scenes.append(Scene(
             scene_id=i + 1, track=track, chapter=chapter,
-            narration=text, caption=text[:38],
+            narration=text, caption=text,  # 타임드 자막: 렌더가 문장 단위로 쪼갬
             visual=SceneVisual(
                 type="slide", ref=f"produce/{slug}/{i + 1}",
                 effect="kenburns" if i % 2 == 0 else "none",
             ),
             conte=Conte(
                 info_point=text[:40],
-                emotion=Emotion(tone="텐션 유지", delivery="빠르게, 행 끝 반 박자 쉼"),
+                emotion=Emotion(tone=tone, delivery="빠르게, 행 끝 반 박자 쉼"),
                 composition="중앙 구도, 하단 자막 여백",
                 visual_direction=f"'{text[:30]}' 분위기의 삽화",
             ),
@@ -249,7 +253,19 @@ def cmd_produce(args) -> None:
         raise SystemExit(f"사실 시트에 없는 키 (규칙 5-3): {sorted(set(missing))}")
 
     print("2) TTS (실측 길이 기입)")
-    audios = tts.synthesize_episode(scenes, bible, sheet, workdir / "audio")
+    audio_dir = workdir / "audio"
+    existing = sorted(audio_dir.glob("scene_*.wav")) if audio_dir.exists() else []
+    if getattr(args, "reuse_audio", False) and len(existing) == len(scenes):
+        # 대본이 안 바뀐 재렌더 — 기존 합성 결과 재사용 (TTS 재과금 방지)
+        audios = []
+        for s, wav in zip(scenes, existing):
+            s.duration = tts.probe_duration(wav)
+            audios.append(tts.SceneAudio(
+                scene_id=s.scene_id, path=wav, duration=s.duration,
+                chars=len(s.narration), backend="reused"))
+        print(f"   기존 음성 {len(audios)}개 재사용 (--reuse-audio)")
+    else:
+        audios = tts.synthesize_episode(scenes, bible, sheet, audio_dir)
     total = tts.total_duration(audios)
     print(f"   합계 {total:.0f}초 ({audios[0].backend})")
 
@@ -258,11 +274,20 @@ def cmd_produce(args) -> None:
     visual_paths: dict[int, Path] = {}
     if args.images:
         img_dir = Path(args.images)
+        video_ext = {".mp4", ".mov", ".webm", ".mkv"}
         for f in sorted(img_dir.iterdir()):
-            if f.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}:
+            # 모션 클립(영상)도 씬 비주얼로 드롭인 가능 — 같은 파일명 숫자 규칙.
+            # 같은 씬 번호에 이미지·영상이 둘 다 있으면 영상(모션)이 우선한다.
+            if f.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", *video_ext}:
                 m = re.search(r"(\d+)", f.stem)
-                if m:
-                    visual_paths[int(m.group(1))] = f
+                if not m:
+                    continue
+                sid = int(m.group(1))
+                prev = visual_paths.get(sid)
+                if prev is not None and prev.suffix.lower() in video_ext \
+                        and f.suffix.lower() not in video_ext:
+                    continue
+                visual_paths[sid] = f
         print(f"   씬 이미지 {len(visual_paths)}개 매핑 (미지정 씬은 플레이스홀더)")
 
     print("3) 렌더")
@@ -639,6 +664,8 @@ def main() -> None:
     p5.add_argument("--shorts", action="store_true", help="9:16 세로판 추가 생성")
     p5.add_argument("--bgm", default="", help="BGM 파일 (글로벌 -26 LUFS 언더베드)")
     p5.add_argument("--images", default="", help="씬 이미지 폴더 (파일명 숫자=씬 번호, 미지정 씬은 플레이스홀더)")
+    p5.add_argument("--reuse-audio", action="store_true", dest="reuse_audio",
+                    help="대본이 같을 때 기존 합성 음성 재사용 (TTS 재과금 방지)")
     p5.add_argument("--slug", default="", help="출력 폴더명 (기본: 대본 파일명)")
     p5.set_defaults(fn=cmd_produce)
 

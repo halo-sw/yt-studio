@@ -16,8 +16,8 @@
 | 작업 큐 | Redis + RQ | 렌더·생성 잡. 초기 스케줄링은 APScheduler |
 | 프론트 | Next.js + React + Tailwind | `demo/channel_factory_demo.jsx`가 UI 사양 원본 |
 | 렌더 | FFmpeg + PIL + pdf2image | 서버 로컬 실행 |
-| 외부 API | Anthropic(대본·메타), ElevenLabs(TTS 한/일), YouTube Data API(업로드·경쟁 폴링·지표) | |
-| 수동 대기열 | Midjourney, Higgsfield | 공식 API 없음 → 프롬프트 생성까지 자동, 생성·업로드는 사람(비주얼 대기열 화면) |
+| 외부 API | Anthropic(대본·메타), Typecast/ElevenLabs(TTS 한/일), YouTube Data API(업로드·경쟁 폴링·지표), Higgsfield CLI(씬 이미지·영상 — 공식 스킬 경유, 옵션) | |
+| 수동 대기열 | Midjourney | 공식 API 없음 → 프롬프트 생성까지 자동, 생성·업로드는 사람(비주얼 대기열 화면). Higgsfield는 공식 CLI 공개로 자동 경로 허용(아래 10장) |
 
 ## 3. 레포 구조 (이대로 생성)
 
@@ -120,7 +120,34 @@ TELEGRAM_BOT_TOKEN=       # 관제 알림 (선택)
 
 ## 10. 하지 말 것
 
-- MJ/Higgsfield 자동 호출 시도 (비공식 API·계정 정지 리스크) — 수동 대기열로만
+- MJ 자동 호출 시도 (비공식 API·계정 정지 리스크) — 수동 대기열로만. Higgsfield는 공식 CLI/스킬(.agents/skills/higgsfield-*)이 공개되어 **옵션으로 자동 호출 허용** (2026-07 갱신) — 단, 반드시 공식 CLI 경유, 크레딧 사용량은 관제(5-8)에 집계
 - 씬 JSON에 수치 하드코딩, BGM을 씬 오디오에 굽기, 전체 재렌더로 부분 수정 대체
 - localStorage 사용(웹), 라이선스 미확인 소재 ingest, 셀프 승인 우회 로직
 - 스코프 확장: 대시보드 5화면+에이전트 워크스페이스 외 신규 화면은 3인 합의 전 금지
+
+## 11. 운영 학습 노트 (실수 재발 방지 — 2026-07 세션에서 확정)
+
+> 아래는 실제 제작 세션에서 겪은 실수와 확정된 해법이다. 에이전트는 같은 실수를 반복하지 않는다.
+
+### 환경·레포
+- **세션 시작 시 원격 브랜치부터 확인**: `git branch -a`로 후속 작업 브랜치(예: cli.py·배치 큐가 있는 브랜치)가 있는지 본다. "파일이 없다"고 새로 만들기 전에 반드시 원격을 확인 — 다른 브랜치에 이미 구현돼 있던 사례 있음.
+- **Python은 `.venv`(3.12) 사용**: 시스템 python3은 Xcode 3.9라 스펙(3.11+) 미달. `pip` 명령은 PATH에 없음 → `.venv/bin/python -m pip`.
+- **.env에 인라인 주석 금지**: cli.py의 경량 로더는 `=` 뒤 전체를 값으로 읽는다. 주석은 반드시 별도 줄에. 빈 키에 주석이 붙으면 쓰레기 값이 truthy가 되어 폴백 로직이 망가진다.
+
+### 렌더 (ffmpeg)
+- **drawtext 사용 금지**: Homebrew ffmpeg 병은 freetype 없이 빌드되어 drawtext 필터가 아예 없다. 자막은 assemble.py의 PIL 오버레이 경로(`_caption_overlay_png` + overlay enable)로만. 새 필터를 쓸 땐 바이너리 존재가 아니라 **필터 존재**(`ffmpeg -filters`)를 확인.
+- **자막은 타임드 자막이 기본**: caption에는 내레이션 전문을 넣고, 렌더가 문장 단위로 쪼개 글자수 비례 타이밍으로 교체 표시한다(`_caption_windows`). 캡션을 `[:38]`식으로 자르지 않는다 — 문장이 중간에서 잘리는 사고의 원인.
+- **모션 클립은 1회 재생 + 마지막 프레임 홀드**(tpad clone). `-stream_loop` 무한 루프는 반복이 티가 나서 금지.
+- **자막 폰트**: `data/assets/fonts/Pretendard-Bold.otf` (.env `CF_FONT_PATH`). 시스템 폰트 탐색보다 우선.
+
+### TTS (Typecast)
+- **감정 프리셋을 반드시 전송**: 씬 콘테의 emotion.tone → `prompt.emotion_preset` 매핑(tts.py `_TONE_PRESETS`). 안 보내면 전부 밋밋한 기본 톤 — "감정이 없다"는 피드백의 원인이었다. 보이스마다 지원 감정이 달라 `_voice_emotions`로 필터링한다.
+- **낭독 속도는 보이스별 실측**: Junho(speed 1.0) ≈ 9.5자/초 → 5분 ≈ 2,850자, 10분 ≈ 5,700자. Alena ≈ 7.2자/초. 대본 분량은 실측 비율로 역산할 것 (스펙 7장의 3,300자/10분은 ElevenLabs 기준이라 보이스별 보정 필요).
+- **재렌더 시 `--reuse-audio`**: 대본이 같으면 기존 wav 재사용. TTS는 문자수 과금이라 무심코 재실행하면 이중 과금.
+- 트랙 보이스 확정: natepan = Junho(`tc_632a7588e7c78a412f5a36cd`). 미확정 트랙은 바이블에 TODO가 남아 있어 첫 보이스(Alena) 자동 선택됨 — 새 트랙 가동 전 voice_id부터 확정.
+
+### 비주얼 (Higgsfield — 하이브리드가 기본)
+- **기본 전략은 `core/visuals/higgsfield_gen.py`**: 전 씬 GPT Image 2 1k 실사 프리셋(4cr) + 핵심 씬만 Minimax 모션(6cr/6초). 핵심 씬 = 훅·미드롤 클리프행어·절정·엔딩. 10분 1편 ≈ 80~110크레딧. 전 씬 모션(435cr)은 금지 수준의 낭비.
+- **실사 프리셋 고정**: "35mm 필름 스틸, 자연광, 얕은 심도, 일러스트/3D 금지" — 스타일 프리픽스를 빼먹으면 인위적인 일러스트 느낌으로 나온다. 인물·소품 묘사(주인공 외형 등)는 전 씬 프롬프트에 반복해 일관성을 고정.
+- **알려진 함정**: ① minimax `--resolution` 플래그는 CLI 타입 버그로 실패 → 생략(서버 기본 768). ② "드라이버로 비틀어 연다"류 묘사는 NSFW 오탐 → 도구·강제 뉘앙스 없는 표현으로. ③ 503/무응답은 일시 장애 → 3분 간격 재시도 루프(생성 함수는 기존 파일 스킵이라 재실행 안전). ④ 이미지 1장 ≈ 2분, 클립 1개 ≈ 1~3분 — 3개 동시 실행이 안전한 상한.
+- 단가표(실측): GPT Image 2 2k=7 / 1k=4, NB2=2, NB2 Lite=1, Z Image=0.15 / Kling3.0 Turbo 5s=7.5, Minimax 6s=6, Seedance2.0 5s=22.5.

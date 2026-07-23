@@ -113,11 +113,51 @@ def list_typecast_voices(api_key: str) -> list[dict]:
     return resp.json()
 
 
+# 콘테 감정 톤(script.TRACK_STRUCTURES의 감정 아크) → Typecast emotion_preset 후보.
+# 보이스마다 지원 프리셋이 달라서 후보 순서대로 지원 목록과 매치한다.
+_TONE_PRESETS: list[tuple[tuple[str, ...], list[str]]] = [
+    (("감정 피크", "울컥", "먹먹", "슬픔", "카타르시스"), ["sad", "soft", "tonedown"]),
+    (("긴장", "긴박", "피크", "절정", "충격", "불안"), ["urgent", "angry", "toneup", "sad"]),
+    (("여운", "안도", "정리", "차분", "잔잔", "정돈", "무드"), ["tonedown", "soft", "tonemid", "sad"]),
+    (("호기심", "궁금", "도발", "질문", "즉각"), ["toneup", "happy", "tonemid"]),
+    (("신뢰", "친근", "친밀", "이해", "안정"), ["trustful", "soft", "tonemid"]),
+    (("기쁨", "밝", "설렘", "흥", "쾌"), ["cheer", "happy", "toneup"]),
+    (("몰입", "집중", "텐션"), ["tonemid", "normal"]),
+]
+
+_VOICE_EMOTIONS: dict[str, list[str]] = {}  # voice_id → 지원 감정 (세션 캐시)
+
+
+def _voice_emotions(voice_id: str, api_key: str) -> list[str]:
+    if not _VOICE_EMOTIONS:
+        for v in list_typecast_voices(api_key):
+            vid = v.get("voice_id") or v.get("id", "")
+            _VOICE_EMOTIONS[vid] = v.get("emotions", [])
+    return _VOICE_EMOTIONS.get(voice_id, [])
+
+
+def emotion_preset_for(tone: str, available: list[str]) -> tuple[str, float]:
+    """콘테 감정 톤 → (emotion_preset, intensity).
+
+    보이스가 지원하지 않는 프리셋은 건너뛰고, 매치가 없으면 normal.
+    피크 계열은 intensity를 올려 감정 낙차를 만든다 (씬별 감정 아크).
+    """
+    for keys, prefs in _TONE_PRESETS:
+        if any(k in tone for k in keys):
+            for p in prefs:
+                if p in available:
+                    strong = any(x in tone for x in ("피크", "긴박", "절정", "충격"))
+                    return p, (1.5 if strong else 1.2)
+            break
+    return "normal", 1.0
+
+
 def _synthesize_typecast(
-    text: str, bible: Bible, out_path: Path, api_key: str
+    text: str, bible: Bible, out_path: Path, api_key: str, tone: str = ""
 ) -> Path:
     """타입캐스트 REST 호출. 바이블 voice_id가 미확정(TODO_*)이면
-    보이스 목록의 첫 한국어 보이스로 자동 선택하고 로그를 남긴다."""
+    보이스 목록의 첫 한국어 보이스로 자동 선택하고 로그를 남긴다.
+    콘테 감정 톤(tone)은 보이스가 지원하는 emotion_preset으로 매핑한다."""
     import requests
 
     voice_id = bible.voice_id
@@ -126,22 +166,25 @@ def _synthesize_typecast(
         if not voices:
             raise TTSError("Typecast 보이스 목록이 비어 있음")
         voice_id = voices[0].get("voice_id") or voices[0].get("id", "")
-        print(f"   [tts] 바이블 voice_id 미확정 → Typecast 자동 선택: {voice_id} "
-              f"({voices[0].get('voice_name', '?')}) — data/bibles에 확정 기입 권장")
 
+    preset, intensity = emotion_preset_for(tone, _voice_emotions(voice_id, api_key))
+    if tone:
+        print(f"   [tts] {out_path.stem}: 감정 '{tone}' → {preset} (강도 {intensity})")
+    body = {
+        "voice_id": voice_id,
+        "text": text,
+        "model": TYPECAST_MODEL,
+        "language": "kor",
+        "prompt": {"emotion_preset": preset, "emotion_intensity": intensity},
+        "output": {
+            "audio_format": "wav",
+            "audio_tempo": bible.voice_params.speed,
+        },
+    }
     resp = requests.post(
         f"{TYPECAST_API_BASE}/text-to-speech",
         headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
-        json={
-            "voice_id": voice_id,
-            "text": text,
-            "model": TYPECAST_MODEL,
-            "language": "kor",
-            "output": {
-                "audio_format": "wav",
-                "audio_tempo": bible.voice_params.speed,
-            },
-        },
+        json=body,
         timeout=120,
     )
     if resp.status_code != 200:
@@ -207,7 +250,8 @@ def synthesize_scene(
     path, backend = None, ""
     if tc_key:
         try:
-            path = _synthesize_typecast(text, bible, base, tc_key)
+            path = _synthesize_typecast(
+                text, bible, base, tc_key, tone=scene.conte.emotion.tone)
             backend = "typecast"
         except Exception as e:  # 프록시 차단/키 오류 포함
             print(f"   [tts] Typecast 실패 → 폴백 ({type(e).__name__}: {str(e)[:100]})")

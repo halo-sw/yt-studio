@@ -6,6 +6,8 @@ data/tokens/*
 # 에셋·산출물 (대용량 — 커밋 금지)
 data/assets/*
 !data/assets/.gitkeep
+# 자막 폰트(Pretendard, SIL OFL)는 렌더 필수 자산이라 커밋
+!data/assets/fonts/
 data/*.db
 *.mp3
 *.mp4
