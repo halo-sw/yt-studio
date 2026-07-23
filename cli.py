@@ -288,6 +288,33 @@ def cmd_produce(args) -> None:
         f"{args.title}\n\n{result.chapters_text}\n\n#쇼츠 #스토리\n",
         encoding="utf-8",
     )
+
+    # 편집 플랜(edit_plan.json) — CapCut 드래프트 자동 조립(tools/capcut_push.py)
+    # 및 외부 에디터 연동용 타임라인 명세 (GUIDELINE §4-1-3)
+    import json as _json
+
+    cursor = 0.0
+    plan_scenes = []
+    for a in audios:
+        s = next(sc for sc in scenes if sc.scene_id == a.scene_id)
+        plan_scenes.append({
+            "scene_id": a.scene_id,
+            "start": round(cursor, 3),
+            "end": round(cursor + a.duration, 3),
+            "duration": round(a.duration, 3),
+            "segment": str(workdir / "work" / f"seg_{a.scene_id:03d}.mp4"),
+            "audio": str(a.path),
+            "caption": s.caption,
+            "narration": s.narration,
+        })
+        cursor += a.duration
+    (workdir / "edit_plan.json").write_text(_json.dumps({
+        "title": args.title, "track": track.value,
+        "fps": 30, "width": 1920, "height": 1080,
+        "total_duration": round(cursor, 3),
+        "bgm": args.bgm or None,
+        "scenes": plan_scenes,
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"   → {result.out_path} ({result.duration:.1f}s)")
     print(f"   → {meta} (제목·챕터·설명 초안)")
 
