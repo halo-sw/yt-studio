@@ -213,6 +213,7 @@ def cmd_produce(args) -> None:
     # 트랙 감정 아크(script.TRACK_STRUCTURES)를 씬 위치에 비례 배분 —
     # tts가 씬별 emotion_preset으로 매핑해 낭독 감정 낙차를 만든다.
     arc = [tone for _, _, tone in script.TRACK_STRUCTURES[track]]
+    static_ids = {int(x) for x in getattr(args, "static", "").split(",") if x.strip().isdigit()}
     scenes = []
     for i, line in enumerate(lines):
         chapter = "훅" if i < 2 else ("마무리" if i == len(lines) - 1 else "본편")
@@ -223,7 +224,8 @@ def cmd_produce(args) -> None:
             narration=text, caption=text,  # 타임드 자막: 렌더가 문장 단위로 쪼갬
             visual=SceneVisual(
                 type="slide", ref=f"produce/{slug}/{i + 1}",
-                effect="kenburns" if i % 2 == 0 else "none",
+                # 인포그래픽 슬라이드(--static)는 줌 금지 — 표·도표에 Ken Burns가 들어가면 부자연
+                effect="none" if (i + 1) in static_ids else ("kenburns" if i % 2 == 0 else "none"),
             ),
             conte=Conte(
                 info_point=text[:40],
@@ -709,7 +711,16 @@ def main() -> None:
     p5.add_argument("--reuse-audio", action="store_true", dest="reuse_audio",
                     help="대본이 같을 때 기존 합성 음성 재사용 (TTS 재과금 방지)")
     p5.add_argument("--slug", default="", help="출력 폴더명 (기본: 대본 파일명)")
+    p5.add_argument("--static", default="",
+                    help="줌(Ken Burns) 없이 정지로 보여줄 씬 번호 (쉼표 구분, 인포그래픽 슬라이드용)")
     p5.set_defaults(fn=cmd_produce)
+
+    p11 = sub.add_parser("bbogaegi", help="공고 뽀개기 하네스: 에피소드 YAML → 발행 산출물 원샷 (realestate)")
+    p11.add_argument("--episode", required=True, help="에피소드 정의 YAML (data/episodes/<슬러그>.yaml)")
+    p11.add_argument("--skip-visuals", action="store_true", dest="skip_visuals",
+                     help="Higgsfield 생성 건너뜀 (기존 컷 재사용 — 크레딧 0 재렌더)")
+    p11.set_defaults(fn=lambda args: __import__(
+        "tracks.realestate.bbogaegi", fromlist=["run"]).run(args.episode, args.skip_visuals))
 
     p10 = sub.add_parser("release", help="영상+썸네일+업로드 텍스트를 data/releases/<슬러그>/ 한 폴더로 수집")
     p10.add_argument("--slug", required=True, help="제작 폴더명 (data/assets/produce/<슬러그>)")

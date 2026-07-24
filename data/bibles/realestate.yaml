@@ -1,7 +1,7 @@
 # 채널 바이블 — 부동산 트랙 (잠금 자산, 변경은 3인 합의 후에만)
 # 수치(시세·평수·금액)는 바이블이 아니라 에피소드 fact_sheet가 단일 출처 (규칙 5-3).
 channel: realestate
-voice_id: TODO_ELEVENLABS_VOICE_ID
+voice_id: tc_61e748d0fd9fb2d2cacbb04d  # Typecast Yena — 발랄한 20대 여성 아나운서 톤 (임시 확정 2026-07-24 v2, 감정 10종: cheer/cute/happy/tonedown 등)
 voice_params:
   stability: 0.60
   similarity: 0.85

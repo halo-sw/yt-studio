@@ -1,0 +1,135 @@
+# 공고 뽀개기 에피소드 정의 — python cli.py bbogaegi --episode data/episodes/changneung.yaml
+# 대본: 한 행 = 한 씬. facts는 {script}.facts.json (규칙 5-3).
+slug: changneung
+title: "서울 10분대 새 아파트가 3억대부터?! 고양창릉 본청약 2,306가구 모집공고 뽀개기"
+script: data/scripts/changneung.txt
+
+scenes:
+  presenter_scene: 3          # 진행자 인사 — 메인에 말하는 클립, 사이드 캠 숨김
+
+  photos:                     # 실사(KREAL) — 씬번호: 프롬프트
+    1: "Wide aerial-feel view of a vast Korean new-town construction site at golden hour: tower cranes over rising apartment complex skeletons, graded empty land plots, distant Seoul skyline on the horizon, dramatic scale."
+    4: "A sleek modern Korean commuter train arriving at a bright new underground station platform, motion blur on the train, clean glass safety doors, a few commuters waiting."
+    12: "Over-the-shoulder view of a young Korean person at a laptop at night, scrolling a long official document PDF on screen (text softly blurred), notebook and pen beside, desk lamp light."
+    15: "A young Korean couple in their early 30s standing in a bright apartment showroom model house, looking at a miniature complex model with serious thoughtful faces, sales desk bokeh behind."
+    17: "Close-up of hands typing on a laptop at a sunlit desk, a phone with a calculator app lying beside, coffee cup, morning light — preparing an online application, screen content softly blurred."
+    19: "A young Korean couple sitting on a sofa at home smiling while looking at a tablet together, warm evening lamp light, moving boxes hinted in the corner, hopeful mood."
+
+  docs:                       # 한글 문서 컷(KDOC)
+    6: "Close-up of hands holding a Korean bankbook (청약통장 style savings passbook) and printed household documents over a desk, softly blurred hangul print, warm home light."
+
+  motions:                    # 모션(i2v) — 하네스가 팔린드롬 연장까지 처리
+    1: "Cranes rotate very slowly, dust drifts in golden light, slow forward aerial drift over the construction site."
+    4: "The train glides in and slows to a stop, safety doors reflect light, commuters shift slightly."
+    19: "They point at the tablet and smile, she leans on his shoulder, lamp light breathing gently."
+
+  slides:
+    2:
+      type: kv
+      title: "고양창릉 본청약, 핵심만 셋"
+      y0: 300
+      gap: 220
+      items:
+        - {label: "총 공급", value: "2,306가구"}
+        - {label: "분양가", value: "3억 8천만 원대부터"}
+        - {label: "신규 접수", value: "7/27(월) ~ 29(수) · 단 3일", hl: true}
+      photo: 1
+      photo_box: [1210, 300, 1850, 760]
+    5:
+      type: compare
+      title: "두 블록, 완전히 다른 조건"
+      sections:
+        - {tag: "S-4 · 일반 공공분양", headline: "1,024가구 · 차익 100% 내 것", sub: "전매제한 3년 · 실거주 3년"}
+        - {tag: "S-3 · 이익공유형", color: red, headline: "1,282가구 · 차익 일부 LH와 공유", sub: "거주의무 5년 · 환매 시 수익분할"}
+    7:
+      type: kv
+      title: "S-4 일반 공공분양 — 분양가"
+      y0: 290
+      gap: 200
+      items:
+        - {label: "59㎡", value: "6억 2천만 원대", hl: true}
+        - {label: "74㎡", value: "7억 6천만 원대"}
+        - {label: "84㎡", value: "8억 6천만 원대"}
+      photo: 1
+    8:
+      type: kv
+      title: "S-3 이익공유형 — 진입 가격"
+      y0: 290
+      gap: 200
+      items:
+        - {label: "46㎡", value: "3억 8천만 원대부터", hl: true}
+        - {label: "84㎡", value: "7억 원대"}
+        - {label: "조건", value: "차익 일부 공유 · 거주 5년", size: 52}
+      photo: 4
+    9:
+      type: split
+      title: "이익공유형, 이렇게 계산됩니다"
+      head: "예시 · 몇 년 뒤 집값이 +1억 원 올랐다면"
+      boxes:
+        - {label: "내 몫", value: "차익의 대부분"}
+        - {label: "LH 몫 (환매 시)", value: "차익의 일부", color: red}
+      note: "공유 비율·정산 방식은 블록별 공고문 기준 — 반드시 원문 확인"
+    10:
+      type: numbered
+      title: "자격에서 떨어지는 실수 TOP 3"
+      items:
+        - "세대 분리 안 된 '무주택 착각' — 세대 전원 기준"
+        - "청약통장 납입 요건 부족"
+        - "소득·자산 기준 미확인 — 블록마다 다름"
+    11:
+      type: calendar
+      title: "일정 — 접수까지 D-3"
+      left: {month: "7월", big: "27(월) ~ 29(수)", sub: "신규 청약 접수 · 단 3일"}
+      right: {month: "8월", lines: ["18(화)  S-3 발표", "19(수)  S-4 발표"]}
+      todo: "오늘 할 일 ①  공고문 원문 내려받기    ②  청약통장 납입 내역 조회"
+    13:
+      type: hero
+      title: "이번 공고의 진입 최저선"
+      label: "S-3 · 46㎡형"
+      big: "3억 8천만 원대"
+      sub: "수도권 신축에서 드문 3억대 진입"
+      note: "계약금·중도금 비율은 공고문 납부 일정표 확인"
+      photo: 15
+    14:
+      type: timeline
+      title: "자금 계획 타임라인 (S-4 예시)"
+      steps:
+        - {t: "7/27~29", s: "청약 접수"}
+        - {t: "8/19", s: "당첨 발표"}
+        - {t: "이후", s: "서류·계약"}
+        - {t: "입주 시", s: "잔금"}
+      hl_n: 2
+      note: "발표 전에 시나리오별 자금 계획표부터"
+    16:
+      type: kv
+      title: "계약 포기해도 통장은 소진됩니다"
+      y0: 300
+      gap: 240
+      items:
+        - {label: "당첨 후 포기", value: "통장 사용 처리 + 재당첨 제한 가능", size: 56, hl: true}
+        - {label: "올바른 순서", value: "자금 계획표 → 조건표 → 청약 버튼", size: 56}
+    18:
+      type: checklist
+      title: "청약 전 최종 체크리스트"
+      items:
+        - "공고문 원문에서 소득·자산 세부 기준 확인"
+        - "특별공급 배정과 내 유형 확인"
+        - "납부 일정표로 자금 계획 확정"
+        - "마감일 폭주 전 미리 신청"
+
+chapters:
+  1: "이번 주, 단 3일 (핵심 숫자 3)"
+  3: "예린 인사"
+  4: "고양창릉이 어디길래 (GTX-A 10분대)"
+  6: "공통 자격 — 무주택 세대구성원의 함정"
+  7: "S-4 일반 공공분양 vs S-3 이익공유형"
+  11: "일정 달력 — 접수 D-3"
+  13: "돈 계산 — 진입 최저선 3억 8천만 원대"
+  15: "최대의 함정 — 계약 포기해도 통장은 소진"
+  17: "신청 방법 (LH 청약플러스)"
+  19: "마무리"
+
+thumbs:
+  thumb_A: {base: 1, l1: "서울 10분대 새 아파트", l2: "3억대부터?!", sub: "고양창릉 2,306가구 · 7/27 접수", side: left}
+  thumb_B: {base: 1, l1: "본청약 D-3", l2: "떨어지는 실수 3가지", sub: "넣기 전에 이것부터 확인", side: right}
+  thumb_C: {base: 4, l1: "GTX 10분대 신도시", l2: "본청약 뽀개기", sub: "S-3 vs S-4, 뭐가 다를까", side: left}

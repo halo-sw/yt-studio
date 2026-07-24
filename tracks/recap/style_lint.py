@@ -33,10 +33,19 @@ GUIDELINE_SUBSTITUTIONS: dict[str, str] = {
 AUDIENCE_REFERENCES = ("관객", "시청자", "보는 사람들", "사람들이 놀랐", "사람들이 웃")
 
 
+# 치환 키가 부분 문자열로 오발동하면 안 되는 복합어 (예: "고문"→"괴롭힘"이 "공고문"을 깨뜨림)
+_PROTECTED_WORDS = ("공고문", "모집공고")
+
+
 def apply_guideline_substitutions(text: str) -> str:
-    """민감 표현을 자동 치환한다 (긴 표현 우선 매칭)."""
+    """민감 표현을 자동 치환한다 (긴 표현 우선 매칭, 보호 단어는 제외)."""
+    sentinels = {w: f"\x00{i}\x00" for i, w in enumerate(_PROTECTED_WORDS)}
+    for w, s in sentinels.items():
+        text = text.replace(w, s)
     for src in sorted(GUIDELINE_SUBSTITUTIONS, key=len, reverse=True):
         text = text.replace(src, GUIDELINE_SUBSTITUTIONS[src])
+    for w, s in sentinels.items():
+        text = text.replace(s, w)
     return text
 
 
