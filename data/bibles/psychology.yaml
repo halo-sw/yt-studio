@@ -1,0 +1,35 @@
+# 채널 바이블 — 심리·처세 트랙 (잠금 자산, 변경은 3인 합의 후에만)
+#
+# 채널명: 「심리학가나디」 (가나디 = 강아지, 2026-07-26 확정)
+#   포지션: "심리학 교과서 이론 1개를 내일 할 말 3문장으로 바꿔주는 채널"
+#   '공부하는' 프레임 — 자격증 없는 채널이므로 가르치는 위치가 아니라 같이
+#   공부하는 위치에 선다. 의료 단정·권위 리스크를 구조적으로 없애는 장치.
+#   ⚠ 동명의 이모티콘 캐릭터 IP(「듀.. 가나디」, HNF)가 실재한다. 이름만 쓰고
+#     해당 캐릭터의 그림·디자인은 절대 사용하지 않는다. 마스코트는 이라스토야
+#     강아지로 자체 조달 (tracks/psychology/build_ep01.py CAST["mascot"]).
+#   양식 2종·에피소드 골격은 data/scripts/psychology_positioning.md 참조.
+# 저비용 트랙: 비주얼 = 이라스토야(무료, 편당 20점 한도) + PIL 타이포 카드 + 무료 스톡.
+# Higgsfield 사용 금지(비용 철학). 2026-07-25 파일럿 가동.
+channel: psychology
+voice_id: tc_623145248d2f689cc9bad655  # Typecast Hyunseung — 차분·명료 남성 (감정 10종, 임시 확정 — 3인 합의 대상)
+voice_params:
+  stability: 0.55
+  similarity: 0.80
+  speed: 1.05   # 개념 설명은 살짝 빠른 페이스가 지루함을 줄인다
+style_anchors: []
+subtitle_tokens:
+  font: "Pretendard Bold"
+  size: "56"
+  color: "#1F2937"     # 잉크색 텍스트 (pill 스타일은 밝은 배경)
+  style: "pill"        # 흰 라운드 필 + 좌측 포인트 도트 (assemble._caption_overlay_png)
+  accent: "#FF7A59"    # 채널 포인트 컬러 (코럴)
+  position: "bottom-center"
+lut: ""
+bgm_set: []
+character_refs: []
+glossary:
+  이라스토야: "いらすとや 무료 일러스트 (상업 무료, 편당 20점 이하 — 21점부터 유료)"
+banned_phrases:
+  - "치료됩니다"        # 의료적 단정 금지 — 정보·교양 프레임 유지
+  - "정신병"            # 낙인 표현 금지
+  - "100% 효과"
