@@ -1,0 +1,47 @@
+# 사연 편지함 1호 (결시친 옴니버스) — 비주얼 바이블
+# 규칙: 앵커 문구는 해당 씬 프롬프트에 그대로 반복 삽입 (1탄 검증 방식).
+
+series: pyeonji
+
+mood: >
+  Cinematic photorealistic film still from a Korean drama, shot on 35mm film,
+  natural available light with warm tungsten accents, muted nostalgic color
+  grade with soft teal shadows and warm amber highlights, gentle film grain,
+  shallow depth of field, documentary realism, imperfect framing like a real
+  photograph. Not illustration, not 3D render, no stylization. No text, no
+  letters, no watermark.
+
+# 편별 장소 앵커
+places:
+  gongjang_office: "a small cluttered office inside an old Korean bolt factory: steel desks, stacks of ledgers, dusty window facing the workshop floor, fluorescent light"
+  gongjang_factory: "the workshop floor of a small aging Korean metal parts factory, lathes and shelves of bolts, oil-stained concrete floor"
+  banchan_shop: "a small bright Korean side-dish shop (banchan gage), glass display counter of homemade dishes, warm morning light"
+  yaksa_apart: "the living room of an ordinary Korean apartment of modest means, floral sofa, old wooden cabinet, late afternoon light"
+  yaksa_pharmacy: "a small neat Korean pharmacy being newly opened, white shelves, boxes half unpacked, spring light through the glass front"
+  sawi_market: "a wholesale produce market at two a.m., forklifts, crates of fruit under sodium lights"
+  sawi_truck: "an old one-ton Korean fruit truck parked by an apartment playground, crates of apples and pears, hand-written price signs, loudspeaker on the roof"
+  hospital_ward: "a Korean university hospital ward corridor and patient room, pale green walls, guardian cot beside the bed"
+  palsun_office: "a corporate high-rise office in Seoul, glass meeting room, city view, a woman's desk with thick approval folders"
+  palsun_janchi: "a traditional Korean 80th-birthday banquet (palsun janchi) in a Korean restaurant hall: the elder seated before a traditional folding screen (byeongpung), a ceremonial table with tall stacked towers of fruit and rice cakes (goimsang), elderly guests in hanbok and suits at low tables, warm festive lighting, no text on any banner"
+  ganhosa_alley: "a steep residential alley with concrete stairs on a snowy winter dawn, one streetlamp, snow falling"
+  ganhosa_home: "a modest Korean two-story family home interior, old wall calendar in an elderly woman's room, quiet dawn light"
+  insoe: "an old Korean print shop (inswaeso), aged offset printing machines, ink-stained workbench, shelves of paper, a steel desk with drawers"
+  ceo_office: "a modern mid-size Korean food company CEO office, awards on the shelf, city window light"
+
+# 인물 카드 (등장 씬마다 그대로 반복)
+cast:
+  gongjang_m: "a Korean woman around 60 with short neat permed hair, navy office cardigan over a work apron, tired but dignified face"
+  gongjang_sinui: "a Korean woman in her early 60s with a showy silk scarf and permed dyed-brown hair, haughty expression"
+  gongjang_h: "a Korean man in his early 60s with greying hair, grey factory jacket, gentle weary face"
+  yaksa_b: "a Korean woman in her mid 30s with tidy shoulder-length hair, beige wool coat, intelligent composed face"
+  yaksa_simo: "a Korean woman in her mid 60s with grey permed hair, plain dark cardigan, frugal stern face that softens"
+  yaksa_g: "a Korean man in his mid 30s with short black hair, plain office shirt, kind timid face"
+  sawi_h: "a Korean man in his early 50s with sun-tanned face, padded work jacket, cotton work gloves, sincere weathered smile"
+  sawi_jangmo: "a small Korean woman in her early 80s with white hair in a low bun, hand-knitted vest, warm steady eyes"
+  palsun_w: "a Korean woman in her late 40s with a sharp bob haircut, charcoal business suit, confident but weary face"
+  palsun_h: "a Korean man in his early 50s with neat greying side-part hair, navy suit, face moving from complacent to remorseful"
+  palsun_f: "an elderly Korean man of 80 with deeply tanned wrinkled face from forty years of dawn market work, modest grey hanbok jacket, humble bright smile"
+  ganhosa_n: "a Korean woman in her late 30s in a nurse's uniform under a padded coat, hair in a low ponytail, exhausted gentle eyes"
+  ganhosa_simo: "a small Korean woman in her mid 70s wearing a worn purple padded coat and a thick scarf covering all but her eyes, holding a broom"
+  sangsok_d: "a Korean woman in her late 40s with a composed executive presence, dark tailored suit, strong graceful face"
+  sangsok_f: "an elderly Korean man in his late 70s with ink-stained hands, old grey work shirt, quiet stubborn face"

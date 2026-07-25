@@ -1,0 +1,55 @@
+# 시장 골목 연작 — 비주얼 바이블 (전 에피소드 잠금 자산)
+# 규칙: 아래 앵커 문구는 해당 씬 프롬프트에 "그대로 반복" 삽입한다 (CLAUDE.md 11장 —
+# 인물·장소 일관성은 프롬프트 반복으로 고정). 수정 시 전 에피소드 재생성 각오할 것.
+
+series: sijang  # 어느 오래된 시장의 일곱 가지 이야기
+
+# ── 무드 (전 씬 공통 스타일 프리픽스) ──────────────────────────────
+mood: >
+  Cinematic photorealistic film still from a Korean drama, shot on 35mm film,
+  natural available light with warm tungsten accents, cool blue dawn ambience in
+  early-morning scenes, muted nostalgic color grade with soft teal shadows and
+  warm amber highlights, gentle film grain, shallow depth of field, documentary
+  realism, imperfect framing like a real photograph. Not illustration, not 3D
+  render, no stylization. No text, no letters, no watermark.
+
+# ── 장소 앵커 (모든 씬에 삽입 — 하나의 시장으로 보이게) ─────────────
+place: >
+  Inside the same old traditional Korean covered market arcade: translucent
+  corrugated canopy roof high above, warm round white globe lamps hanging in a
+  row down the alley, narrow walkway with worn dark-grey concrete floor,
+  weathered shopfronts with faded hand-painted Korean signboards, blue plastic
+  tarps over produce stalls, steam drifting in the air.
+
+# ── 가게별 앵커 (해당 편 씬에 추가 삽입) ───────────────────────────
+shops:
+  gukbap:   "a humble gukbap soup restaurant with a fogged-up glass sliding door and a worn wooden table by the window"  # 기존 컷 참조용
+  gudubang: "a tiny one-pyeong wooden shoeshine booth at the market entrance next to an old bus stop sign, shelves of shoe polish tins and brushes, a small low stool"
+  suseon:   "a small clothing-repair shop deep in the alley, an old sewing machine behind a glass door, shelves of fabric rolls, a single warm incandescent bulb, a tape measure hanging on the wall"
+  ssalgage: "an old rice shop with stacked rice sacks and a wooden counter"      # 장부 편 참조용
+  tteok_east: "a rice-cake shop at the east end of the arcade, glass display case of colorful tteok, steaming wooden siru steamer, pink apron hanging on a hook"
+  tteok_west: "a rice-cake mill at the west end of the arcade, old grain-milling machines, steaming wooden siru steamer, green apron hanging on a hook"
+  laundry:  "a small old laundry at the far end of the alley where the market meets a residential lane, racks of plastic-covered clothes, a steaming iron"  # 기존 컷 참조용
+  munbanggu: "a 45-year-old stationery shop at the corner where the market alley meets an elementary school back gate, racks of colorful school supplies, an old wooden bench in front"
+
+# ── 인물 카드 (등장 씬 프롬프트에 외형 문구 그대로 반복) ────────────
+cast:
+  # 기존 편 (참조 — 재생성 시에만 사용)
+  gukbap_noshinsa: "an elderly Korean gentleman in his 80s wearing a dark grey fedora hat, brown wool overcoat, navy knit sweater, thin dignified face"
+  gukbap_bakssi:   "a Korean woman in her 60s wearing a maroon apron, short permed grey-black hair, kind weathered face"
+  # 구둣방 편
+  gudubang_choi:  "a Korean man in his 70s with short white hair, square weathered face, dark-brown work vest over a grey shirt, polish-stained hands, reading glasses on a neck cord"
+  gudubang_yeong: "a Korean man in his early 30s with neat black hair, wearing a well-fitted navy suit and polished black dress shoes, earnest gentle face"
+  # 수선집 편
+  suseon_jeong:   "a Korean woman in her 60s with silver-grey short permed hair, mustard-yellow cardigan, a cloth tape measure around her neck, thimble on her finger"
+  suseon_cheong:  "a thin Korean man in his late 20s wearing a worn light-grey padded jacket, tired but kind eyes, short practical haircut"
+  suseon_eomeoni: "a small elderly Korean woman in her 70s with a floral silk scarf, walking cane, gentle deeply-lined face"
+  # 떡집 편 (자매 — 닮은 얼굴로 고정)
+  tteok_sunnam:   "a Korean woman in her late 60s, slightly plump, white hygiene cap and pink apron, round warm face with deep smile lines"
+  tteok_sunok:    "a Korean woman in her early 60s, slim build, white hygiene cap and green apron, face closely resembling her older sister, slightly sharper features"
+  # 문방구 편
+  munbanggu_song: "a Korean man in his 80s with sparse white hair, thick horn-rimmed reading glasses, brown knit cardigan, small bent frame"
+  munbanggu_nam:  "a Korean man in his 50s wearing a navy suit without a tie, mild scholarly face with silver-framed glasses"
+
+# ── 모션 정책 ──────────────────────────────────────────────────────
+motion: "편당 훅 1컷만 Minimax 6초 (6cr). 나머지는 Ken Burns."
