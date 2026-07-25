@@ -13,6 +13,20 @@ data/*.db
 *.mp4
 *.wav
 
+# 부동산 프레젠터 '예린' — 브랜드 잠금 자산은 예외로 커밋한다.
+# 재생성에 Higgsfield 크레딧이 들고 brand.ensure_brand_assets()가 존재를 강제하므로
+# (없으면 FileNotFoundError) 공동 작업자가 클론만으로 렌더할 수 있어야 한다.
+# 순서 주의: 마지막에 매치되는 규칙이 이긴다 → oni 제외는 반드시 맨 아래.
+!data/assets/realestate/
+data/assets/realestate/*
+!data/assets/realestate/brand/
+!data/assets/realestate/character/
+!data/assets/realestate/brand/*.mp4
+!data/assets/realestate/brand/*.wav
+!data/assets/realestate/character/*.mp4
+# 폐기된 초기 프레젠터안(스튜디오/자취방 '오니') — 62MB 원본, 커밋하지 않는다
+data/assets/realestate/character/oni_*
+
 # Python
 __pycache__/
 *.pyc

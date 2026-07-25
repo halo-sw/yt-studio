@@ -23,6 +23,19 @@ FONT_PATH = ROOT / "data/assets/fonts/Pretendard-Bold.otf"
 CHANNEL_NAME = "예린이의 부동산 뽀개기"
 TAGLINE = "공고문은 어렵게, 정보는 쉽게"
 
+# 프레젠터 외형 잠금 문구 — 신규 컷 생성 시 프롬프트에 그대로 반복 삽입한다.
+# (CLAUDE.md 11장: 인물 일관성은 레퍼런스 이미지 + 프롬프트 반복으로 고정)
+# 수정하면 기존 컷과 얼굴이 어긋난다 — 교체는 3인 합의 후 전량 재생성 각오.
+PRESENTER_ANCHOR = (
+    "A Korean woman in her late twenties, shoulder-length straight dark-brown hair "
+    "with light see-through bangs, minimal natural makeup with faint freckles, "
+    "small pearl earrings, plain black crew-neck long-sleeve knit top. "
+    "Setting: an apartment living room at night — ivory fabric sofa, warm floor "
+    "lamp, city night view through the window, an orange tabby cat resting on the "
+    "sofa. Vlog selfie angle, shallow depth of field, photorealistic, "
+    "not illustration, no text, no watermark."
+)
+
 # 영구 에셋 (재생성 시 크레딧 발생 — 교체는 사람이 결정)
 LOGO_PNG = CHAR_DIR / "yerin_logo.png"            # GPT Image 2 스티커 로고
 PRESENTER_BASE = CHAR_DIR / "yerin_living.png"     # NB2 거실 베이스 컷

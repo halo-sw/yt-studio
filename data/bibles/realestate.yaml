@@ -19,7 +19,18 @@ lut: data/assets/realestate/lut_clean_daylight.cube
 bgm_set:
   - data/assets/bgm/neutral_news_01.mp3
   - data/assets/bgm/minimal_piano_02.mp3
-character_refs: []
+# 프레젠터 '예린' — AI 모델링 캐릭터 (2026-07-24 확정, 재생성에 크레딧 소요).
+# 규칙 5-2: 씬 재생성 시 아래 레퍼런스가 자동 주입되어 외형이 고정된다.
+# 외형 잠금 문구(신규 컷 생성 시 프롬프트에 그대로 반복 삽입 — 상수는
+# tracks/realestate/brand.PRESENTER_ANCHOR):
+#   한국인 20대 후반 여성, 어깨 아래 길이의 짙은 갈색 생머리에 가벼운 시스루 앞머리,
+#   옅은 화장에 자연스러운 주근깨, 작은 진주 귀걸이, 검은 라운드넥 긴팔 니트.
+#   무대는 밤의 아파트 거실 — 아이보리 소파, 따뜻한 플로어 램프, 창밖 야경,
+#   소파 위 주황 고등어 태비 고양이. 브이로그 셀피 앵글, 얕은 심도.
+character_refs:
+  - data/assets/realestate/character/yerin_living.png   # NB2 거실 베이스 컷 (얼굴 기준)
+  - data/assets/realestate/character/yerin_logo.png     # GPT Image 2 스티커 로고
+  - data/assets/realestate/brand/presenter_chain.mp4    # 말하기 3클립 팔린드롬 체인(35s)
 glossary:
   전용면적: "전용면적 (공급면적과 구분)"
   LTV: "LTV (주택담보인정비율)"
