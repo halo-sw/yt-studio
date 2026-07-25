@@ -27,6 +27,7 @@ class Track(str, Enum):
     NATEPAN = "natepan"        # 사연
     PLAYLIST = "playlist"      # 플레이리스트 (60분 롱폼)
     RECAP = "recap"            # 리캡(냐옹체) — 라이선스 확보 원본만 (규칙 5-5, plans/12)
+    PSYCHOLOGY = "psychology"  # 심리·처세 (저비용: 이라스토야 일러스트 + 무료 스톡, 2026-07-25 추가)
 
 
 class VisualType(str, Enum):

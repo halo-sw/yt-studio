@@ -37,8 +37,18 @@ MOTION_BASE = (
 
 
 def _run_hf(args: list[str]) -> str | None:
-    """higgsfield CLI 실행 → 결과 URL (실패 시 None)."""
-    proc = subprocess.run([HF_BIN, *args], capture_output=True, text=True)
+    """higgsfield CLI 실행 → 결과 URL (실패 시 None).
+
+    --wait-timeout과 별개로 프로세스 자체가 무응답으로 매달리는 사례가 있어
+    (2026-07-24 시장 연작 생성 중 2시간 행) 하드 타임아웃을 건다.
+    """
+    try:
+        proc = subprocess.run([HF_BIN, *args], capture_output=True, text=True,
+                              timeout=1800)
+    except subprocess.TimeoutExpired:
+        print("   [hf] 실패 — 프로세스 타임아웃(30분), 다음 재시도 패스에서 재실행",
+              flush=True)
+        return None
     urls = [ln.strip() for ln in proc.stdout.splitlines()
             if ln.strip().startswith("https://")]
     if proc.returncode != 0 or not urls:

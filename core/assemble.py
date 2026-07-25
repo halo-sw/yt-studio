@@ -118,6 +118,27 @@ def _caption_windows(caption: str, duration: float) -> list[tuple[str, float, fl
     sentences = [s.strip() for s in _SENTENCE_RE.split(caption.strip()) if s.strip()]
     if not sentences:
         return []
+    # 긴 문장은 쉼표 경계에서 추가 분할 — 자막 한 창을 최대 2줄로 유지
+    # (3줄짜리 장문 자막은 줄바꿈이 부자연스럽다는 피드백, 2026-07-25)
+    MAX_CHUNK = 38
+    chunked: list[str] = []
+    for s in sentences:
+        if len(s) <= MAX_CHUNK or "," not in s:
+            chunked.append(s)
+            continue
+        parts = [p.strip() for p in s.split(",") if p.strip()]
+        buf = ""
+        for i, p in enumerate(parts):
+            tail = "," if i < len(parts) - 1 else ""
+            trial = f"{buf}, {p}".strip(", ") if buf else p
+            if buf and len(trial) > MAX_CHUNK:
+                chunked.append(buf + ",")
+                buf = p
+            else:
+                buf = trial
+        if buf:
+            chunked.append(buf)
+    sentences = chunked
     total = sum(len(s) for s in sentences)
     windows, cursor = [], 0.0
     for s in sentences:
@@ -145,16 +166,46 @@ def _wrap_caption(draw, text: str, f, max_width: int) -> list[str]:
     return lines
 
 
+def _wrap_caption_balanced(draw, text: str, f, max_width: int) -> list[str]:
+    """균형 줄바꿈 — 그리디로 줄 수를 정한 뒤, 같은 줄 수를 유지하는 최소 폭을
+    이진 탐색해 줄들의 폭을 비슷하게 만든다 ("긴 첫 줄 + 외톨이 단어" 방지)."""
+    greedy = _wrap_caption(draw, text, f, max_width)
+    n = len(greedy)
+    if n <= 1:
+        return greedy
+    lo = max(draw.textlength(w, font=f) for w in text.split())
+    hi = max_width
+    best = greedy
+    while hi - lo > 8:
+        mid = (lo + hi) // 2
+        trial = _wrap_caption(draw, text, f, mid)
+        if len(trial) <= n:
+            best, hi = trial, mid
+        else:
+            lo = mid
+    return best
+
+
 def _caption_overlay_png(caption: str, font: str, fontsize: int,
-                         fontcolor: str, out_path: Path) -> Path:
-    """자막 PNG (중앙 하단, 반투명 박스, 어절 단위 줄바꿈) — overlay 합성용."""
+                         fontcolor: str, out_path: Path,
+                         style: dict | None = None) -> Path:
+    """자막 PNG (중앙 하단, 어절 단위 줄바꿈) — overlay 합성용.
+
+    style = 바이블 subtitle_tokens. style["style"]에 따라:
+      (기본)  검정 반투명 박스 + 밝은 텍스트 — 사연/부동산 트랙
+      "pill"  흰 라운드 필 + 잉크 텍스트, 균형 줄바꿈 — 심리 트랙 (밝은 화면용)
+    """
     from PIL import Image, ImageDraw, ImageFont
 
+    style = style or {}
+    is_pill = style.get("style") == "pill"
     w, h = VIDEO_SIZE
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     f = ImageFont.truetype(font, fontsize)
-    lines = _wrap_caption(draw, caption, f, max_width=w - 320)
+    # 균형 줄바꿈을 전 스타일 기본으로 — "긴 첫 줄 + 외톨이 단어" 방지
+    # (사연 트랙 자막 줄바꿈 부자연 피드백, 2026-07-25)
+    lines = _wrap_caption_balanced(draw, caption, f, max_width=w - 320)
     line_h = round(fontsize * 1.35)
     pad = 18
     block_h = line_h * len(lines)
@@ -162,11 +213,26 @@ def _caption_overlay_png(caption: str, font: str, fontsize: int,
     widths = [draw.textlength(ln, font=f) for ln in lines]
     box_w = max(widths)
     bx = (w - box_w) // 2
-    draw.rectangle((bx - pad, y0 - pad, bx + box_w + pad, y0 + block_h + pad - line_h + fontsize),
-                   fill=(0, 0, 0, 115))  # black@0.45
-    for i, ln in enumerate(lines):
-        x = (w - widths[i]) // 2
-        draw.text((x, y0 + i * line_h), ln, font=f, fill=fontcolor)
+
+    if is_pill:
+        radius = round(fontsize * 0.6)
+        top = y0 - pad - 6
+        bottom = y0 + block_h + pad - line_h + fontsize + 6
+        # 그림자 → 흰 필 (포인트 도트는 어색해서 제거 — 2026-07-25 피드백)
+        draw.rounded_rectangle((bx - pad * 2 + 5, top + 6, bx + box_w + pad * 2 + 5, bottom + 6),
+                               radius=radius, fill=(30, 30, 30, 60))
+        draw.rounded_rectangle((bx - pad * 2, top, bx + box_w + pad * 2, bottom),
+                               radius=radius, fill=(255, 255, 255, 242))
+        for i, ln in enumerate(lines):
+            x = (w - widths[i]) // 2
+            draw.text((x, y0 + i * line_h), ln, font=f, fill=fontcolor)
+    else:
+        draw.rectangle((bx - pad, y0 - pad, bx + box_w + pad,
+                        y0 + block_h + pad - line_h + fontsize),
+                       fill=(0, 0, 0, 115))  # black@0.45
+        for i, ln in enumerate(lines):
+            x = (w - widths[i]) // 2
+            draw.text((x, y0 + i * line_h), ln, font=f, fill=fontcolor)
     img.save(out_path)
     return out_path
 
@@ -400,7 +466,7 @@ def render_scene_segment(
     for idx, (sentence, start, end) in enumerate(windows):
         png = _caption_overlay_png(
             sentence, font, fontsize, fontcolor,
-            seg_path.with_suffix(f".cap{idx}.png"))
+            seg_path.with_suffix(f".cap{idx}.png"), style=bible.subtitle_tokens)
         cmd += ["-loop", "1", "-i", str(png)]
         nxt = f"c{idx}"
         fc += (f";[{last}][{2 + idx}:v]overlay=0:0"
@@ -612,7 +678,8 @@ def render_clip_segment(
     ]
     if caption and not _has_drawtext():
         cap_png = _caption_overlay_png(
-            caption, font, fontsize, fontcolor, seg_path.with_suffix(".cap.png"))
+            caption, font, fontsize, fontcolor, seg_path.with_suffix(".cap.png"),
+            style=bible.subtitle_tokens)
         _run([
             "ffmpeg", "-y", *src, "-loop", "1", "-i", str(cap_png),
             "-filter_complex", f"[0:v]{vf}[bg];[bg][2:v]overlay=0:0,format=yuv420p[v]",

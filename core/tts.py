@@ -23,7 +23,7 @@ from core.schemas import FACT_REF_PATTERN, Bible, FactSheet, Scene
 
 ELEVENLABS_TTS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 TYPECAST_API_BASE = "https://api.typecast.ai/v1"
-TYPECAST_MODEL = "ssfm-v21"
+TYPECAST_MODEL = "ssfm-v30"  # 2026-07-25 v21→v30 전환 (whisper 감정 추가, 자연스러움 개선)
 
 # espeak-ng 기본 낭독 속도(wpm). 바이블 voice_params.speed를 곱해 쓴다.
 _ESPEAK_BASE_WPM = 165
@@ -241,12 +241,30 @@ def synthesize_scene(
     out_dir.mkdir(parents=True, exist_ok=True)
     text = resolve_fact_tokens(scene.narration, fact_sheet)
 
+    base = out_dir / f"scene_{scene.scene_id:03d}.mp3"
+
+    # 씬 단위 캐시 — 같은 텍스트로 이미 합성된 씬은 재과금하지 않는다.
+    # (크레딧 소진으로 중단된 에피소드를 충전 후 이어서 돌리는 부분 재개 경로.
+    #  대본이 바뀐 씬은 해시 불일치로 자연히 재합성된다.)
+    import hashlib
+
+    # 서명에 보이스·모델·감정 톤 포함 — 보이스/톤 교체 시 캐시가 옛 음성을 재사용하지 않게
+    text_sig = hashlib.sha1(
+        f"{bible.voice_id}|{TYPECAST_MODEL}|{scene.conte.emotion.tone}|{text}"
+        .encode()).hexdigest()[:16]
+    for cached in (base.with_suffix(".wav"), base):
+        sig_file = cached.with_suffix(".sig")
+        if cached.exists() and sig_file.exists() and sig_file.read_text() == text_sig:
+            duration = probe_duration(cached)
+            scene.duration = duration
+            return SceneAudio(scene_id=scene.scene_id, path=cached,
+                              duration=duration, chars=len(text), backend="cached")
+
     # 백엔드 우선순위: Typecast > ElevenLabs > espeak-ng 폴백.
     # 상위 백엔드가 네트워크 차단·키 오류로 실패하면 경고 후 다음으로 폴백한다
     # — 발행 파이프라인이 외부 장애로 멈추지 않게 (규칙 5-8 정신).
     tc_key = os.getenv("TYPECAST_API_KEY")
     el_key = api_key or os.getenv("ELEVENLABS_API_KEY")
-    base = out_dir / f"scene_{scene.scene_id:03d}.mp3"
     path, backend = None, ""
     if tc_key:
         try:
@@ -254,6 +272,12 @@ def synthesize_scene(
                 text, bible, base, tc_key, tone=scene.conte.emotion.tone)
             backend = "typecast"
         except Exception as e:  # 프록시 차단/키 오류 포함
+            # 크레딧 소진은 일시 장애가 아니다 — 폴백하면 에피소드 중간에
+            # 보이스가 바뀌어 바이블 잠금(음색 통일)이 깨진다. 즉시 중단.
+            if "CREDIT_INSUFFICIENT" in str(e) or "402" in str(e):
+                raise TTSError(
+                    "Typecast 크레딧 소진 — 충전 후 재실행하면 합성된 씬은 "
+                    "기존 wav 스킵으로 이중 과금 없음") from e
             print(f"   [tts] Typecast 실패 → 폴백 ({type(e).__name__}: {str(e)[:100]})")
     if path is None and el_key:
         try:
@@ -267,6 +291,7 @@ def synthesize_scene(
 
     duration = probe_duration(path)
     scene.duration = duration  # 규칙 5-7: 실측값 기입
+    path.with_suffix(".sig").write_text(text_sig)  # 부분 재개용 캐시 서명
 
     if session is not None:
         from core.models import UsageLogModel

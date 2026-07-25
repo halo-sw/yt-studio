@@ -197,6 +197,12 @@ def cmd_produce(args) -> None:
 
     track = Track(args.track)
     bible = load_bible(track)
+    if getattr(args, "voice", ""):
+        # 에피소드 단위 보이스 오버라이드 (옴니버스에서 사연별 화자 교차용).
+        # 바이블은 frozen(잠금 자산) — 복사본으로 이번 실행만 덮어쓴다.
+        # 캐시 서명에 voice_id가 들어가므로 교체 시 자동 재합성된다.
+        bible = bible.model_copy(update={"voice_id": args.voice})
+        print(f"   보이스 오버라이드: {bible.voice_id}")
     script_path = Path(args.script)
     lines = [
         ln.strip() for ln in script_path.read_text(encoding="utf-8").splitlines()
@@ -213,12 +219,26 @@ def cmd_produce(args) -> None:
     # 트랙 감정 아크(script.TRACK_STRUCTURES)를 씬 위치에 비례 배분 —
     # tts가 씬별 emotion_preset으로 매핑해 낭독 감정 낙차를 만든다.
     arc = [tone for _, _, tone in script.TRACK_STRUCTURES[track]]
+    # 씬별 감정 톤 오버라이드 — {대본}.tones.json 이 있으면 아크 자동 배분보다 우선.
+    # 트랙 기본 아크는 해당 트랙의 대표 포맷 하나를 전제로 균등 배분하므로,
+    # 같은 트랙 안에서 감정 곡선이 다른 포맷(예: 심리 B형 유형 해부형 —
+    # 피크가 앞쪽 '반전'에 있고 뒤쪽은 위로 구간)에는 맞지 않는다.
+    # 형식: {"14": "호기심", "23": "차분"} — 미지정 씬은 아크 자동 배분.
+    tone_map: dict[int, str] = {}
+    tones_path = script_path.with_suffix(".tones.json")
+    if tones_path.exists():
+        import json as _json
+
+        tone_map = {int(k): v for k, v in
+                    _json.loads(tones_path.read_text(encoding="utf-8")).items()}
+        print(f"   씬별 감정 톤 로드: {tones_path.name} ({len(tone_map)}개 씬)")
     static_ids = {int(x) for x in getattr(args, "static", "").split(",") if x.strip().isdigit()}
     scenes = []
     for i, line in enumerate(lines):
         chapter = "훅" if i < 2 else ("마무리" if i == len(lines) - 1 else "본편")
         text = apply_guideline_substitutions(line)
-        tone = arc[min(i * len(arc) // len(lines), len(arc) - 1)]
+        tone = (tone_map.get(i + 1) or getattr(args, "tone", "")
+                or arc[min(i * len(arc) // len(lines), len(arc) - 1)])
         scenes.append(Scene(
             scene_id=i + 1, track=track, chapter=chapter,
             narration=text, caption=text,  # 타임드 자막: 렌더가 문장 단위로 쪼갬
@@ -708,6 +728,10 @@ def main() -> None:
     p5.add_argument("--shorts", action="store_true", help="9:16 세로판 추가 생성")
     p5.add_argument("--bgm", default="", help="BGM 파일 (글로벌 -26 LUFS 언더베드)")
     p5.add_argument("--images", default="", help="씬 이미지 폴더 (파일명 숫자=씬 번호, 미지정 씬은 플레이스홀더)")
+    p5.add_argument("--voice", default="",
+                    help="Typecast voice_id 오버라이드 (기본: 트랙 바이블 voice_id)")
+    p5.add_argument("--tone", default="",
+                    help="전 씬 감정 톤 강제 (예: '여운'→tonedown — 프레임 내레이션 등 톤 통일용)")
     p5.add_argument("--reuse-audio", action="store_true", dest="reuse_audio",
                     help="대본이 같을 때 기존 합성 음성 재사용 (TTS 재과금 방지)")
     p5.add_argument("--slug", default="", help="출력 폴더명 (기본: 대본 파일명)")
