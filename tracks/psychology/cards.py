@@ -12,27 +12,70 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[2]
 FONT = str(ROOT / "data/assets/fonts/Pretendard-Bold.otf")
 W, H = 1920, 1080
-BG = (255, 253, 248)
-INK = (31, 41, 55)
-GREY = (140, 140, 135)
-CORAL = (255, 122, 89)
-CORAL_SOFT = (255, 235, 228)
-TEAL = (42, 157, 143)
-TEAL_SOFT = (223, 242, 239)
-RED_SOFT = (253, 226, 224)
-LINE = (232, 228, 220)
+# 파스텔 블루/보라 브랜드 무드 (2026-07-26 리브랜딩 — 그라디언트 로고와 통일).
+# CORAL/TEAL 이름은 하위호환용 슬롯이고 실제 색은 페리윙클/스카이블루다.
+BG = (248, 247, 253)          # 소프트 라벤더 화이트
+INK = (58, 52, 92)            # 인디고 잉크
+GREY = (150, 146, 162)
+CORAL = (139, 122, 224)       # 주 accent — 페리윙클(보라)
+CORAL_SOFT = (234, 230, 250)  # 소프트 라벤더
+TEAL = (86, 150, 214)         # 보조 accent — 스카이블루
+TEAL_SOFT = (224, 237, 251)   # 소프트 블루
+RED_SOFT = (253, 226, 224)    # ✕ 말풍선(유지)
+LINE = (231, 229, 243)
+
+# 채널 로고 배지용 마스코트 컷아웃 (신규 파스텔 강아지, brand에서 생성)
+MASCOT_CUT = ROOT / "data/assets/psychology/character/mascot_cut.png"
+CHANNEL = "심리학가나디"
+
+# 카카오톡 팔레트 (예문 채팅 UI — 실제 카톡 화면에 맞춤)
+KAKAO_BG = (176, 197, 216)      # 채팅 배경 블루그레이
+KAKAO_HEADER = (183, 203, 221)  # 상단 헤더 바 (배경보다 살짝 밝게)
+KAKAO_YELLOW = (255, 227, 60)   # 내가 보낸 말풍선
+KAKAO_WHITE = (255, 255, 255)   # 상대 말풍선
+KAKAO_TEXT = (38, 38, 40)
+KAKAO_TIME = (95, 108, 122)     # 시간 회색
+KAKAO_UNREAD = (255, 214, 76)   # 안읽음 '1' (노랑)
+KAKAO_ICON = (70, 78, 88)
 
 
 def F(s):
     return ImageFont.truetype(FONT, s)
 
 
-def _base(chip="말투 심리학"):
+TITLE_LOGO = ROOT / "data/assets/psychology/character/title_logo.png"
+
+
+def _brand_badge(im, d):
+    """좌상단 채널 배지 — 디자인 로고 이미지(그라디언트) 그대로 사용.
+
+    (마스코트+텍스트 락업 → 로고 이미지로 교체, 2026-07-26 사용자 요청.)
+    로고가 없으면 마스코트+텍스트로 폴백.
+    """
+    x, y = 60, 34
+    if TITLE_LOGO.exists():
+        lg = Image.open(TITLE_LOGO).convert("RGBA")
+        bh = 108
+        r = bh / lg.height
+        lg = lg.resize((max(1, round(lg.width * r)), bh), Image.LANCZOS)
+        im.paste(lg, (x, y), lg)
+        return
+    tx = x
+    if MASCOT_CUT.exists():
+        m = Image.open(MASCOT_CUT).convert("RGBA")
+        th = 84
+        r = th / m.height
+        m = m.resize((max(1, round(m.width * r)), th), Image.LANCZOS)
+        im.paste(m, (x, y), m)
+        tx = x + m.width + 18
+    d.text((tx, y + 22), CHANNEL, font=F(40), fill=INK)
+
+
+def _base(chip=None):
+    """chip 인자는 하위 호환용으로 남기고 무시한다 — 상단은 항상 로고 배지."""
     im = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(im)
-    cw = d.textlength(chip, font=F(28))
-    d.rounded_rectangle((70, 54, 70 + cw + 40, 110), radius=28, fill=CORAL)
-    d.text((90, 66), chip, font=F(28), fill=(255, 255, 255))
+    _brand_badge(im, d)
     return im, d
 
 
@@ -119,18 +162,46 @@ def big_card(headline: str, sub: str, illust: Path, out: Path,
     return out
 
 
-def _draw_wrapped(d, text, font, fill, x, y, max_w, line_h):
-    line = ""
-    for word in text.split():
-        trial = f"{line} {word}".strip()
-        if d.textlength(trial, font=font) <= max_w or not line:
-            line = trial
+def _balance_wrap(d, text, font, max_w):
+    """max_w 안에서 최소 줄 수로 감싸되, 줄 길이를 균형 있게 배분한다.
+    그리디 줄바꿈은 마지막에 한 단어만 떨어지는 고아(예: '…닫는' / '것')를 만든다.
+    → 같은 줄 수를 유지하는 최소 폭을 이분 탐색해, 마지막 줄이 홀로 짧아지지 않게 한다."""
+    words = text.split()
+    if len(words) <= 1:
+        return words
+
+    def greedy(width):
+        lines, line = [], ""
+        for w in words:
+            trial = f"{line} {w}".strip()
+            if d.textlength(trial, font=font) <= width or not line:
+                line = trial
+            else:
+                lines.append(line); line = w
+        if line:
+            lines.append(line)
+        return lines
+
+    n = len(greedy(max_w))
+    if n <= 1:
+        return greedy(max_w)
+    lo = int(max(d.textlength(w, font=font) for w in words)) + 1  # 최소한 한 단어는 들어가야
+    hi = int(max_w)
+    best = greedy(max_w)
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        cand = greedy(mid)
+        if len(cand) <= n:
+            best = cand; hi = mid - 1
         else:
-            d.text((x, y), line, font=font, fill=fill)
-            y += line_h
-            line = word
-    if line:
+            lo = mid + 1
+    return best
+
+
+def _draw_wrapped(d, text, font, fill, x, y, max_w, line_h):
+    for line in _balance_wrap(d, text, font, max_w):
         d.text((x, y), line, font=font, fill=fill)
+        y += line_h
 
 
 # ---------------------------------------------------------------------------
@@ -155,27 +226,122 @@ def focus_frame(illust: Path, out: Path, headline: str | None = None,
     return out
 
 
+def _x_mark(d, cx, cy, r, color, w=9):
+    d.line((cx - r, cy - r, cx + r, cy + r), fill=color, width=w)
+    d.line((cx + r, cy - r, cx - r, cy + r), fill=color, width=w)
+
+
+def _check_mark(d, cx, cy, r, color, w=10):
+    d.line((cx - r, cy, cx - r * 0.2, cy + r * 0.8), fill=color, width=w)
+    d.line((cx - r * 0.2, cy + r * 0.8, cx + r, cy - r), fill=color, width=w)
+
+
+def _heart(d, cx, cy, s, color):
+    d.pieslice((cx - s, cy - s, cx, cy), 130, 360, fill=color)
+    d.pieslice((cx, cy - s, cx + s, cy), 180, 50, fill=color)
+    d.polygon([(cx - s * 0.92, cy - s * 0.1), (cx + s * 0.92, cy - s * 0.1),
+               (cx, cy + s)], fill=color)
+
+
+def _wrap(d, text, font, max_w):
+    return _balance_wrap(d, text, font, max_w)
+
+
+def _sent_bubble(d, text, font, right_x, top_y, max_text_w):
+    """카톡 '내가 보낸' 노란 말풍선 (우측, 우상단 꼬리). bbox 반환."""
+    lines = _wrap(d, text, font, max_text_w)
+    lh = round(font.size * 1.34)
+    pad_x, pad_y = 32, 22
+    tw = max(d.textlength(ln, font=font) for ln in lines)
+    bw, bh = tw + pad_x * 2, lh * len(lines) + pad_y * 2
+    x0, y0 = right_x - bw, top_y
+    d.rounded_rectangle((x0, y0, right_x, y0 + bh), radius=20, fill=KAKAO_YELLOW)
+    d.polygon([(right_x - 6, y0 + 4), (right_x + 16, y0 - 4), (right_x - 2, y0 + 30)],
+              fill=KAKAO_YELLOW)
+    for i, ln in enumerate(lines):
+        d.text((x0 + pad_x, y0 + pad_y + i * lh), ln, font=font, fill=KAKAO_TEXT)
+    return (x0, y0, right_x, y0 + bh)
+
+
+def _recv_bubble(im, d, text, font, left_x, top_y, max_text_w, avatar=None, name=None):
+    """카톡 '상대' 흰 말풍선 (좌측, 아바타+이름). bbox 반환."""
+    ax = left_x
+    if avatar is not None and avatar.exists():
+        av = Image.open(avatar).convert("RGBA").resize((84, 84), Image.LANCZOS)
+        mask = Image.new("L", (84 * 4, 84 * 4), 0)
+        ImageDraw.Draw(mask).ellipse((0, 0, 84 * 4, 84 * 4), fill=255)
+        im.paste(av, (ax, top_y), mask.resize((84, 84), Image.LANCZOS))
+    bx0 = ax + 104
+    ny = top_y
+    if name:
+        d.text((bx0 + 6, ny), name, font=F(28), fill=(70, 78, 92))
+        ny += 42
+    lines = _wrap(d, text, font, max_text_w)
+    lh = round(font.size * 1.34)
+    pad_x, pad_y = 30, 20
+    tw = max(d.textlength(ln, font=font) for ln in lines)
+    bw, bh = tw + pad_x * 2, lh * len(lines) + pad_y * 2
+    d.rounded_rectangle((bx0, ny, bx0 + bw, ny + bh), radius=20, fill=KAKAO_WHITE)
+    d.polygon([(bx0 + 6, ny + 4), (bx0 - 16, ny - 4), (bx0 + 2, ny + 30)], fill=KAKAO_WHITE)
+    for i, ln in enumerate(lines):
+        d.text((bx0 + pad_x, ny + pad_y + i * lh), ln, font=font, fill=KAKAO_TEXT)
+    return (bx0, ny, bx0 + bw, ny + bh)
+
+
 def quote_frame(text: str, good: bool, illust: Path, out: Path,
                 chip: str = "말투 심리학") -> Path:
-    """대사 한 줄이 주인공인 프레임 — 큰 말풍선 + 일러스트."""
+    """대사 한 줄이 주인공인 프레임 — 실제 카카오톡 화면 목업 + 일러스트.
+
+    (2026-07-26: 레퍼런스처럼 헤더바·아바타·정확한 말풍선으로 리얼하게.
+    '1'(안읽음)은 상대가 읽지 않은 bad 예문에서만 — 읽으면 사라진다.)
+    """
     im, d = _base(chip)
-    fill = TEAL_SOFT if good else RED_SOFT
-    mark_c = TEAL if good else (214, 69, 65)
-    # 말풍선은 위로 붙이고 높이를 줄여, 남는 세로 공간을 일러스트에 준다.
-    # ✕✓ 대사가 이 채널의 핵심 문법이라 그림이 조연처럼 작아 보이면 안 된다.
-    d.rounded_rectangle((160, 150, 1760, 430), radius=40, fill=fill)
-    # 말풍선 꼬리
-    d.polygon([(900, 430), (1000, 430), (930, 505)], fill=fill)
-    if good:
-        d.line((250, 275, 292, 327), fill=mark_c, width=16)
-        d.line((292, 327, 366, 203), fill=mark_c, width=16)
-    else:
-        for dx in (0, 2):
-            d.line((256 + dx, 227, 344 + dx, 347), fill=mark_c, width=16)
-            d.line((344 + dx, 227, 256 + dx, 347), fill=mark_c, width=16)
-    _draw_wrapped(d, text, F(64), INK, x=430, y=225, max_w=1250, line_h=92)
-    # 하단 자막 필(~y830)을 침범하지 않는 최대 박스
-    _illust(im, illust, (600, 500, 1320, 825), pad_ratio=0.02)
+    accent = TEAL if good else (224, 82, 65)
+
+    # 상단 라벨 칩
+    label = "이렇게 말해요" if good else "이렇게 말고"
+    lw = d.textlength(label, font=F(40))
+    cx0 = 90
+    d.rounded_rectangle((cx0, 150, cx0 + 84 + lw + 44, 226), radius=38,
+                        fill=(TEAL_SOFT if good else RED_SOFT))
+    (_check_mark if good else _x_mark)(d, cx0 + 46, 189, 19, accent)
+    d.text((cx0 + 88, 166), label, font=F(40), fill=accent)
+
+    # 카톡 화면 패널
+    px0, py0, px1, py1 = 90, 258, 1150, 862
+    d.rounded_rectangle((px0, py0, px1, py1), radius=40, fill=KAKAO_BG)
+    # 헤더 바
+    hh = 96
+    d.rounded_rectangle((px0, py0, px1, py0 + hh + 30), radius=40, fill=KAKAO_HEADER)
+    d.rectangle((px0, py0 + 46, px1, py0 + hh), fill=KAKAO_HEADER)
+    cy = py0 + hh // 2
+    d.line([(px0 + 52, cy - 15), (px0 + 36, cy), (px0 + 52, cy + 15)], fill=KAKAO_ICON, width=6)
+    d.text(((px0 + px1) // 2, cy), "상대방", font=F(38), fill=(45, 48, 55), anchor="mm")
+    ix = px1 - 60
+    for _ in range(3):  # 검색/통화/메뉴 자리 — 심플 아이콘 3
+        pass
+    # 검색(돋보기)
+    d.ellipse((px1 - 260, cy - 16, px1 - 230, cy + 14), outline=KAKAO_ICON, width=5)
+    d.line((px1 - 234, cy + 12, px1 - 224, cy + 22), fill=KAKAO_ICON, width=5)
+    # 통화(수화기 단순화 — 둥근 사각)
+    d.rounded_rectangle((px1 - 178, cy - 15, px1 - 150, cy + 15), radius=9, outline=KAKAO_ICON, width=5)
+    # 메뉴(햄버거)
+    for k in range(3):
+        d.line((px1 - 96, cy - 14 + k * 14, px1 - 60, cy - 14 + k * 14), fill=KAKAO_ICON, width=5)
+    d.line((px0, py0 + hh, px1, py0 + hh), fill=(160, 178, 196), width=2)
+
+    # 내가 보낸 노란 말풍선
+    bx = _sent_bubble(d, text, F(50), right_x=px1 - 46, top_y=py0 + hh + 74,
+                      max_text_w=560)
+    # 시간 + (bad일 때만) 안읽음 '1' — 말풍선 좌하단
+    right_edge = bx[0] - 14
+    tstr = "오후 9:14"
+    d.text((right_edge, bx[3] - 34), tstr, font=F(26), fill=KAKAO_TIME, anchor="ra")
+    if not good:  # 읽지 않음 → '1'. 읽으면 아무 표시 없음(카톡)
+        d.text((right_edge, bx[3] - 74), "1", font=F(30), fill=KAKAO_UNREAD, anchor="ra")
+
+    # 캐릭터 (우측)
+    _illust(im, illust, (1210, 300, 1850, 820), pad_ratio=0.02)
     out.parent.mkdir(parents=True, exist_ok=True)
     im.save(out)
     return out

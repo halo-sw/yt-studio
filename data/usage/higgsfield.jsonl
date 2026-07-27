@@ -1,0 +1,40 @@
+{"at": "2026-07-26T02:50:54", "track": "", "label": "failed", "model": "gpt_image_2", "estimated": 4.0, "ok": false, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-26T02:50:54", "track": "", "label": "failed", "model": "seedance_2_0", "estimated": 22.5, "ok": false, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-26T02:50:54", "track": "psychology", "label": "예상 출력 확인", "model": "(batch)", "estimated": 26.5, "ok": true, "balance_before": 892.74, "balance_after": 892.74, "actual": 0.0}
+{"at": "2026-07-27T00:03:01", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:03:04", "track": "psychology", "label": "ep02 썸네일 카톡화면 (GPT Image 2)", "model": "(batch)", "estimated": 4.0, "ok": true, "balance_before": 663.74, "balance_after": 659.74, "actual": 4.0}
+{"at": "2026-07-27T00:09:31", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:11:05", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:11:07", "track": "psychology", "label": "ep02 새 훅 여성 (이미지+모션)", "model": "(batch)", "estimated": 10.0, "ok": true, "balance_before": 659.74, "balance_after": 649.74, "actual": 10.0}
+{"at": "2026-07-27T00:14:54", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:15:00", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:15:09", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:16:27", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:16:29", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:16:30", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:18:15", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:18:18", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:18:32", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:19:43", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:19:56", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:19:57", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:20:00", "track": "psychology", "label": "ep02 전용 감정 라이브 씬 6개", "model": "(batch)", "estimated": 60.0, "ok": true, "balance_before": 649.74, "balance_after": 589.74, "actual": 60.0}
+{"at": "2026-07-27T00:33:14", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:33:16", "track": "psychology", "label": "ep02 마스코트 CTA 애니(i2v)", "model": "(batch)", "estimated": 6.0, "ok": true, "balance_before": 589.74, "balance_after": 583.74, "actual": 6.0}
+{"at": "2026-07-27T00:50:20", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:52:01", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T00:52:02", "track": "psychology", "label": "ep02 인트로 여성 교체 (더 예쁘고 어린 불안형)", "model": "(batch)", "estimated": 10.0, "ok": true, "balance_before": 583.74, "balance_after": 573.74, "actual": 10.0}
+{"at": "2026-07-27T10:52:51", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:52:51", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:52:51", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:54:13", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:54:15", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:54:28", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:56:00", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:56:18", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:56:22", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:57:27", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:57:51", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:58:31", "track": "", "label": "ok", "model": "minimax_hailuo", "estimated": 6.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:59:26", "track": "", "label": "ok", "model": "gpt_image_2", "estimated": 4.0, "ok": true, "balance_before": null, "balance_after": null, "actual": null}
+{"at": "2026-07-27T10:59:28", "track": "psychology", "label": "ep03 전용 비주얼 (훅+감정5+썸네일)", "model": "(batch)", "estimated": 64.0, "ok": true, "balance_before": 573.74, "balance_after": 509.74, "actual": 64.0}

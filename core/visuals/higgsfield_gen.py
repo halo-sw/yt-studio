@@ -16,6 +16,8 @@ import subprocess
 import urllib.request
 from pathlib import Path
 
+from core.visuals import credits
+
 HF_BIN = str(Path.home() / ".local/bin/higgsfield")
 
 # 실사 스타일 프리셋 — "인위적인 느낌" 배제: 필름 스틸 문법으로 고정
@@ -42,18 +44,37 @@ def _run_hf(args: list[str]) -> str | None:
     --wait-timeout과 별개로 프로세스 자체가 무응답으로 매달리는 사례가 있어
     (2026-07-24 시장 연작 생성 중 2시간 행) 하드 타임아웃을 건다.
     """
+    # 규칙 5-8: 태우기 전에 얼마 나가는지 먼저 말한다. CLI가 작업별 크레딧을
+    # 안 돌려주므로, 여기서 알리지 않으면 나중에 파일 개수로 역산할 수밖에 없다.
+    model = args[2] if len(args) > 2 and args[:2] == ["generate", "create"] else ""
+    def _opt(name: str) -> str | None:
+        return args[args.index(name) + 1] if name in args else None
+    cr = credits.estimate(model, resolution=_opt("--resolution"),
+                          duration=float(_opt("--duration") or 5)
+                          if _opt("--duration") else None)
+    print(f"   [hf] {model} — 예상 차감 {credits.fmt(cr)}", flush=True)
+    batch = credits.active()
+    if batch:
+        batch.add(cr)
+
+    ok = False
     try:
         proc = subprocess.run([HF_BIN, *args], capture_output=True, text=True,
                               timeout=1800)
     except subprocess.TimeoutExpired:
         print("   [hf] 실패 — 프로세스 타임아웃(30분), 다음 재시도 패스에서 재실행",
               flush=True)
+        credits.record(model, label="timeout", estimated=cr, ok=False)
         return None
     urls = [ln.strip() for ln in proc.stdout.splitlines()
             if ln.strip().startswith("https://")]
     if proc.returncode != 0 or not urls:
         print(f"   [hf] 실패 — {(proc.stderr or proc.stdout)[-200:]}", flush=True)
+        # 실패도 원장에 남긴다 — 실패가 크레딧을 안 태웠다는 보장이 없다
+        credits.record(model, label="failed", estimated=cr, ok=False)
         return None
+    ok = True
+    credits.record(model, label="ok", estimated=cr, ok=ok)
     return urls[-1]
 
 

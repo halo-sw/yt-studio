@@ -11,7 +11,7 @@
 # 저비용 트랙: 비주얼 = 이라스토야(무료, 편당 20점 한도) + PIL 타이포 카드 + 무료 스톡.
 # Higgsfield 사용 금지(비용 철학). 2026-07-25 파일럿 가동.
 channel: psychology
-voice_id: tc_623145248d2f689cc9bad655  # Typecast Hyunseung — 차분·명료 남성 (감정 10종, 임시 확정 — 3인 합의 대상)
+voice_id: tc_6568164fe05ddffee8b0e271  # Typecast Siyeon — 따뜻·차분 20대 여성 (감정 7종: whisper/normal/toneup/happy/tonedown/sad, 2026-07-26 확정)
 voice_params:
   stability: 0.55
   similarity: 0.80
@@ -25,7 +25,11 @@ subtitle_tokens:
   accent: "#FF7A59"    # 채널 포인트 컬러 (코럴)
   position: "bottom-center"
 lut: ""
-bgm_set: []
+bgm_set:
+  # Mixkit 무료 라이선스 (상업 이용 가능, 크레딧 표기 불요).
+  # 3곡을 크로스페이드로 이어 325초 베드 — mix_bgm이 -stream_loop로 반복하는데
+  # 100초짜리 단일 곡은 10분에 6번 돌아 반복이 티가 난다. 베드는 2회만 돈다.
+  - data/assets/psychology/bgm/bed_calm.mp3
 character_refs: []
 glossary:
   이라스토야: "いらすとや 무료 일러스트 (상업 무료, 편당 20점 이하 — 21점부터 유료)"

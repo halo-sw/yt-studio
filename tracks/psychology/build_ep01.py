@@ -49,11 +49,35 @@ CAST: dict[str, tuple[str, str]] = {
     "shindenzu":   ("心電図", ""),                # 센서·심박 측정
     "hitori":      ("体育座り", "後ろ姿"),        # 등을 돌리고 물러선 사람
     "yorisou":     ("慰める", "母親"),            # 곁에 있어주기
-    # 채널 마스코트 — 채널명 「심리학가나디」(가나디=강아지). 채널이 직접 말하는
-    # 씬(주제 소개·구독·정리·다음 편)에만 등장시켜 브랜드 신호로 쓴다.
-    # ※ 동명의 이모티콘 캐릭터 IP가 실재하므로 그 캐릭터의 그림·디자인은 절대 쓰지 않는다.
-    "mascot":      ("座る犬", "座る犬のイラスト"),
 }
+
+# 채널 마스코트는 이라스토야가 아니라 **자체 자산**이다 —
+# 범퍼·썸네일에 쓰는 마스코트와 본편 마스코트가 다르면 강아지가 두 마리가 된다.
+# 채널명이 마스코트에서 나온 이상 여기서 어긋나면 브랜딩이 무너진다.
+# (이라스토야 고유 점수에도 안 잡히므로 라이선스 여유가 오히려 늘어난다.)
+MASCOT_SLUG = "mascot"
+
+# --- 실사 클립 배치 --------------------------------------------------------
+# 카드만 40씬 이어지면 10분이 단조롭다(malto편도 실사 스톡을 섞었다).
+# 원칙: **카드는 정보를, 실사는 감정을 나른다.**
+#   이론·실험·✕✓ 대사 = 카드 (정보 밀도가 필요)
+#   훅·고독·위로·희망    = 실사 (문장으로 안 되는 걸 화면이 한다)
+# 9/40씬(22%)만 실사 — 더 늘리면 카드 아이덴티티가 흐려진다.
+# 소재: Mixkit 무료 라이선스(상업 이용 가능, 크레딧 표기 불요).
+# produce는 같은 씬 번호에 영상이 있으면 영상을 우선하므로 png는 그대로 둔다.
+LIVE: dict[int, str] = {
+    1:  "47985",   # 훅 — 무표정하게 답장을 기다리는 사람
+    2:  "35426",   # 훅 — 해질녘 난간에 기대 먼 곳을 보는 실루엣
+                   #      (22240 커튼 여는 컷은 동작이 밝아 "정반대입니다"와 톤 충돌)
+    18: "46448",   # 울어도 아무도 오지 않았을 때 — 무릎 안고 앉은 사람
+    19: "35830",   # 거리 두기는 생존 기술 — 혼자 먼 길을 걸어가는 뒷모습
+    20: "46788",   # 당신은 차가운 사람이 아닙니다 — 밤길, 온기
+    24: "12837",   # 갈등 중 침묵 — 벤치에 혼자 앉은 사람
+    27: "20311",   # 아홉 시라는 보증서 — 빗방울 맺힌 창(기다림)
+    33: "35889",   # 다가갈수록 물러섭니다 — 바다에 혼자 선 사람
+    38: "6104",    # 배운 것은 다시 배울 수 있습니다 — 일출
+}
+STOCK_DIR = ROOT / "data/assets/psychology/stockvideo"
 
 # --- 씬 → 카드 매핑 (대본 40행과 1:1) ---------------------------------------
 # ("focus", 일러스트, 헤드라인|None, 넘버|None)
@@ -119,9 +143,15 @@ def _cast() -> dict[str, Path]:
             print(f"   ⚠ 캐스트 누락: {slug} ({kw}) — 키워드 재지정 필요")
     limit = irasutoya.FREE_LIMIT_PER_VIDEO
     n = len(got)
-    print(f"   캐스트 {n}/{len(CAST)}점 (라이선스 한도 {limit}점, 여유 {limit - n}점)")
+    print(f"   이라스토야 {n}/{len(CAST)}점 (무료 한도 {limit}점, 여유 {limit - n}점)")
     if n > limit:
         raise SystemExit(f"고유 소재 {n}점 — 무료 한도 {limit}점 초과. 캐스트를 줄일 것")
+
+    # 신규 파스텔 마스코트(그라디언트 브랜드) — 배지·본문 일러스트 통일 (2026-07-26)
+    new_mascot = ROOT / "data/assets/psychology/character/mascot_cut.png"
+    from tracks.psychology.brand import mascot_cutout
+    got[MASCOT_SLUG] = new_mascot if new_mascot.exists() else mascot_cutout()
+    print(f"   마스코트 → {got[MASCOT_SLUG].name}")
     return got
 
 
@@ -152,6 +182,27 @@ def build() -> Path:
         else:
             raise SystemExit(f"씬 {i}: 알 수 없는 카드 종류 {kind}")
     print(f"   → {OUT} ({len(SCENES)}장)")
+
+    print("3) 실사 클립 배치")
+    import shutil
+
+    for old in OUT.glob("*.mp4"):
+        old.unlink()
+    placed = 0
+    for sid, clip in LIVE.items():
+        src = STOCK_DIR / f"{clip}.mp4"
+        if not src.exists():
+            print(f"   ⚠ 씬 {sid}: 클립 {clip}.mp4 없음 — 카드로 대체됨")
+            continue
+        shutil.copy2(src, OUT / f"{sid}.mp4")
+        placed += 1
+    # 씬1 훅 = 예쁜 20대 한국 여성(자체 생성 i2v) — 스톡 여성보다 강한 첫인상
+    # (2026-07-26 사용자 요청). LIVE[1] 스톡 클립을 덮어쓴다.
+    hook = ROOT / "data/assets/psychology/character/hook_woman.mp4"
+    if hook.exists():
+        shutil.copy2(hook, OUT / "1.mp4")
+        print("   씬1 훅 → hook_woman.mp4 (예쁜 20대 한국 여성)")
+    print(f"   실사 {placed}씬 / 카드 {len(SCENES) - placed}씬")
 
     static = ",".join(str(i) for i in range(1, len(SCENES) + 1))
     print("\n다음 단계 (카드는 전면 타이포라 Ken Burns 금지 → 전 씬 --static):")

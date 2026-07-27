@@ -429,15 +429,22 @@ def render_scene_segment(
 
     frames = max(int(duration * FPS), 1)
     w, h = VIDEO_SIZE
-    # 씬 비주얼이 영상(모션 클립)이면 1회 재생 후 마지막 프레임 홀드 —
-    # 루프 반복은 티가 나므로 쓰지 않는다 (모션이 정지화면으로 자연히 가라앉음).
+    # 씬 비주얼이 영상(모션 클립)이면 씬 길이에 맞춰 슬로우모션으로 리타임(setpts)해
+    # 정지 없이 끝까지 움직이게 한다. 예전엔 1회 재생 후 마지막 프레임 홀드(tpad clone)
+    # 였는데 "말하다가 영상이 멈추는" 어색함이 있었다(2026-07-27 피드백). 무한 루프는
+    # 반복이 티나 금지. 클립 길이 불명(probe 실패)일 때만 홀드로 폴백.
     is_video = Path(visual_path).suffix.lower() in {".mp4", ".mov", ".webm", ".mkv"}
     if is_video:
+        clip_dur = probe_duration(visual_path)
         vin = ["-i", str(visual_path)]
+        if 0.1 < clip_dur < duration:
+            factor = (duration + 0.15) / clip_dur          # 씬보다 살짝 길게 늘려 트림
+            fill = f"setpts={factor:.5f}*PTS,"
+        else:
+            fill = f"tpad=stop_mode=clone:stop_duration={duration:.3f},"
         vf = (
             f"scale={w}:{h}:force_original_aspect_ratio=decrease,"
-            f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,fps={FPS},"
-            f"tpad=stop_mode=clone:stop_duration={duration:.3f}"
+            f"pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,{fill}fps={FPS}"
         )
     else:
         vin = ["-loop", "1", "-i", str(visual_path)]
@@ -763,9 +770,12 @@ def preset_shorts(
         inputs += ["-i", str(s)]
     chains = []
     for i in range(len(segs)):
+        # setsar=1 필수 — 실사 스톡을 섞은 씬 세그먼트는 SAR이 1:1로 박히고
+        # PIL 카드 세그먼트는 SAR 미설정이라, 그대로 concat하면 SAR 불일치로
+        # "Invalid argument"가 나며 출력이 0바이트가 된다.
         chains.append(
             f"[{i}:v]crop=ih*{sw}/{sh}:ih:(iw-ih*{sw}/{sh})/2:0,"
-            f"scale={sw}:{sh},fps={FPS},format=yuv420p[v{i}]"
+            f"scale={sw}:{sh},setsar=1,fps={FPS},format=yuv420p[v{i}]"
         )
     concat_in = "".join(f"[v{i}][{i}:a]" for i in range(len(segs)))
     chains.append(f"{concat_in}concat=n={len(segs)}:v=1:a=1[vout][aout]")
