@@ -527,11 +527,32 @@ def cmd_ui(args) -> None:
     uvicorn.run("service.api.app:app", host="127.0.0.1", port=args.port, log_level="warning")
 
 
-def cmd_release(args) -> None:
-    """제작 산출물을 발행용 단일 폴더로 수집 — data/releases/<슬러그>/.
+def _release_dir(slug: str, workdir: Path) -> Path:
+    """완성본이 갈 곳 — 트랙에 채널이 있으면 channels/<채널>/롱폼/, 없으면 data/releases/.
 
-    영상(인트로 결합본 우선) + 썸네일 + 업로드 텍스트를 한곳에 모아
-    업로드할 때 폴더 하나만 열면 되게 한다.
+    트랙은 edit_plan.json의 씬에서 읽고, 채널 매핑은 data/channels.yaml의 dir 필드.
+    """
+    import json as _json
+
+    import yaml as _yaml
+
+    try:
+        plan = _json.loads((workdir / "edit_plan.json").read_text(encoding="utf-8"))
+        track = plan.get("track") or (plan.get("scenes") or [{}])[0].get("track")
+        info = _yaml.safe_load(Path("data/channels.yaml").read_text(encoding="utf-8")).get(track)
+        if info and info.get("dir"):
+            return Path(info["dir"]) / "롱폼" / slug
+    except (OSError, ValueError, KeyError, IndexError, AttributeError):
+        pass
+    return Path("data/releases") / slug
+
+
+def cmd_release(args) -> None:
+    """제작 산출물을 발행용 단일 폴더로 수집.
+
+    트랙에 연결된 채널이 있으면 channels/<채널>/롱폼/<슬러그>/,
+    없으면 data/releases/<슬러그>/. 영상(인트로 결합본 우선) + 썸네일 +
+    업로드 텍스트를 한곳에 모아 업로드할 때 폴더 하나만 열면 되게 한다.
     """
     import shutil
 
@@ -539,7 +560,7 @@ def cmd_release(args) -> None:
     workdir = Path("data/assets/produce") / slug
     if not workdir.exists():
         raise SystemExit(f"제작 폴더 없음: {workdir}")
-    out = Path("data/releases") / slug
+    out = _release_dir(slug, workdir)
     out.mkdir(parents=True, exist_ok=True)
 
     # 영상: --video 지정 > 인트로 결합본 > 기본 렌더본
@@ -746,7 +767,7 @@ def main() -> None:
     p11.set_defaults(fn=lambda args: __import__(
         "tracks.realestate.bbogaegi", fromlist=["run"]).run(args.episode, args.skip_visuals))
 
-    p10 = sub.add_parser("release", help="영상+썸네일+업로드 텍스트를 data/releases/<슬러그>/ 한 폴더로 수집")
+    p10 = sub.add_parser("release", help="영상+썸네일+업로드 텍스트를 채널 서랍(channels/<채널>/롱폼/) 또는 data/releases/로 수집")
     p10.add_argument("--slug", required=True, help="제작 폴더명 (data/assets/produce/<슬러그>)")
     p10.add_argument("--video", default="", help="영상 직접 지정 (기본: 인트로 결합본 우선 자동 선택)")
     p10.add_argument("--thumb", default="", help="썸네일 직접 지정 (기본: thumbs/thumb_A.png)")

@@ -44,3 +44,11 @@ node_modules/
 .idea/
 .vscode/
 data/releases/
+
+# 채널 서랍 — 문서(말투·소재함·README)만 커밋, 완성본·브랜딩 미디어는 로컬
+channels/*/롱폼/
+channels/*/숏폼/
+channels/*/브랜딩/
+
+# 채널 현황 배치 산출물 — crontab이 매일 append하는 로컬 데이터
+data/usage/channel_pulse.*

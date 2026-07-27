@@ -1,0 +1,32 @@
+# 트랙(카테고리) → 유튜브 채널 매핑 — 채널 현황 배치·scout·harvest의 단일 출처
+# 2026-07-27 기준. 채널이 없는 트랙은 url: null.
+
+psychology:
+  name: 심리학가나디
+  handle: "@simriganadi"
+  channel_id: null
+  url: https://www.youtube.com/@simriganadi
+  dir: channels/심리학가나디   # release가 완성본을 수집하는 채널 서랍
+
+natepan:
+  name: 톡톡 드라마썰
+  handle: "@톡톡드라마썰"
+  channel_id: UC75qv9AvJcYhT04cvq-0DRg
+  url: https://www.youtube.com/@%ED%86%A1%ED%86%A1%EB%93%9C%EB%9D%BC%EB%A7%88%EC%8D%B0
+  dir: channels/톡톡드라마썰
+
+realestate:
+  name: null   # 공고 뽀개기 — 채널 미개설
+  url: null
+
+japan:
+  name: null   # 일본 머니 — 채널 미개설
+  url: null
+
+drama:
+  name: null   # 드라마썰 — 채널 미개설
+  url: null
+
+playlist:
+  name: null   # 플레이리스트 — 채널 미개설 (YPP 리스크로 우선순위 하향)
+  url: null
