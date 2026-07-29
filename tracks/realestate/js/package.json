@@ -1,0 +1,9 @@
+{
+  "name": "realestate-capture",
+  "private": true,
+  "description": "부동산 트랙 비주얼 캡처 러너 (카카오맵 로드뷰/지도, 공식 투어 영상 프레임)",
+  "dependencies": {
+    "puppeteer-core": "^25.0.0",
+    "pptxgenjs": "^4.0.0"
+  }
+}

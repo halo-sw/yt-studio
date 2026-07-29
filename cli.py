@@ -690,7 +690,87 @@ def _load_dotenv(path: Path = Path(".env")) -> None:
         line = line.strip()
         if line and not line.startswith("#") and "=" in line:
             k, _, v = line.partition("=")
-            os.environ.setdefault(k.strip(), v.strip())
+            # .env.example을 그대로 복사하면 인라인 주석이 값으로 들어간다 —
+            # 빈 키가 truthy가 되어 실 API를 호출하므로 주석을 걷어낸다.
+            os.environ.setdefault(k.strip(), v.partition("#")[0].strip())
+
+
+def cmd_re_scout(args) -> None:
+    """부동산: 청년안심주택 데이터 → 후보 추출 → 소재 카드 후보 출력.
+
+    확정은 사람 게이트 1 — 여기서는 후보만 보여준다 (반자동 파서, 규칙 5-3).
+    --collect-assets는 1위(또는 --pick N위) 후보의 로드뷰/지도/투어 프레임을
+    data/assets/realestate/{homeCode}/ 에 수집한다.
+    """
+    from tracks.realestate import parser as re_parser
+
+    complexes = re_parser.load_complexes(args.data_dir or re_parser.DEFAULT_DATA_DIR)
+    cands = re_parser.extract_candidates(
+        complexes, top_n=args.top, check_videos=args.videos,
+    )
+    cards = re_parser.make_cards(cands)
+    print(f"[re-scout] 단지 {len(complexes)}곳 → 후보 {len(cands)}곳"
+          f" (영상 조회: {'ON' if args.videos else 'OFF'})")
+    for i, (cand, card) in enumerate(zip(cands, cards), 1):
+        print(f"  {i:2d}. {card.title} — {card.summary}")
+
+    if args.json:
+        payload = {
+            "cards": [c.model_dump() for c in cards],
+            "fact_sheets": {
+                c.home_code: re_parser.build_fact_sheet(c).model_dump() for c in cands
+            },
+        }
+        Path(args.json).write_text(
+            __import__("json").dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[re-scout] 카드+fact_sheet 저장: {args.json}")
+
+    if args.collect_assets:
+        from tracks.realestate.assets import collect_assets
+
+        target = cands[args.pick - 1]
+        print(f"[re-scout] 에셋 수집 시작: {target.name}")
+        manifest = collect_assets(target)
+        print(f"[re-scout] 에셋 {len(manifest['visuals'])}개 수집 완료 → "
+              f"data/assets/realestate/{target.home_code}/assets.json")
+
+
+def cmd_re_episode(args) -> None:
+    """부동산: 후보 선택 → 에셋 수집 → 뽀개기 덱 → 슬라이드 → 대본 → 영상까지 원커맨드.
+
+    수동 제작 세션(2026-07 포르투나 블루 파일럿)의 전 과정을 자동화한 표준 경로.
+    """
+    import sys
+
+    from tracks.realestate import parser as re_parser
+    from tracks.realestate.episode import make_episode
+
+    complexes = re_parser.load_complexes(args.data_dir or re_parser.DEFAULT_DATA_DIR)
+    if getattr(args, "home_code", ""):
+        # UI 경로: 순위는 재계산 시 변할 수 있으므로 home_code로 고정 지정한다.
+        cands = re_parser.extract_candidates(complexes, top_n=len(complexes), check_videos=False)
+        target = next((c for c in cands if c.home_code == args.home_code), None)
+        if target is None:
+            raise SystemExit(f"home_code {args.home_code} 후보 없음")
+        if args.videos and target.homepage:
+            target.video = re_parser.find_official_video(target)
+    else:
+        cands = re_parser.extract_candidates(complexes, top_n=max(args.pick, 10), check_videos=args.videos)
+        target = cands[args.pick - 1]
+    print(f"[re-episode] 대상: {target.name} (점수 {target.score:.1f})")
+
+    ep = make_episode(target, skip_assets=args.skip_assets)
+    print(f"[re-episode] 덱 {ep['n_slides']}장 + 대본 생성 → {ep['deck']}")
+
+    cmd = [sys.executable, "cli.py", "produce",
+           "--script", ep["script"], "--title", f"{target.name} — 예린이의 부동산 뽀개기",
+           "--track", "realestate", "--images", ep["images_dir"], "--slug", ep["slug"]]
+    if args.reuse_audio:
+        cmd.append("--reuse-audio")
+    subprocess.run(cmd, check=True)
+    print(f"[re-episode] 완료 → data/assets/produce/{ep['slug']}/episode.mp4")
 
 
 def main() -> None:
@@ -775,6 +855,25 @@ def main() -> None:
     p3.add_argument("--minutes", type=int, default=10)
     p3.add_argument("--outline", default="")
     p3.set_defaults(fn=cmd_e2e)
+
+    p9 = sub.add_parser("re-scout", help="부동산: 청년안심주택 후보 추출 → 소재 카드 (+에셋 수집)")
+    p9.add_argument("--data-dir", default=None, help="데이터 폴더 (기본: REALESTATE_DATA_DIR)")
+    p9.add_argument("--top", type=int, default=10, help="후보 수 (기본 10)")
+    p9.add_argument("--videos", action="store_true", help="공식 홈페이지 투어 영상 조회 (네트워크)")
+    p9.add_argument("--json", default="", help="카드+fact_sheet JSON 저장 경로")
+    p9.add_argument("--collect-assets", action="store_true",
+                    help="선택 후보의 로드뷰/지도/투어 프레임 수집 (node+Chrome 필요)")
+    p9.add_argument("--pick", type=int, default=1, help="에셋 수집 대상 순위 (기본 1위)")
+    p9.set_defaults(fn=cmd_re_scout)
+
+    p10 = sub.add_parser("re-episode", help="부동산: 후보→덱→슬라이드→대본→영상 원커맨드 (macOS Keynote 필요)")
+    p10.add_argument("--data-dir", default=None, help="데이터 폴더 (기본: REALESTATE_DATA_DIR)")
+    p10.add_argument("--pick", type=int, default=1, help="후보 순위 (기본 1위)")
+    p10.add_argument("--home-code", default="", dest="home_code", help="순위 대신 단지 homeCode로 지정 (UI 경로)")
+    p10.add_argument("--videos", action="store_true", help="공식 투어 영상 조회·캡처 포함 (네트워크)")
+    p10.add_argument("--skip-assets", action="store_true", help="기존 수집 에셋(assets.json) 재사용")
+    p10.add_argument("--reuse-audio", action="store_true", dest="reuse_audio", help="기존 TTS 재사용 (재렌더 시)")
+    p10.set_defaults(fn=cmd_re_episode)
 
     args = ap.parse_args()
     args.fn(args)
