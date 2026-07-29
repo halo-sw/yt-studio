@@ -1,0 +1,14 @@
+{
+ "complex_name": "화랑대역 에이트플레이스",
+ "address": "중랑구 신내로 267",
+ "subway_desc": "6호선 화랑대역 6번출구 146m, 도보 2분",
+ "deposit_low_won": 48000000,
+ "rent_low_won": 160000,
+ "total_units": 724,
+ "station_distance_m": 146,
+ "contact_phone": "02-3296-3598",
+ "deposit_fmt": "4,800만원",
+ "rent_fmt": "16만원",
+ "units_fmt": "724세대",
+ "dist_fmt": "146미터"
+}

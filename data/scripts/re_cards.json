@@ -1,0 +1,190 @@
+{
+  "cards": [
+    {
+      "card_id": "cfff7d5d-f232-4a28-aa3c-8edc9ba5694b",
+      "track": "realestate",
+      "title": "화곡역 포르투나 블루",
+      "summary": "강서구 · 역까지 211m · 82세대 · 월세 8만원~ · 공식 투어 영상 있음 · 점수 10.0",
+      "source_ref": "https://sejee000.cafe24.com/default/",
+      "owner": null,
+      "approved_by": null,
+      "state": "draft"
+    },
+    {
+      "card_id": "89214479-7144-4639-b168-20cb426e7fb0",
+      "track": "realestate",
+      "title": "화랑대역 에이트플레이스",
+      "summary": "중랑구 · 역까지 146m · 724세대 · 월세 16만원~ · 점수 7.5",
+      "source_ref": "https://8-place.com/",
+      "owner": null,
+      "approved_by": null,
+      "state": "draft"
+    },
+    {
+      "card_id": "aa4acee0-dcb3-4556-85c0-9f204170a632",
+      "track": "realestate",
+      "title": "신대방삼거리역 골드타워",
+      "summary": "동작구 · 역까지 152m · 330세대 · 월세 23만원~ · 점수 7.5",
+      "source_ref": "http://www.gold-tower.co.kr",
+      "owner": null,
+      "approved_by": null,
+      "state": "draft"
+    },
+    {
+      "card_id": "025c9d8c-a832-46a4-b607-f38123bdc601",
+      "track": "realestate",
+      "title": "영등포구청역 포레나당산",
+      "summary": "영등포구 · 역까지 146m · 496세대 · 월세 31만원~ · 점수 7.5",
+      "source_ref": "http://www.포레나당산.com",
+      "owner": null,
+      "approved_by": null,
+      "state": "draft"
+    },
+    {
+      "card_id": "c268eaac-1a68-4c6e-bbdc-ebf9ab8afc50",
+      "track": "realestate",
+      "title": "상봉역 와이센트럴시티 상봉",
+      "summary": "중랑구 · 역까지 88m · 351세대 · 월세 45만원~ · 점수 7.5",
+      "source_ref": "https://ycentralcity.com",
+      "owner": null,
+      "approved_by": null,
+      "state": "draft"
+    },
+    {
+      "card_id": "9d386d43-63fe-4902-b1b3-46ae35908092",
+      "track": "realestate",
+      "title": "건대입구역 더포디엄 830",
+      "summary": "광진구 · 역까지 221m · 480세대 · 월세 51만원~ · 점수 7.5",
+      "source_ref": "https://Thepodium830.com",
+      "owner": null,
+      "approved_by": null,
+      "state": "draft"
+    },
+    {
+      "card_id": "820d977b-7802-48aa-8b95-7388cdd95f19",
+      "track": "realestate",
+      "title": "신풍역 비스타동원",
+      "summary": "영등포구 · 역까지 70m · 576세대 · 월세 5만원~ · 점수 7.5",
+      "source_ref": "https://sinpung2030.com",
+      "owner": null,
+      "approved_by": null,
+      "state": "draft"
+    },
+    {
+      "card_id": "729ad829-15ad-420a-bdd7-22697e93db53",
+      "track": "realestate",
+      "title": "광흥창역 이랜드 PEER 신촌",
+      "summary": "마포구 · 역까지 232m · 589세대 · 월세 7만원~ · 점수 7.5",
+      "source_ref": "https://elandpeer.com/sinchon",
+      "owner": null,
+      "approved_by": null,
+      "state": "draft"
+    }
+  ],
+  "fact_sheets": {
+    "20000412": {
+      "version_hash": "31338311033837f9",
+      "facts": {
+        "complex_name": "화곡역 포르투나 블루",
+        "address": "강서구 화곡로 146",
+        "subway_desc": "5호선 화곡역 6번출구 211m",
+        "deposit_low_won": 50000000,
+        "rent_low_won": 80000,
+        "total_units": 82,
+        "station_distance_m": 211,
+        "contact_phone": "010-4942-8982"
+      }
+    },
+    "20000597": {
+      "version_hash": "686bd9be0ca38dca",
+      "facts": {
+        "complex_name": "화랑대역 에이트플레이스",
+        "address": "중랑구 신내로 267",
+        "subway_desc": "6호선 화랑대역 6번출구 146m, 도보 2분",
+        "deposit_low_won": 48000000,
+        "rent_low_won": 160000,
+        "total_units": 724,
+        "station_distance_m": 146,
+        "contact_phone": "02-3296-3598"
+      }
+    },
+    "20000564": {
+      "version_hash": "368f1cbf0cc86af1",
+      "facts": {
+        "complex_name": "신대방삼거리역 골드타워",
+        "address": "동작구 신대방동 351-5",
+        "subway_desc": "7호선 신대방삼거리역 2번출구 152m",
+        "deposit_low_won": 36000000,
+        "rent_low_won": 230000,
+        "total_units": 330,
+        "station_distance_m": 152,
+        "contact_phone": "070-4349-2998"
+      }
+    },
+    "20000475": {
+      "version_hash": "24a68b87ca2e7b1e",
+      "facts": {
+        "complex_name": "영등포구청역 포레나당산",
+        "address": "영등포구 당산동2가 45-5",
+        "subway_desc": "영등포구청역 6번 출구에서 146m",
+        "deposit_low_won": 58000000,
+        "rent_low_won": 310000,
+        "total_units": 496,
+        "station_distance_m": 146,
+        "contact_phone": "02-2633-2030"
+      }
+    },
+    "20000583": {
+      "version_hash": "5355486d265e18f4",
+      "facts": {
+        "complex_name": "상봉역 와이센트럴시티 상봉",
+        "address": "중랑구 망우로 313",
+        "subway_desc": "7호선, 경의중앙선, 경춘선 상봉역 8번 출구 88m",
+        "deposit_low_won": 38000000,
+        "rent_low_won": 450000,
+        "total_units": 351,
+        "station_distance_m": 88,
+        "contact_phone": "02-6451-0220"
+      }
+    },
+    "20000558": {
+      "version_hash": "a0a904256ee085f0",
+      "facts": {
+        "complex_name": "건대입구역 더포디엄 830",
+        "address": "광진구 자양동 8-8",
+        "subway_desc": "2호선, 7호선 건대입구역  6번출구 221m",
+        "deposit_low_won": 57000000,
+        "rent_low_won": 510000,
+        "total_units": 480,
+        "station_distance_m": 221,
+        "contact_phone": "02-6239-0330"
+      }
+    },
+    "20000541": {
+      "version_hash": "8ca750b462939fc4",
+      "facts": {
+        "complex_name": "신풍역 비스타동원",
+        "address": "영등포구 신풍로 28",
+        "subway_desc": "7호선 신풍역 2번출구 70m",
+        "deposit_low_won": 39000000,
+        "rent_low_won": 50000,
+        "total_units": 576,
+        "station_distance_m": 70,
+        "contact_phone": "02-6223-2005"
+      }
+    },
+    "20000355": {
+      "version_hash": "23532f2e166a1be4",
+      "facts": {
+        "complex_name": "광흥창역 이랜드 PEER 신촌",
+        "address": "마포구 서강로75-4",
+        "subway_desc": "6호선 광흥창역 1번출구 232m",
+        "deposit_low_won": 3182000,
+        "rent_low_won": 73000,
+        "total_units": 589,
+        "station_distance_m": 232,
+        "contact_phone": "02-325-9996"
+      }
+    }
+  }
+}

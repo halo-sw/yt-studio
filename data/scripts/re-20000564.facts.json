@@ -1,0 +1,14 @@
+{
+ "complex_name": "신대방삼거리역 골드타워",
+ "address": "동작구 신대방동 351-5",
+ "subway_desc": "7호선 신대방삼거리역 2번출구 152m",
+ "deposit_low_won": 36000000,
+ "rent_low_won": 230000,
+ "total_units": 330,
+ "station_distance_m": 152,
+ "contact_phone": "070-4349-2998",
+ "deposit_fmt": "3,600만원",
+ "rent_fmt": "23만원",
+ "units_fmt": "330세대",
+ "dist_fmt": "152미터"
+}

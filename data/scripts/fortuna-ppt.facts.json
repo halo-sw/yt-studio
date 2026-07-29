@@ -1,0 +1,12 @@
+{
+  "complex_name": "화곡역 포르투나 블루",
+  "address": "서울 강서구 화곡로 146",
+  "station_distance_m": 211,
+  "station_distance_fmt": "211미터",
+  "total_units": 82,
+  "total_units_fmt": "82세대",
+  "deposit_low_won": 50000000,
+  "deposit_low_fmt": "5천만 원",
+  "rent_low_won": 80000,
+  "rent_low_fmt": "8만 원"
+}

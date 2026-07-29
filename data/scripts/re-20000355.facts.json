@@ -1,0 +1,14 @@
+{
+ "complex_name": "광흥창역 이랜드 PEER 신촌",
+ "address": "마포구 서강로75-4",
+ "subway_desc": "6호선 광흥창역 1번출구 232m",
+ "deposit_low_won": 3182000,
+ "rent_low_won": 73000,
+ "total_units": 589,
+ "station_distance_m": 232,
+ "contact_phone": "02-325-9996",
+ "deposit_fmt": "318만원",
+ "rent_fmt": "7만원",
+ "units_fmt": "589세대",
+ "dist_fmt": "232미터"
+}
