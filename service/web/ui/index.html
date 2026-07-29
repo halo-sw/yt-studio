@@ -116,6 +116,7 @@ code{background:var(--surface2);border-radius:5px;padding:1px 6px;font-size:12px
   <nav>
     <button data-tab="scripts" class="active">대본 재고</button>
     <button data-tab="create">생성</button>
+    <button data-tab="realestate">부동산</button>
     <button data-tab="gallery">갤러리</button>
     <button data-tab="metrics">지표</button>
   </nav>
@@ -159,6 +160,26 @@ code{background:var(--surface2);border-radius:5px;padding:1px 6px;font-size:12px
       <div class="row" style="margin-bottom:8px"><span class="badge acc" id="jobLogTitle"></span></div>
       <div class="log" id="jobLog"></div>
     </div>
+  </section>
+
+  <!-- 부동산 (예린이의 부동산 뽀개기) — ※ 신규 화면: 3인 합의 대상, 합의 전 파일럿 -->
+  <section id="realestate">
+    <h1>부동산 — 예린이의 부동산 뽀개기</h1>
+    <div class="sub">청년안심주택 후보 → 카드에서 <b>에피소드 생성</b> 한 번이면 로드뷰·덱·대본·렌더까지 자동 (macOS Keynote 필요)</div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="row">
+        <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;font-size:13px">
+          <input type="checkbox" id="reVideos" style="width:auto"> 공식 투어 영상 포함 (홈페이지 조회·프레임 캡처, 느림)</label>
+        <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;font-size:13px">
+          <input type="checkbox" id="reSkipAssets" checked style="width:auto"> 기존 수집 에셋 재사용</label>
+        <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;font-size:13px">
+          <input type="checkbox" id="reReuseAudio" style="width:auto"> 기존 음성 재사용 (재렌더용)</label>
+        <span class="spacer"></span>
+        <button class="btn small" onclick="loadCandidates()">후보 새로고침</button>
+      </div>
+      <div class="hint">보이스: 바이블 realestate.yaml (Rayeon) · TTS는 문자수 과금 — 같은 대본 재렌더는 음성 재사용을 켜세요</div>
+    </div>
+    <div class="grid cols" id="reCards"><div class="empty">후보 불러오는 중…</div></div>
   </section>
 
   <!-- 갤러리 -->
@@ -274,6 +295,48 @@ async function watch(id){
 }
 function toTab(t){document.querySelector(`nav [data-tab=${t}]`).click()}
 
+/* 부동산 */
+let RE_CANDS=[];
+async function loadCandidates(){
+  $("#reCards").innerHTML='<div class="empty">후보 불러오는 중…</div>';
+  try{ RE_CANDS=await (await fetch("/api/realestate/candidates?top=20")).json(); }
+  catch(e){ $("#reCards").innerHTML='<div class="empty">후보 조회 실패 — REALESTATE_DATA_DIR 확인</div>'; return }
+  renderCandidates();
+}
+function won(n){ return n?Math.round(n/10000).toLocaleString()+"만":"—" }
+function renderCandidates(){
+  const el=$("#reCards"); el.innerHTML="";
+  for(const c of RE_CANDS){
+    const d=document.createElement("div"); d.className="card";
+    d.innerHTML=`
+      <div class="row" style="justify-content:space-between">
+        <span class="badge acc">${c.gu||"—"}</span>
+        <span class="badge">점수 ${c.score.toFixed(1)}</span>
+      </div>
+      <h3 style="margin-top:10px">${c.name}</h3>
+      <div class="hook">${c.subway||c.address||""}</div>
+      <div class="row">
+        ${c.station_m!=null?`<span class="badge acc">역 ${c.station_m}m</span>`:""}
+        ${c.rent_low_won?`<span class="badge">월세 ${won(c.rent_low_won)}~</span>`:""}
+        ${c.total_units?`<span class="badge">${c.total_units}세대</span>`:""}
+        ${c.has_assets?'<span class="badge ok">에셋 있음</span>':""}
+        ${c.rendered?'<span class="badge ok">렌더됨</span>':""}
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary small" onclick="runReEpisode('${c.home_code}')">에피소드 생성</button>
+        ${c.rendered?`<a class="badge" href="/media/produce/re-${c.home_code}/episode.mp4" target="_blank">영상 보기</a>`:""}
+      </div>`;
+    el.appendChild(d);
+  }
+}
+async function runReEpisode(code){
+  const c=RE_CANDS.find(x=>x.home_code===code);
+  const r=await post("/api/realestate/episode",{home_code:code,name:c?c.name:code,
+    videos:$("#reVideos").checked,skip_assets:$("#reSkipAssets").checked,
+    reuse_audio:$("#reReuseAudio").checked});
+  watch(r.job);
+}
+
 /* 갤러리 */
 function renderGallery(){
   const el=$("#galleryCards"); el.innerHTML="";
@@ -324,7 +387,7 @@ async function post(url,body){
   return r.json();
 }
 
-refresh(); refreshMetrics(); setInterval(refresh,4000);
+refresh(); refreshMetrics(); loadCandidates(); setInterval(refresh,4000);
 </script>
 </body>
 </html>

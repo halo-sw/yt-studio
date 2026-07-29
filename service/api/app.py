@@ -207,6 +207,56 @@ def job_detail(job_id: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# 부동산 트랙 — 예린이의 부동산 뽀개기 (후보 조회 + 원커맨드 에피소드)
+# ※ 신규 화면: 3인 합의 대상 (CLAUDE.md 10장) — 합의 전까지 파일럿 탭
+# ---------------------------------------------------------------------------
+
+class ReEpisodeReq(BaseModel):
+    home_code: str
+    name: str = ""
+    videos: bool = False       # 공식 투어 영상 조회·프레임 캡처 포함
+    skip_assets: bool = False  # 기존 수집 에셋 재사용
+    reuse_audio: bool = False  # 기존 TTS 재사용 (재렌더)
+
+
+@app.get("/api/realestate/candidates")
+def realestate_candidates(top: int = 20) -> list:
+    """청년안심주택 후보 목록 (빠른 추출 — 영상 조회는 에피소드 생성 시 옵션)."""
+    from tracks.realestate import parser as re_parser
+
+    try:
+        complexes = re_parser.load_complexes()
+    except FileNotFoundError as e:
+        raise HTTPException(500, f"데이터 폴더 없음 — .env REALESTATE_DATA_DIR 확인: {e}")
+    out = []
+    for c in re_parser.extract_candidates(complexes, top_n=top):
+        out.append({
+            "home_code": c.home_code, "name": c.name, "gu": c.gu,
+            "address": c.address, "subway": c.subway,
+            "station_m": c.station_distance_m(),
+            "deposit_low_won": c.deposit_low_won, "rent_low_won": c.rent_low_won,
+            "total_units": c.total_units, "has_homepage": bool(c.homepage),
+            "score": c.score,
+            "rendered": (OUTPUTS / f"re-{c.home_code}" / "episode.mp4").exists(),
+            "has_assets": (ROOT / "data" / "assets" / "realestate" / c.home_code / "assets.json").exists(),
+        })
+    return out
+
+
+@app.post("/api/realestate/episode")
+def realestate_episode(req: ReEpisodeReq) -> dict:
+    """후보 하나 → 에셋 수집 → 덱 → 슬라이드 → 대본 → 렌더 (cli re-episode 잡)."""
+    args = ["re-episode", "--home-code", req.home_code]
+    if req.videos:
+        args.append("--videos")
+    if req.skip_assets:
+        args.append("--skip-assets")
+    if req.reuse_audio:
+        args.append("--reuse-audio")
+    return {"job": _start_job("re-episode", req.name or req.home_code, args)}
+
+
+# ---------------------------------------------------------------------------
 # 지표 시트 (§B8 — harvest 구현 전 수동 기록)
 # ---------------------------------------------------------------------------
 
