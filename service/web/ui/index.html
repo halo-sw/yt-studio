@@ -109,23 +109,6 @@ video{width:100%;border-radius:var(--radius-sm);background:#000;max-height:420px
 .hint{font-size:12.5px;color:var(--text2);margin-top:10px}
 code{background:var(--surface2);border-radius:5px;padding:1px 6px;font-size:12px}
 
-/* ── 부동산 탭 ── */
-.re-card{transition:border-color .18s,transform .18s,box-shadow .18s;display:flex;flex-direction:column}
-.re-card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--border));transform:translateY(-2px);
-  box-shadow:0 8px 24px -12px color-mix(in srgb,var(--text) 22%,transparent)}
-.re-stats{display:flex;gap:22px;margin:10px 0 4px;font-variant-numeric:tabular-nums}
-.re-stat b{display:block;font-size:22px;letter-spacing:-.02em;line-height:1.1}
-.re-stat span{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
-.re-card .row:last-child{margin-top:auto;padding-top:12px}
-.re-toggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;
-  padding:7px 13px;border:1px solid var(--border);border-radius:99px;background:var(--bg);user-select:none;
-  transition:background .15s,border-color .15s}
-.re-toggle:has(input:checked){background:color-mix(in srgb,var(--accent) 12%,var(--bg));
-  border-color:color-mix(in srgb,var(--accent) 50%,var(--border));color:var(--text)}
-.re-toggle input{width:auto;accent-color:var(--accent);margin:0}
-.skel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;min-height:170px}
-.skel div{background:var(--surface2);border-radius:6px;animation:sk 1.3s ease-in-out infinite}
-@keyframes sk{50%{opacity:.45}}
 .btn:active{transform:scale(.98)}
 .btn:focus-visible,nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
@@ -136,7 +119,7 @@ code{background:var(--surface2);border-radius:5px;padding:1px 6px;font-size:12px
   <nav>
     <button data-tab="scripts" class="active">대본 재고</button>
     <button data-tab="create">생성</button>
-    <button data-tab="realestate">부동산</button>
+    <button onclick="location.href='/realestate'">부동산 ↗</button>
     <button data-tab="gallery">갤러리</button>
     <button data-tab="metrics">지표</button>
   </nav>
@@ -180,21 +163,6 @@ code{background:var(--surface2);border-radius:5px;padding:1px 6px;font-size:12px
       <div class="row" style="margin-bottom:8px"><span class="badge acc" id="jobLogTitle"></span></div>
       <div class="log" id="jobLog"></div>
     </div>
-  </section>
-
-  <!-- 부동산 (예린이의 부동산 뽀개기) — ※ 신규 화면: 3인 합의 대상, 합의 전 파일럿 -->
-  <section id="realestate">
-    <h1>부동산 — 예린이의 부동산 뽀개기</h1>
-    <div class="sub">청년안심주택 후보 → 카드에서 <b>에피소드 생성</b> 한 번이면 로드뷰·덱·대본·렌더까지 자동 (macOS Keynote 필요)</div>
-    <div class="row" style="margin-bottom:16px">
-      <label class="re-toggle"><input type="checkbox" id="reVideos"> 투어 영상 포함 <span style="color:var(--text2)">(느림)</span></label>
-      <label class="re-toggle"><input type="checkbox" id="reSkipAssets" checked> 기존 에셋 재사용</label>
-      <label class="re-toggle"><input type="checkbox" id="reReuseAudio"> 음성 재사용 <span style="color:var(--text2)">(재렌더)</span></label>
-      <span class="spacer"></span>
-      <button class="btn small" onclick="loadCandidates()">후보 새로고침</button>
-    </div>
-    <div class="hint" style="margin:-6px 0 16px">보이스: Rayeon (바이블) · TTS는 문자수 과금 — 같은 대본을 다시 렌더할 땐 음성 재사용을 켜세요</div>
-    <div class="grid cols" id="reCards"></div>
   </section>
 
   <!-- 갤러리 -->
@@ -310,50 +278,6 @@ async function watch(id){
 }
 function toTab(t){document.querySelector(`nav [data-tab=${t}]`).click()}
 
-/* 부동산 */
-let RE_CANDS=[];
-async function loadCandidates(){
-  $("#reCards").innerHTML=Array.from({length:6},()=>`
-    <div class="skel"><div style="width:38%;height:14px"></div>
-      <div style="width:72%;height:20px;margin:14px 0 8px"></div>
-      <div style="width:55%;height:13px;margin-bottom:18px"></div>
-      <div style="width:80%;height:26px"></div></div>`).join("");
-  try{ RE_CANDS=await (await fetch("/api/realestate/candidates?top=20")).json(); }
-  catch(e){ $("#reCards").innerHTML='<div class="empty">후보를 불러오지 못했습니다 — .env의 REALESTATE_DATA_DIR 경로를 확인하세요</div>'; return }
-  renderCandidates();
-}
-function won(n){ return n?Math.round(n/10000).toLocaleString()+"만":"—" }
-function renderCandidates(){
-  const el=$("#reCards"); el.innerHTML="";
-  for(const c of RE_CANDS){
-    const d=document.createElement("div"); d.className="card re-card";
-    d.innerHTML=`
-      <div class="row" style="justify-content:space-between">
-        <span class="badge acc">${c.gu||"—"}</span>
-        ${c.rendered?'<span class="badge ok">렌더됨</span>':c.has_assets?'<span class="badge">에셋 있음</span>':""}
-      </div>
-      <h3 style="margin-top:10px">${c.name}</h3>
-      <div class="hook" style="min-height:auto">${c.subway||c.address||""}</div>
-      <div class="re-stats">
-        ${c.station_m!=null?`<div class="re-stat"><b>${c.station_m}m</b><span>역까지</span></div>`:""}
-        ${c.rent_low_won?`<div class="re-stat"><b>${won(c.rent_low_won)}~</b><span>월세</span></div>`:""}
-        ${c.total_units?`<div class="re-stat"><b>${c.total_units.toLocaleString()}</b><span>세대</span></div>`:""}
-      </div>
-      <div class="row">
-        <button class="btn primary small" onclick="runReEpisode('${c.home_code}')">에피소드 생성</button>
-        ${c.rendered?`<a class="badge" href="/media/produce/re-${c.home_code}/episode.mp4" target="_blank">영상 보기</a>`:""}
-      </div>`;
-    el.appendChild(d);
-  }
-}
-async function runReEpisode(code){
-  const c=RE_CANDS.find(x=>x.home_code===code);
-  const r=await post("/api/realestate/episode",{home_code:code,name:c?c.name:code,
-    videos:$("#reVideos").checked,skip_assets:$("#reSkipAssets").checked,
-    reuse_audio:$("#reReuseAudio").checked});
-  watch(r.job);
-}
-
 /* 갤러리 */
 function renderGallery(){
   const el=$("#galleryCards"); el.innerHTML="";
@@ -404,7 +328,7 @@ async function post(url,body){
   return r.json();
 }
 
-refresh(); refreshMetrics(); loadCandidates(); setInterval(refresh,4000);
+refresh(); refreshMetrics(); setInterval(refresh,4000);
 </script>
 </body>
 </html>

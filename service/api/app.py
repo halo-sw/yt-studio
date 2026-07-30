@@ -294,4 +294,10 @@ def index() -> FileResponse:
     return FileResponse(UI_INDEX)
 
 
+@app.get("/realestate")
+def realestate_page() -> FileResponse:
+    """부동산 전용 제작 스튜디오 — 매물 선택→제작→완성 흐름만 담은 독립 화면."""
+    return FileResponse(UI_INDEX.parent / "realestate.html")
+
+
 app.mount("/media", StaticFiles(directory=ROOT / "data" / "assets"), name="media")

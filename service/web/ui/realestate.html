@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>예린이의 부동산 뽀개기 — 제작 스튜디오</title>
+<style>
+/* 전용 스튜디오 — Astryx 토큰 구조 + 채널 브랜드(앰버) 액센트 */
+:root{
+  --bg:#ffffff; --surface:#f7f7f6; --surface2:#efefee;
+  --text:#0f0f0f; --text2:#5c5c58; --border:#e4e4e1;
+  --brand:#e8a200; --brand-soft:#fff5dd; --ok:#0a7d33; --bad:#c62828;
+  --radius:14px; --radius-sm:9px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b0b0c; --surface:#151517; --surface2:#1e1e21;
+    --text:#f2f2f0; --text2:#9c9c96; --border:#28282b;
+    --brand:#ffb300; --brand-soft:#2a2313; --ok:#4ade80; --bad:#f87171;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR",sans-serif;
+  font-size:14.5px;line-height:1.55;letter-spacing:-.01em}
+a{color:inherit;text-decoration:none}
+
+header{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px;
+  padding:0 24px;height:58px;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15.5px;letter-spacing:-.02em}
+.logo .dot{width:11px;height:11px;border-radius:4px;background:var(--brand)}
+.home{margin-left:auto;font-size:12.5px;color:var(--text2)}
+.home:hover{color:var(--text)}
+
+main{max-width:1180px;margin:0 auto;padding:30px 24px 90px}
+
+/* 스텝 레일 */
+.steps{display:flex;gap:8px;align-items:center;margin-bottom:26px;font-size:13px;font-weight:600;color:var(--text2)}
+.step{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface)}
+.step b{display:inline-flex;width:20px;height:20px;border-radius:99px;background:var(--surface2);
+  align-items:center;justify-content:center;font-size:11.5px;color:var(--text2)}
+.step.on{border-color:color-mix(in srgb,var(--brand) 55%,var(--border));background:var(--brand-soft);color:var(--text)}
+.step.on b{background:var(--brand);color:#1c1500}
+.steps .arrow{color:var(--border)}
+
+h2{font-size:18px;letter-spacing:-.02em;margin:34px 0 4px}
+.sub{color:var(--text2);font-size:13px;margin-bottom:14px}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;
+  display:flex;flex-direction:column;transition:border-color .18s,transform .18s,box-shadow .18s}
+.card:hover{border-color:color-mix(in srgb,var(--brand) 50%,var(--border));transform:translateY(-2px);
+  box-shadow:0 10px 26px -14px color-mix(in srgb,var(--text) 25%,transparent)}
+.card h3{font-size:15px;letter-spacing:-.01em;margin:10px 0 2px}
+.where{color:var(--text2);font-size:12.5px}
+.badge{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;padding:3px 9px;
+  border-radius:99px;background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.badge.brand{color:color-mix(in srgb,var(--brand) 75%,var(--text));background:var(--brand-soft);
+  border-color:color-mix(in srgb,var(--brand) 35%,var(--border))}
+.badge.ok{color:var(--ok)}
+.stats{display:flex;gap:22px;margin:12px 0 6px;font-variant-numeric:tabular-nums}
+.stats b{display:block;font-size:22px;line-height:1.1;letter-spacing:-.02em}
+.stats span{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+.card .actions{margin-top:auto;padding-top:12px;display:flex;gap:8px;align-items:center}
+
+.btn{appearance:none;cursor:pointer;font:inherit;font-weight:700;font-size:13px;padding:8px 16px;
+  border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);
+  transition:filter .12s,transform .1s}
+.btn:hover{filter:brightness(.96)} .btn:active{transform:scale(.98)}
+.btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#1c1500}
+.btn:disabled{opacity:.4;cursor:default}
+
+.re-toggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;
+  padding:7px 13px;border:1px solid var(--border);border-radius:99px;background:var(--bg);user-select:none;
+  transition:background .15s,border-color .15s}
+.re-toggle:has(input:checked){background:var(--brand-soft);border-color:color-mix(in srgb,var(--brand) 50%,var(--border))}
+.re-toggle input{accent-color:var(--brand);margin:0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.hint{font-size:12.5px;color:var(--text2)}
+
+/* 제작 중 패널 */
+#making{display:none;border:1px solid color-mix(in srgb,var(--brand) 40%,var(--border));
+  background:var(--brand-soft);border-radius:var(--radius);padding:16px 18px;margin-top:14px}
+#making.show{display:block}
+.pulse{display:inline-block;width:9px;height:9px;border-radius:99px;background:var(--brand);animation:p 1.2s infinite;margin-right:8px}
+@keyframes p{50%{opacity:.25}}
+.log{background:color-mix(in srgb,var(--bg) 75%,transparent);border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;padding:12px 14px;
+  max-height:240px;overflow:auto;white-space:pre-wrap;color:var(--text2);margin-top:10px}
+
+video{width:100%;border-radius:var(--radius-sm);background:#000;aspect-ratio:16/9}
+.skel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;min-height:180px}
+.skel div{background:var(--surface2);border-radius:6px;animation:sk 1.3s ease-in-out infinite}
+@keyframes sk{50%{opacity:.45}}
+.empty{color:var(--text2);padding:36px 0;text-align:center}
+details summary{cursor:pointer;font-size:12.5px;color:var(--text2)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><span class="dot"></span>예린이의 부동산 뽀개기 <span class="badge brand" style="margin-left:2px">제작 스튜디오</span></div>
+  <a class="home" href="/">← yt-studio 홈</a>
+</header>
+
+<main>
+  <div class="steps">
+    <div class="step on" id="st1"><b>1</b> 매물 고르기</div><span class="arrow">→</span>
+    <div class="step" id="st2"><b>2</b> 제작 중</div><span class="arrow">→</span>
+    <div class="step" id="st3"><b>3</b> 완성 영상</div>
+  </div>
+
+  <!-- ① 매물 고르기 -->
+  <h2>① 매물 고르기</h2>
+  <div class="sub">서울 청년안심주택 후보 — 카드에서 <b>이 매물로 만들기</b>를 누르면 로드뷰 캡처부터 완성 영상까지 자동입니다 (3~5분)</div>
+  <div class="row" style="margin-bottom:14px">
+    <label class="re-toggle"><input type="checkbox" id="optVideos"> 투어 영상 포함 <span class="hint">(느림)</span></label>
+    <label class="re-toggle"><input type="checkbox" id="optAssets" checked> 기존 에셋 재사용</label>
+    <label class="re-toggle"><input type="checkbox" id="optAudio"> 음성 재사용 <span class="hint">(재렌더)</span></label>
+    <span class="spacer"></span>
+    <button class="btn" onclick="loadCands()">새로고침</button>
+  </div>
+  <div class="grid" id="cands"></div>
+
+  <!-- ② 제작 중 -->
+  <div id="making">
+    <div style="font-weight:700"><span class="pulse"></span><span id="mkTitle">제작 중…</span></div>
+    <div class="hint" style="margin-top:4px">순서: 로드뷰·지도 캡처 → 브리핑 덱 → 슬라이드 → 대본 → 예린 목소리(TTS) → 영상 조립</div>
+    <div class="log" id="mkLog">(대기)</div>
+  </div>
+
+  <!-- ③ 완성 영상 -->
+  <h2 id="doneHead">③ 완성 영상</h2>
+  <div class="sub">확인 후 유튜브 업로드는 사람이 합니다 (게이트 2 — 최종 검토)</div>
+  <div class="grid" id="outs"><div class="empty">아직 완성된 에피소드가 없습니다</div></div>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+let CANDS=[], JOB=null;
+const won=n=>n?Math.round(n/10000).toLocaleString()+"만":"—";
+
+function setStep(n){
+  [1,2,3].forEach(i=>$("#st"+i).classList.toggle("on", i===n));
+}
+
+async function loadCands(){
+  $("#cands").innerHTML=Array.from({length:6},()=>`
+    <div class="skel"><div style="width:38%;height:14px"></div>
+      <div style="width:72%;height:20px;margin:14px 0 8px"></div>
+      <div style="width:55%;height:13px;margin-bottom:18px"></div>
+      <div style="width:80%;height:26px"></div></div>`).join("");
+  try{ CANDS=await (await fetch("/api/realestate/candidates?top=20")).json(); }
+  catch(e){ $("#cands").innerHTML='<div class="empty">후보를 불러오지 못했습니다 — .env의 REALESTATE_DATA_DIR 경로를 확인하세요</div>'; return }
+  $("#cands").innerHTML="";
+  for(const c of CANDS){
+    const d=document.createElement("div"); d.className="card";
+    d.innerHTML=`
+      <div class="row" style="justify-content:space-between">
+        <span class="badge brand">${c.gu||"—"}</span>
+        ${c.rendered?'<span class="badge ok">렌더됨</span>':c.has_assets?'<span class="badge">에셋 있음</span>':""}
+      </div>
+      <h3>${c.name}</h3>
+      <div class="where">${c.subway||c.address||""}</div>
+      <div class="stats">
+        ${c.station_m!=null?`<div><b>${c.station_m}m</b><span>역까지</span></div>`:""}
+        ${c.rent_low_won?`<div><b>${won(c.rent_low_won)}~</b><span>월세</span></div>`:""}
+        ${c.total_units?`<div><b>${c.total_units.toLocaleString()}</b><span>세대</span></div>`:""}
+      </div>
+      <div class="actions">
+        <button class="btn primary" onclick="make('${c.home_code}')">이 매물로 만들기</button>
+      </div>`;
+    $("#cands").appendChild(d);
+  }
+}
+
+async function make(code){
+  const c=CANDS.find(x=>x.home_code===code);
+  const r=await fetch("/api/realestate/episode",{method:"POST",
+    headers:{"content-type":"application/json"},
+    body:JSON.stringify({home_code:code,name:c?c.name:code,
+      videos:$("#optVideos").checked,skip_assets:$("#optAssets").checked,
+      reuse_audio:$("#optAudio").checked})});
+  if(!r.ok){alert("실행 실패: "+await r.text());return}
+  JOB=(await r.json()).job;
+  $("#mkTitle").textContent=(c?c.name:code)+" — 제작 중";
+  $("#making").classList.add("show"); setStep(2);
+  $("#making").scrollIntoView({behavior:"smooth",block:"center"});
+  pollJob();
+}
+
+async function pollJob(){
+  if(!JOB) return;
+  const j=await (await fetch("/api/jobs/"+JOB)).json();
+  $("#mkLog").textContent=j.log.slice(-40).join("\n")||"(대기)";
+  $("#mkLog").scrollTop=$("#mkLog").scrollHeight;
+  if(j.status==="running"){ setTimeout(pollJob,1500); return }
+  $("#mkTitle").textContent=(j.status==="done"?"완성! 아래에서 확인하세요":"실패 — 로그를 확인하세요");
+  if(j.status==="done"){ setStep(3); loadOuts(); loadCands();
+    setTimeout(()=>$("#doneHead").scrollIntoView({behavior:"smooth"}),400); }
+  JOB=null;
+}
+
+async function loadOuts(){
+  const st=await (await fetch("/api/state")).json();
+  const outs=st.outputs.filter(o=>o.slug.startsWith("re-")&&o.episode);
+  if(!outs.length){$("#outs").innerHTML='<div class="empty">아직 완성된 에피소드가 없습니다</div>';return}
+  $("#outs").innerHTML=outs.map(o=>{
+    const title=(o.meta.match(/제목:\s*(.+)/)||[])[1]||o.slug;
+    return `<div class="card">
+      <video controls preload="metadata" src="/media/produce/${o.slug}/episode.mp4"></video>
+      <h3>${title}</h3>
+      <div class="actions">
+        <a class="badge" href="/media/produce/${o.slug}/episode.mp4" download>영상 저장</a>
+        <details style="flex:1"><summary>업로드용 메타</summary>
+          <div class="log" style="max-height:160px">${(o.meta||"").replace(/</g,"&lt;")}</div></details>
+      </div></div>`;
+  }).join("");
+}
+
+loadCands(); loadOuts();
+</script>
+</body>
+</html>
