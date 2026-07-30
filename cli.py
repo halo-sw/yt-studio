@@ -775,8 +775,11 @@ def cmd_re_episode(args) -> None:
     cmd = [sys.executable, "cli.py", "produce",
            "--script", ep["script"], "--title", f"{target.name} — 예린이의 부동산 뽀개기",
            "--track", "realestate", "--images", ep["images_dir"], "--slug", ep["slug"]]
-    if args.reuse_audio:
+    if args.reuse_audio or ep.get("script_unchanged"):
+        # 대본이 바뀌지 않았으면 TTS 재과금 없이 기존 음성 자동 재사용
         cmd.append("--reuse-audio")
+        if ep.get("script_unchanged"):
+            print("[re-episode] 대본 동일 — 기존 음성 자동 재사용 (TTS 과금 없음)")
     subprocess.run(cmd, check=True)
     print(f"[re-episode] 완료 → data/assets/produce/{ep['slug']}/episode.mp4")
 

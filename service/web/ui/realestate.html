@@ -116,9 +116,7 @@ details summary{cursor:pointer;font-size:12.5px;color:var(--text2)}
   <h2>① 매물 고르기</h2>
   <div class="sub">서울 청년안심주택 후보 — 카드에서 <b>이 매물로 만들기</b>를 누르면 로드뷰 캡처부터 완성 영상까지 자동입니다 (3~5분)</div>
   <div class="row" style="margin-bottom:14px">
-    <label class="re-toggle"><input type="checkbox" id="optVideos"> 투어 영상 포함 <span class="hint">(느림)</span></label>
-    <label class="re-toggle"><input type="checkbox" id="optAssets" checked> 기존 에셋 재사용</label>
-    <label class="re-toggle"><input type="checkbox" id="optAudio"> 음성 재사용 <span class="hint">(재렌더)</span></label>
+    <span class="hint">투어 영상·에셋·음성 재사용은 자동으로 처리됩니다 — 고를 것 없이 매물만 선택하세요</span>
     <span class="spacer"></span>
     <button class="btn" onclick="syncData(this)">매물 새로 수집</button>
     <button class="btn" onclick="loadCands()">새로고침</button>
@@ -154,7 +152,7 @@ async function loadCands(){
       <div style="width:72%;height:20px;margin:14px 0 8px"></div>
       <div style="width:55%;height:13px;margin-bottom:18px"></div>
       <div style="width:80%;height:26px"></div></div>`).join("");
-  try{ CANDS=await (await fetch("/api/realestate/candidates?top=20")).json(); }
+  try{ CANDS=await (await fetch("/api/realestate/candidates?top=200")).json(); }
   catch(e){ $("#cands").innerHTML='<div class="empty">후보를 불러오지 못했습니다 — .env의 REALESTATE_DATA_DIR 경로를 확인하세요</div>'; return }
   $("#cands").innerHTML="";
   for(const c of CANDS){
@@ -172,7 +170,10 @@ async function loadCands(){
         ${c.total_units?`<div><b>${c.total_units.toLocaleString()}</b><span>세대</span></div>`:""}
       </div>
       <div class="actions">
-        <button class="btn primary" onclick="make('${c.home_code}')">이 매물로 만들기</button>
+        ${c.station_m!=null||c.rent_low_won?"":""}
+        ${(c.home_code&&c.has_coords===false)
+          ? '<button class="btn" disabled>좌표 없음 — 제작 불가</button><span class="hint">지도·로드뷰 캡처가 안 되는 매물</span>'
+          : `<button class="btn primary" onclick="make('${c.home_code}')">이 매물로 만들기</button>`}
       </div>`;
     $("#cands").appendChild(d);
   }
@@ -182,9 +183,7 @@ async function make(code){
   const c=CANDS.find(x=>x.home_code===code);
   const r=await fetch("/api/realestate/episode",{method:"POST",
     headers:{"content-type":"application/json"},
-    body:JSON.stringify({home_code:code,name:c?c.name:code,
-      videos:$("#optVideos").checked,skip_assets:$("#optAssets").checked,
-      reuse_audio:$("#optAudio").checked})});
+    body:JSON.stringify({home_code:code,name:c?c.name:code})});
   if(!r.ok){alert("실행 실패: "+await r.text());return}
   JOB=(await r.json()).job;
   $("#mkTitle").textContent=(c?c.name:code)+" — 제작 중";

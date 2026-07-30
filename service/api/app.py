@@ -214,13 +214,13 @@ def job_detail(job_id: str) -> dict:
 class ReEpisodeReq(BaseModel):
     home_code: str
     name: str = ""
-    videos: bool = False       # 공식 투어 영상 조회·프레임 캡처 포함
-    skip_assets: bool = False  # 기존 수집 에셋 재사용
-    reuse_audio: bool = False  # 기존 TTS 재사용 (재렌더)
+    videos: bool = True        # 투어 영상 있으면 자동 포함
+    skip_assets: bool = True   # 에셋 있으면 재사용, 없으면 자동 수집
+    reuse_audio: bool = False  # 대본 동일 시 cli가 자동 재사용
 
 
 @app.get("/api/realestate/candidates")
-def realestate_candidates(top: int = 20) -> list:
+def realestate_candidates(top: int = 200) -> list:
     """청년안심주택 후보 목록 (빠른 추출 — 영상 조회는 에피소드 생성 시 옵션)."""
     from tracks.realestate import parser as re_parser
 
@@ -236,6 +236,7 @@ def realestate_candidates(top: int = 20) -> list:
             "station_m": c.station_distance_m(),
             "deposit_low_won": c.deposit_low_won, "rent_low_won": c.rent_low_won,
             "total_units": c.total_units, "has_homepage": bool(c.homepage),
+            "has_coords": bool(c.lat and c.lng),
             "score": c.score,
             "rendered": (OUTPUTS / f"re-{c.home_code}" / "episode.mp4").exists(),
             "has_assets": (ROOT / "data" / "assets" / "realestate" / c.home_code / "assets.json").exists(),

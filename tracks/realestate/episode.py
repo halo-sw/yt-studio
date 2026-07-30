@@ -277,9 +277,12 @@ def make_episode(c: Candidate, out_root: pathlib.Path = pathlib.Path("data/asset
         raise CaptureError(f"슬라이드 {len(pages)}장 ≠ 대본 {len(lines)}행 — spec 불일치")
 
     script_path = pathlib.Path("data/scripts") / f"{slug}.txt"
-    script_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    new_text = "\n".join(lines) + "\n"
+    script_unchanged = script_path.exists() and script_path.read_text(encoding="utf-8") == new_text
+    script_path.write_text(new_text, encoding="utf-8")
     script_path.with_suffix(".facts.json").write_text(
         json.dumps(facts, ensure_ascii=False, indent=1), encoding="utf-8")
 
     return {"slug": slug, "script": str(script_path), "images_dir": str(images_dir),
-            "deck": str(deck), "n_slides": len(pages)}
+            "deck": str(deck), "n_slides": len(pages),
+            "script_unchanged": script_unchanged}
