@@ -243,6 +243,18 @@ def realestate_candidates(top: int = 20) -> list:
     return out
 
 
+@app.get("/api/realestate/syncinfo")
+def realestate_syncinfo() -> dict:
+    """캐시 메타 — 스튜디오 상단 '마지막 수집' 표시용."""
+    from tracks.realestate.scraper import load_cache
+
+    c = load_cache()
+    if not c:
+        return {"fetched_at": None, "count": 0, "with_coords": 0}
+    return {"fetched_at": c.get("fetched_at"), "count": c.get("count", 0),
+            "with_coords": c.get("with_coords", 0)}
+
+
 @app.post("/api/realestate/sync")
 def realestate_sync() -> dict:
     """매물 데이터 자체 수집 잡 — 청년안심주택 포털 → data/realestate/complexes.json."""
@@ -295,15 +307,18 @@ def metrics_add(row: MetricRow) -> dict:
 # 정적 서빙 — UI + 영상 미리보기
 # ---------------------------------------------------------------------------
 
+_NO_CACHE = {"Cache-Control": "no-store"}  # UI 갱신이 브라우저 캐시에 막히지 않게
+
+
 @app.get("/")
 def index() -> FileResponse:
-    return FileResponse(UI_INDEX)
+    return FileResponse(UI_INDEX, headers=_NO_CACHE)
 
 
 @app.get("/realestate")
 def realestate_page() -> FileResponse:
     """부동산 전용 제작 스튜디오 — 매물 선택→제작→완성 흐름만 담은 독립 화면."""
-    return FileResponse(UI_INDEX.parent / "realestate.html")
+    return FileResponse(UI_INDEX.parent / "realestate.html", headers=_NO_CACHE)
 
 
 app.mount("/media", StaticFiles(directory=ROOT / "data" / "assets"), name="media")
