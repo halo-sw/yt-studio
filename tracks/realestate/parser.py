@@ -67,11 +67,33 @@ class Candidate(BaseModel):
         return int(m.group(1)) if m else None
 
 
-def load_complexes(data_dir: str = DEFAULT_DATA_DIR) -> list[dict]:
-    """청년안심주택 단지 목록(youth-complexes.json)을 읽는다."""
-    path = pathlib.Path(data_dir) / "youth-complexes.json"
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+def load_complexes(data_dir: str | None = None) -> list[dict]:
+    """청년안심주택 단지 목록.
+
+    우선순위 — 어느 머신에서도 자체 완결되게:
+    1) yt-studio 자체 캐시 (data/realestate/complexes.json — 커밋된 스냅샷 포함)
+    2) 캐시가 없으면 포털에서 즉시 수집 (scraper.sync_complexes, 키 불필요)
+    3) 수집 실패 시 REALESTATE_DATA_DIR(레거시 외부 폴더) 폴백
+    data_dir 인자를 명시하면 그 폴더의 youth-complexes.json을 그대로 읽는다.
+    """
+    if data_dir:
+        path = pathlib.Path(data_dir) / "youth-complexes.json"
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+
+    from tracks.realestate import scraper
+
+    cache = scraper.load_cache()
+    if cache:
+        return cache["complexes"]
+    try:
+        return scraper.sync_complexes()["complexes"]
+    except scraper.SyncError:
+        legacy = pathlib.Path(DEFAULT_DATA_DIR) / "youth-complexes.json"
+        if legacy.exists():
+            with open(legacy, encoding="utf-8") as f:
+                return json.load(f)
+        raise
 
 
 def _fetch(url: str, timeout: float = 12.0) -> str:

@@ -704,7 +704,7 @@ def cmd_re_scout(args) -> None:
     """
     from tracks.realestate import parser as re_parser
 
-    complexes = re_parser.load_complexes(args.data_dir or re_parser.DEFAULT_DATA_DIR)
+    complexes = re_parser.load_complexes(args.data_dir)
     cands = re_parser.extract_candidates(
         complexes, top_n=args.top, check_videos=args.videos,
     )
@@ -737,6 +737,14 @@ def cmd_re_scout(args) -> None:
               f"data/assets/realestate/{target.home_code}/assets.json")
 
 
+def cmd_re_sync(args) -> None:
+    """부동산: 매물 데이터 자체 수집 — 서울시 청년안심주택 포털 → 자체 캐시."""
+    from tracks.realestate.scraper import sync_complexes
+
+    cache = sync_complexes()
+    print(f"[re-sync] {cache['count']}개 단지 수집 (좌표 보유 {cache['with_coords']}) → data/realestate/complexes.json")
+
+
 def cmd_re_episode(args) -> None:
     """부동산: 후보 선택 → 에셋 수집 → 뽀개기 덱 → 슬라이드 → 대본 → 영상까지 원커맨드.
 
@@ -747,7 +755,7 @@ def cmd_re_episode(args) -> None:
     from tracks.realestate import parser as re_parser
     from tracks.realestate.episode import make_episode
 
-    complexes = re_parser.load_complexes(args.data_dir or re_parser.DEFAULT_DATA_DIR)
+    complexes = re_parser.load_complexes(args.data_dir)
     if getattr(args, "home_code", ""):
         # UI 경로: 순위는 재계산 시 변할 수 있으므로 home_code로 고정 지정한다.
         cands = re_parser.extract_candidates(complexes, top_n=len(complexes), check_videos=False)
@@ -874,6 +882,9 @@ def main() -> None:
     p10.add_argument("--skip-assets", action="store_true", help="기존 수집 에셋(assets.json) 재사용")
     p10.add_argument("--reuse-audio", action="store_true", dest="reuse_audio", help="기존 TTS 재사용 (재렌더 시)")
     p10.set_defaults(fn=cmd_re_episode)
+
+    p12 = sub.add_parser("re-sync", help="부동산: 매물 데이터 자체 수집 (청년안심주택 포털, 키 불필요)")
+    p12.set_defaults(fn=cmd_re_sync)
 
     args = ap.parse_args()
     args.fn(args)

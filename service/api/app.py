@@ -243,6 +243,12 @@ def realestate_candidates(top: int = 20) -> list:
     return out
 
 
+@app.post("/api/realestate/sync")
+def realestate_sync() -> dict:
+    """매물 데이터 자체 수집 잡 — 청년안심주택 포털 → data/realestate/complexes.json."""
+    return {"job": _start_job("re-sync", "매물 데이터 수집", ["re-sync"])}
+
+
 @app.post("/api/realestate/episode")
 def realestate_episode(req: ReEpisodeReq) -> dict:
     """후보 하나 → 에셋 수집 → 덱 → 슬라이드 → 대본 → 렌더 (cli re-episode 잡)."""
