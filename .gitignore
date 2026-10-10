@@ -52,3 +52,4 @@ channels/*/브랜딩/
 
 # 채널 현황 배치 산출물 — crontab이 매일 append하는 로컬 데이터
 data/usage/channel_pulse.*
+.claude/settings.local.json
